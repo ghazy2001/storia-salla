@@ -1,0 +1,95 @@
+import React from "react";
+import Navbar from "./components/Navbar";
+import Hero from "./components/Hero";
+import ProductListing from "./components/ProductListing";
+import ProductDetail from "./components/ProductDetail";
+
+const Footer = () => (
+  <footer className="bg-brand-charcoal text-brand-offwhite py-20 px-12 text-right">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-12 border-b border-white/10 pb-20">
+      <div className="col-span-1 md:col-span-1">
+        <h2 className="text-4xl font-serif mb-6 italic">ستوريا للعبايات</h2>
+        <p className="text-sm font-light text-brand-offwhite/50 leading-relaxed uppercase tracking-widest">
+          المتجر الأكبر في المملكة لأحدث تصاميم العبايات السعودية باستخدام أفضل
+          الأقمشة العملية. التوصيل لكافة مناطق المملكة.
+        </p>
+      </div>
+      <div>
+        <h4 className="uppercase tracking-[0.3em] text-[10px] mb-8 font-semibold">
+          تصنيفات المتجر
+        </h4>
+        <ul className="flex flex-col gap-4 text-sm font-light tracking-widest text-brand-offwhite/70">
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            عبايات سوداء
+          </li>
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            عبايات رسمية
+          </li>
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            عبايات كلوش
+          </li>
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            عبايات بشت
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="uppercase tracking-[0.3em] text-[10px] mb-8 font-semibold">
+          روابط مہمة
+        </h4>
+        <ul className="flex flex-col gap-4 text-sm font-light tracking-widest text-brand-offwhite/70">
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            سياسة الاستبدال والاسترجاع
+          </li>
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            دليل المقاسات
+          </li>
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            تتبع الطلب
+          </li>
+          <li className="hover:text-brand-gold transition-colors cursor-pointer">
+            تواصلي معنا
+          </li>
+        </ul>
+      </div>
+      <div>
+        <h4 className="uppercase tracking-[0.3em] text-[10px] mb-8 font-semibold">
+          اشتراك النشرة البريدية
+        </h4>
+        <div className="flex border-b border-white/30 pb-2">
+          <input
+            type="email"
+            placeholder="البريد الإلكتروني"
+            className="bg-transparent text-xs tracking-widest focus:outline-none w-full placeholder:text-white/20"
+          />
+          <button className="uppercase tracking-widest text-[10px] text-brand-gold">
+            اشتراك
+          </button>
+        </div>
+      </div>
+    </div>
+    <div className="mt-12 flex flex-col md:flex-row justify-between items-center text-[10px] font-light tracking-widest text-brand-offwhite/30 uppercase gap-4">
+      <span>&copy; 2026 دار ستوريا للعبايات. جميع الحقوق محفوظة.</span>
+      <div className="flex gap-8">
+        <span>منصة سلة</span>
+        <span>الرقم الضريبي</span>
+      </div>
+    </div>
+  </footer>
+);
+
+function App() {
+  return (
+    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen">
+      <Navbar />
+      <main>
+        <Hero />
+        <ProductListing />
+        <ProductDetail />
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+export default App;
