@@ -5,16 +5,20 @@ export default {
     extend: {
       colors: {
         brand: {
-          offwhite: "#FDFCF8",
-          beige: "#F5F5F0",
-          charcoal: "#1A1A1A",
-          gold: "#C5A059",
-          "gold-light": "#D4AF37",
+          offwhite: "var(--bg-site)",
+          beige: "var(--bg-secondary)",
+          charcoal: "var(--text-main)", // Updated to Deep Green
+          light: "var(--text-on-dark)", // Added for consistent light text
+          burgundy: "#4D1330", // New Brand Color
+          gold: "var(--accent-gold)", // Metallic gold matching logo
+          "gold-light": "#E5C860", // Lighter variant of metallic gold
+          footer: "var(--bg-footer)",
         },
       },
       fontFamily: {
-        serif: ["Amiri", "serif"],
-        sans: ["Cairo", "sans-serif"],
+        alexandria: ["Alexandria", "sans-serif"],
+        serif: ["Alexandria", "sans-serif"], // Aligning with design
+        sans: ["Alexandria", "sans-serif"],
       },
       letterSpacing: {
         widest: ".2em",

@@ -19,17 +19,30 @@ const Hero = () => {
       { y: 0, opacity: 1, duration: 1.5, stagger: 0.3, ease: "power3.out" },
       "-=1",
     );
+
+    // Ultra-Performant Scroll Animation: Border Radius is much smoother than Clip-Path
+    gsap.to(containerRef.current, {
+      scrollTrigger: {
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom top",
+        scrub: true,
+      },
+      borderBottomLeftRadius: "50% 150px",
+      borderBottomRightRadius: "50% 150px",
+      ease: "none",
+    });
   }, []);
 
   return (
     <section
       ref={containerRef}
-      className="relative h-screen w-full overflow-hidden bg-brand-offwhite flex items-center justify-center"
+      className="relative h-screen w-full bg-brand-offwhite flex items-center justify-center overflow-hidden"
     >
       <div ref={imageRef} className="absolute inset-0 w-full h-full">
         <img
           src="/assets/hero.png"
-          alt="ستوريا للعبايات"
+          alt="STORIA DESIGN"
           className="w-full h-full object-cover grayscale-[10%] brightness-90"
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-brand-offwhite/40"></div>
@@ -39,14 +52,18 @@ const Hero = () => {
         ref={textRef}
         className="relative z-10 text-center text-white px-4 pt-32 md:pt-40"
       >
-        <h2 className="text-5xl md:text-7xl font-serif italic mb-10 drop-shadow-lg leading-tight uppercase font-medium">
-          ستوريا للعبايات <br />{" "}
-          <span className="not-italic text-lg md:text-2xl block mt-4 font-light opacity-90 tracking-[0.2em]">
-            الأناقة السعودية بأفضل الأقمشة
+        <h2 className="text-5xl md:text-8xl font-serif italic mb-10 drop-shadow-2xl leading-tight uppercase font-medium tracking-tight">
+          STORIA <br />{" "}
+          <span className="not-italic text-2xl md:text-3xl block mt-4 font-light opacity-95 tracking-[0.4em]">
+            DESIGN
           </span>
         </h2>
+        <p className="text-white/80 text-sm md:text-base max-w-lg mx-auto mb-10 tracking-widest font-light leading-relaxed">
+          مستوحاة من الأناقة والذوق السعودي الأصيل. أنثوية راقية وقيم موضة
+          سعودية حديثة.
+        </p>
         <button className="group relative px-12 py-5 overflow-hidden border border-brand-gold/50 bg-brand-charcoal/40 backdrop-blur-md">
-          <span className="relative z-10 uppercase tracking-widest text-sm font-semibold group-hover:text-brand-charcoal transition-colors duration-300">
+          <span className="relative z-10 uppercase tracking-widest text-sm font-semibold transition-colors duration-300">
             تسوقي الآن
           </span>
           <div className="absolute inset-0 bg-brand-gold translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>

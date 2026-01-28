@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ShoppingBag, Search, Menu, X } from "lucide-react";
+import { ShoppingBag, Search, Menu, X, Sun, Moon } from "lucide-react";
 import gsap from "gsap";
 
-const Navbar = () => {
+const Navbar = ({ theme, toggleTheme }) => {
   const navRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -29,9 +29,15 @@ const Navbar = () => {
 
   const navLinks = ["عبايات سوداء", "رسمية", "عملية", "كلوش", "بشت"];
 
-  // Dynamic class for text and icons based on scroll state
+  // Dynamic class for text and icons based on scroll state and theme
   const colorClass = isScrolled ? "text-brand-charcoal" : "text-white";
-  const logoFilter = isScrolled ? "brightness-0" : "brightness-0 invert";
+  // When not scrolled (transparent navbar): always show white logo (logo2 inverted)
+  // When scrolled: light mode = dark logo2, dark mode = inverted white logo
+  const logoFilter = !isScrolled
+    ? "brightness-0 invert"
+    : theme === "green"
+      ? ""
+      : "brightness-0 invert";
 
   return (
     <>
@@ -42,6 +48,9 @@ const Navbar = () => {
             ? "py-3 bg-white/80 backdrop-blur-md shadow-sm border-b border-brand-charcoal/5"
             : "py-8 bg-transparent"
         } ${colorClass}`}
+        style={{
+          backgroundColor: isScrolled ? "var(--nav-bg)" : "transparent",
+        }}
       >
         <div className="flex items-center gap-10">
           <Menu
@@ -64,19 +73,27 @@ const Navbar = () => {
 
         <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out">
           <img
-            src="/assets/logo.png"
+            src={theme === "green" ? "/assets/logo2.png" : "/assets/logo.png"}
             alt="Storia Logo"
-            className={`transition-all duration-700 ease-in-out object-contain w-auto ${isScrolled ? "h-10" : "h-20"} ${logoFilter}`}
+            className={`transition-all duration-700 ease-in-out object-contain w-auto ${isScrolled ? "h-14" : "h-24"} ${logoFilter}`}
           />
         </div>
 
         <div className="flex items-center gap-8">
+          <button
+            onClick={toggleTheme}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${
+              theme === "green"
+                ? "bg-brand-charcoal/5 text-brand-charcoal"
+                : "bg-brand-gold/20 text-brand-gold"
+            }`}
+            title={
+              theme === "green" ? "Switch to Dark Mode" : "Switch to Light Mode"
+            }
+          >
+            {theme === "green" ? <Moon size={20} /> : <Sun size={20} />}
+          </button>
           <div className="hidden md:flex items-center gap-8">
-            <span
-              className={`uppercase tracking-[0.1em] text-[13px] font-bold cursor-pointer hover:text-brand-gold transition-colors duration-300 ${colorClass}`}
-            >
-              قصتنا
-            </span>
             <Search
               size={22}
               className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 ${colorClass}`}
@@ -119,7 +136,7 @@ const Navbar = () => {
             {navLinks.concat(["قصتنا"]).map((cat) => (
               <span
                 key={cat}
-                className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer"
+                className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 {cat}
