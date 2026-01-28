@@ -1,50 +1,44 @@
-import React, { useEffect, useRef } from "react";
-import gsap from "gsap";
+import React, { useEffect, useState } from "react";
 
-const Preloader = ({ isReady, onTransitionEnd }) => {
-  const loaderRef = useRef(null);
-  const logoRef = useRef(null);
+const Preloader = ({ isReady }) => {
+  const [shouldRender, setShouldRender] = useState(true);
 
   useEffect(() => {
-    // Continuous breathing/pulse animation
-    const pulse = gsap.to(logoRef.current, {
-      scale: 1.05,
-      opacity: 0.8,
-      duration: 1.5,
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-    });
-
     if (isReady) {
-      // Stop pulse and exit
-      pulse.kill();
-      gsap.to(loaderRef.current, {
-        opacity: 0,
-        duration: 0.8,
-        ease: "power2.inOut",
-        onComplete: () => {
-          if (onTransitionEnd) onTransitionEnd();
-        },
-      });
+      // Allow the fade-out transition to complete before unmounting
+      const timer = setTimeout(() => setShouldRender(false), 1000);
+      return () => clearTimeout(timer);
     }
+  }, [isReady]);
 
-    return () => pulse.kill();
-  }, [isReady, onTransitionEnd]);
+  if (!shouldRender) return null;
 
   return (
     <div
-      ref={loaderRef}
-      className={`fixed inset-0 z-[100] bg-brand-charcoal flex items-center justify-center ${isReady ? "pointer-events-none" : "pointer-events-auto"}`}
+      className={`fixed inset-0 z-[100] bg-brand-charcoal flex items-center justify-center transition-opacity duration-700 ease-in-out ${isReady ? "opacity-0 pointer-events-none" : "opacity-100"}`}
     >
       <div className="relative">
         <img
-          ref={logoRef}
           src="/assets/logo.png"
           alt="Storia Logo"
-          className="h-20 brightness-0 invert"
+          className="h-16 brightness-0 invert animate-pulse"
+          style={{ animationDuration: "2s" }}
         />
       </div>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.6; transform: scale(0.95); }
+        }
+        .animate-pulse {
+          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `,
+        }}
+      />
     </div>
   );
 };

@@ -81,11 +81,11 @@ const Footer = () => (
 
 function App() {
   const [isReady, setIsReady] = useState(false);
-  const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
     const handleLoad = () => {
-      setIsReady(true);
+      // Small delay to ensure browser settling
+      setTimeout(() => setIsReady(true), 100);
     };
 
     if (document.readyState === "complete") {
@@ -98,22 +98,22 @@ function App() {
   }, []);
 
   return (
-    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen">
-      <Preloader
-        isReady={isReady}
-        onTransitionEnd={() => setShowContent(true)}
-      />
-      {showContent && (
-        <div className="animate-in fade-in duration-1000">
-          <Navbar />
-          <main>
-            <Hero />
-            <ProductListing />
-            <ProductDetail />
-          </main>
-          <Footer />
-        </div>
-      )}
+    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal">
+      <Preloader isReady={isReady} />
+
+      {/* Content stays in DOM to prevent mounting lag */}
+      <div
+        className={`transition-opacity duration-1000 ease-in-out ${isReady ? "opacity-100" : "opacity-0"}`}
+        aria-hidden={!isReady}
+      >
+        <Navbar />
+        <main>
+          <Hero />
+          <ProductListing />
+          <ProductDetail />
+        </main>
+        <Footer />
+      </div>
     </div>
   );
 }
