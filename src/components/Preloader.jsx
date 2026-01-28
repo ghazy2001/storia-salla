@@ -1,55 +1,49 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const Preloader = ({ onComplete }) => {
+const Preloader = ({ isReady, onTransitionEnd }) => {
   const loaderRef = useRef(null);
   const logoRef = useRef(null);
-  const lineRef = useRef(null);
 
   useEffect(() => {
-    const tl = gsap.timeline({
-      onComplete: () => {
-        if (onComplete) onComplete();
-      },
+    // Continuous breathing/pulse animation
+    const pulse = gsap.to(logoRef.current, {
+      scale: 1.05,
+      opacity: 0.8,
+      duration: 1.5,
+      repeat: -1,
+      yoyo: true,
+      ease: "sine.inOut",
     });
 
-    tl.fromTo(
-      logoRef.current,
-      { opacity: 0, y: 20 },
-      { opacity: 1, y: 0, duration: 1, ease: "power3.out" },
-    )
-      .fromTo(
-        lineRef.current,
-        { scaleX: 0 },
-        { scaleX: 1, duration: 1.5, ease: "power2.inOut" },
-        "-=0.5",
-      )
-      .to(loaderRef.current, {
-        yPercent: -100,
-        duration: 1,
-        delay: 0.5,
-        ease: "expo.inOut",
+    if (isReady) {
+      // Stop pulse and exit
+      pulse.kill();
+      gsap.to(loaderRef.current, {
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.inOut",
+        onComplete: () => {
+          if (onTransitionEnd) onTransitionEnd();
+        },
       });
-  }, [onComplete]);
+    }
+
+    return () => pulse.kill();
+  }, [isReady, onTransitionEnd]);
 
   return (
     <div
       ref={loaderRef}
-      className="fixed inset-0 z-[100] bg-brand-charcoal flex flex-col items-center justify-center pointer-events-none"
+      className={`fixed inset-0 z-[100] bg-brand-charcoal flex items-center justify-center ${isReady ? "pointer-events-none" : "pointer-events-auto"}`}
     >
-      <div className="relative flex flex-col items-center">
+      <div className="relative">
         <img
           ref={logoRef}
           src="/assets/logo.png"
           alt="Storia Logo"
-          className="h-20 mb-8 brightness-0 invert"
+          className="h-20 brightness-0 invert"
         />
-        <div className="w-48 h-[1px] bg-brand-gold/30">
-          <div
-            ref={lineRef}
-            className="w-full h-full bg-brand-gold origin-left"
-          ></div>
-        </div>
       </div>
     </div>
   );

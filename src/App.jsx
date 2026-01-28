@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ProductListing from "./components/ProductListing";
@@ -80,13 +80,31 @@ const Footer = () => (
 );
 
 function App() {
-  const [loading, setLoading] = useState(true);
+  const [isReady, setIsReady] = useState(false);
+  const [showContent, setShowContent] = useState(false);
+
+  useEffect(() => {
+    const handleLoad = () => {
+      setIsReady(true);
+    };
+
+    if (document.readyState === "complete") {
+      handleLoad();
+    } else {
+      window.addEventListener("load", handleLoad);
+    }
+
+    return () => window.removeEventListener("load", handleLoad);
+  }, []);
 
   return (
     <div className="bg-brand-offwhite text-brand-charcoal min-h-screen">
-      <Preloader onComplete={() => setLoading(false)} />
-      {!loading && (
-        <>
+      <Preloader
+        isReady={isReady}
+        onTransitionEnd={() => setShowContent(true)}
+      />
+      {showContent && (
+        <div className="animate-in fade-in duration-1000">
           <Navbar />
           <main>
             <Hero />
@@ -94,7 +112,7 @@ function App() {
             <ProductDetail />
           </main>
           <Footer />
-        </>
+        </div>
       )}
     </div>
   );
