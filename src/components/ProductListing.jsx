@@ -42,9 +42,45 @@ const products = [
     price: "290 ر.س",
     image: "/assets/product3.png",
   },
+  {
+    id: 7,
+    name: "عباية حرير طبيعي - فاخرة",
+    price: "550 ر.س",
+    image: "/assets/product1.png",
+  },
+  {
+    id: 8,
+    name: "عباية بتطريز ذهبي - ملكية",
+    price: "500 ر.س",
+    image: "/assets/product2.png",
+  },
+  {
+    id: 9,
+    name: "عباية كلوش فضية - أنيقة",
+    price: "380 ر.س",
+    image: "/assets/product3.png",
+  },
+  {
+    id: 10,
+    name: "عباية بشت بتطريز ناعم",
+    price: "450 ر.س",
+    image: "/assets/product1.png",
+  },
+  {
+    id: 11,
+    name: "عباية سوداء بتفاصيل مزدوجة",
+    price: "400 ر.س",
+    image: "/assets/product2.png",
+  },
+  {
+    id: 12,
+    name: "عباية فاخرة بتصميم عصري",
+    price: "520 ر.س",
+    image: "/assets/product3.png",
+  },
 ];
 
-const ProductListing = ({ theme }) => {
+const ProductListing = ({ theme, goToStore }) => {
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -120,11 +156,11 @@ const ProductListing = ({ theme }) => {
 
   useEffect(() => {
     gsap.to(trackRef.current, {
-      xPercent: -currentIndex * (100 / products.length),
+      xPercent: -currentIndex * (100 / itemsToShow),
       duration: 1,
       ease: "power3.inOut",
     });
-  }, [currentIndex]);
+  }, [currentIndex, itemsToShow]);
 
   const nextSlide = () => {
     if (currentIndex < products.length - itemsToShow) {
@@ -157,7 +193,8 @@ const ProductListing = ({ theme }) => {
           </h3>
         </div>
         <button
-          className={`uppercase tracking-widest text-sm pb-1 border-b-2 font-semibold hover:scale-105 transition-all duration-300 hidden md:block ${
+          onClick={goToStore}
+          className={`uppercase tracking-widest text-sm pb-1 border-b-2 font-semibold hover:scale-105 transition-all duration-300 hidden md:block cursor-pointer ${
             theme === "green"
               ? "border-brand-charcoal text-brand-charcoal hover:text-brand-gold hover:border-brand-gold"
               : "border-brand-light text-brand-light hover:text-brand-gold hover:border-brand-gold"
@@ -169,16 +206,12 @@ const ProductListing = ({ theme }) => {
 
       <div className="relative group/listing">
         <div className="overflow-hidden">
-          <div
-            ref={trackRef}
-            className="flex"
-            style={{ width: `${(products.length / itemsToShow) * 100}%` }}
-          >
+          <div ref={trackRef} className="flex" style={{ width: `100%` }}>
             {products.map((product) => (
               <div
                 key={product.id}
-                className="px-4 product-card-reveal"
-                style={{ width: `${100 / products.length}%` }}
+                className="px-4 product-card-reveal flex-shrink-0"
+                style={{ width: `${100 / itemsToShow}%` }}
               >
                 <div className="group cursor-pointer text-right">
                   <div className="aspect-[3/4] overflow-hidden bg-brand-beige mb-6 relative">

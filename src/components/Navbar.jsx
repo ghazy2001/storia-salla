@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ShoppingBag, Search, Menu, X, Sun, Moon } from "lucide-react";
+import { ShoppingBag, Menu, X, Sun, Moon } from "lucide-react";
 import gsap from "gsap";
+import { useCart } from "../context/useCart";
 
 const Navbar = ({ theme, toggleTheme }) => {
   const navRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { getCartCount, setCurrentPage } = useCart();
 
   useEffect(() => {
     // Initial entry animation - more graceful
@@ -68,10 +70,20 @@ const Navbar = ({ theme, toggleTheme }) => {
                 <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
               </span>
             ))}
+            <button
+              onClick={() => setCurrentPage("store")}
+              className={`uppercase tracking-[0.1em] text-[13px] font-bold hover:text-brand-gold transition-all duration-300 relative group ${colorClass}`}
+            >
+              المتجر
+              <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
+            </button>
           </div>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out">
+        <div
+          className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out cursor-pointer hover:opacity-80"
+          onClick={() => setCurrentPage("home")}
+        >
           <img
             src={theme === "green" ? "/assets/logo2.png" : "/assets/logo.png"}
             alt="Storia Logo"
@@ -93,13 +105,10 @@ const Navbar = ({ theme, toggleTheme }) => {
           >
             {theme === "green" ? <Moon size={20} /> : <Sun size={20} />}
           </button>
-          <div className="hidden md:flex items-center gap-8">
-            <Search
-              size={22}
-              className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 ${colorClass}`}
-            />
-          </div>
-          <div className="relative group cursor-pointer flex items-center justify-center">
+          <div
+            className="relative group cursor-pointer flex items-center justify-center"
+            onClick={() => setCurrentPage("cart")}
+          >
             <ShoppingBag
               size={22}
               className={`group-hover:text-brand-gold transition-colors duration-300 ${colorClass}`}
@@ -107,7 +116,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             <span
               className={`absolute -top-1 -right-1 bg-brand-gold text-white text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-bold ring-2 ring-transparent transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"}`}
             >
-              0
+              {getCartCount()}
             </span>
           </div>
         </div>
@@ -142,6 +151,15 @@ const Navbar = ({ theme, toggleTheme }) => {
                 {cat}
               </span>
             ))}
+            <button
+              onClick={() => {
+                setCurrentPage("store");
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer text-left"
+            >
+              المتجر
+            </button>
           </div>
           <div className="mt-auto flex flex-col gap-4 text-sm font-light tracking-widest opacity-60">
             <span>اتصل بنا</span>

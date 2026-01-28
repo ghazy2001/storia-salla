@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 
-const Hero = () => {
+const Hero = ({ goToStore }) => {
   const containerRef = useRef(null);
   const textRef = useRef(null);
   const imageRef = useRef(null);
@@ -62,7 +62,10 @@ const Hero = () => {
           مستوحاة من الأناقة والذوق السعودي الأصيل. أنثوية راقية وقيم موضة
           سعودية حديثة.
         </p>
-        <button className="group relative px-12 py-5 overflow-hidden border border-brand-gold/50 bg-brand-charcoal/40 backdrop-blur-md">
+        <button
+          className="group relative px-12 py-5 overflow-hidden border border-brand-gold/50 bg-brand-charcoal/40 backdrop-blur-md cursor-pointer hover:shadow-lg transition-shadow duration-300"
+          onClick={goToStore}
+        >
           <span className="relative z-10 uppercase tracking-widest text-sm font-semibold transition-colors duration-300">
             تسوقي الآن
           </span>

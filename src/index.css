@@ -36,6 +36,15 @@ body {
     color 0.5s ease;
 }
 
+a,
+button,
+input,
+textarea,
+select,
+.cursor-pointer {
+  cursor: pointer;
+}
+
 h1,
 h2,
 h3,
@@ -49,11 +58,17 @@ h4,
   overflow: hidden;
 }
 
-.custom-cursor {
-  mix-blend-mode: difference;
-}
-
 ::selection {
   background-color: #4d1330;
   color: white;
+}
+
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

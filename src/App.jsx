@@ -4,6 +4,11 @@ import Hero from "./components/Hero";
 import ProductListing from "./components/ProductListing";
 import ProductDetail from "./components/ProductDetail";
 import Preloader from "./components/Preloader";
+import CustomCursor from "./components/CustomCursor";
+import Store from "./components/Store";
+import ShoppingCart from "./components/ShoppingCart";
+import { CartProvider } from "./context/CartContext";
+import { useCart } from "./context/useCart";
 
 const Footer = ({ theme }) => (
   <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500">
@@ -87,9 +92,10 @@ const Footer = ({ theme }) => (
   </footer>
 );
 
-function App() {
+function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [theme, setTheme] = useState("green");
+  const { currentPage, setCurrentPage } = useCart();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -113,8 +119,34 @@ function App() {
     return () => window.removeEventListener("load", handleLoad);
   }, []);
 
+  const renderPage = () => {
+    switch (currentPage) {
+      case "store":
+        return <Store theme={theme} />;
+      case "cart":
+        return (
+          <ShoppingCart
+            theme={theme}
+            onContinueShopping={() => setCurrentPage("store")}
+          />
+        );
+      default:
+        return (
+          <>
+            <Hero goToStore={() => setCurrentPage("store")} />
+            <ProductListing
+              theme={theme}
+              goToStore={() => setCurrentPage("store")}
+            />
+            <ProductDetail theme={theme} />
+          </>
+        );
+    }
+  };
+
   return (
     <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal">
+      <CustomCursor />
       <Preloader isReady={isReady} />
 
       <div
@@ -122,14 +154,18 @@ function App() {
         aria-hidden={!isReady}
       >
         <Navbar theme={theme} toggleTheme={toggleTheme} />
-        <main>
-          <Hero />
-          <ProductListing theme={theme} />
-          <ProductDetail theme={theme} />
-        </main>
+        <main>{renderPage()}</main>
         <Footer theme={theme} />
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <CartProvider>
+      <AppContent />
+    </CartProvider>
   );
 }
 
