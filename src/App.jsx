@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ProductListing from "./components/ProductListing";
 import ProductDetail from "./components/ProductDetail";
+import Preloader from "./components/Preloader";
 
 const Footer = () => (
   <footer className="bg-brand-charcoal text-brand-offwhite py-20 px-12 text-right">
@@ -79,15 +80,22 @@ const Footer = () => (
 );
 
 function App() {
+  const [loading, setLoading] = useState(true);
+
   return (
     <div className="bg-brand-offwhite text-brand-charcoal min-h-screen">
-      <Navbar />
-      <main>
-        <Hero />
-        <ProductListing />
-        <ProductDetail />
-      </main>
-      <Footer />
+      <Preloader onComplete={() => setLoading(false)} />
+      {!loading && (
+        <>
+          <Navbar />
+          <main>
+            <Hero />
+            <ProductListing />
+            <ProductDetail />
+          </main>
+          <Footer />
+        </>
+      )}
     </div>
   );
 }
