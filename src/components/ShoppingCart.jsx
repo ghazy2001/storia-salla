@@ -4,8 +4,15 @@ import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 
 const ShoppingCart = ({ theme, onContinueShopping }) => {
-  const { cartItems, removeFromCart, updateQuantity, getCartTotal, clearCart } =
-    useCart();
+  const {
+    cartItems,
+    removeFromCart,
+    updateQuantity,
+    getCartTotal,
+    clearCart,
+    addToCart,
+    setCurrentPage,
+  } = useCart();
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -30,7 +37,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
       <section
         ref={containerRef}
         className={`min-h-screen py-24 px-6 md:px-12 transition-colors duration-500 ${
-          theme === "green" ? "bg-brand-offwhite" : "bg-brand-charcoal"
+          theme === "green" ? "bg-brand-offwhite" : "bg-brand-burgundy"
         }`}
       >
         <div className="max-w-6xl mx-auto">
@@ -80,7 +87,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
     <section
       ref={containerRef}
       className={`min-h-screen py-24 px-6 md:px-12 transition-colors duration-500 ${
-        theme === "green" ? "bg-brand-offwhite" : "bg-brand-charcoal"
+        theme === "green" ? "bg-brand-offwhite" : "bg-brand-burgundy"
       }`}
     >
       <div className="max-w-6xl mx-auto">
@@ -123,16 +130,40 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
                     {item.name}
                   </h3>
 
-                  {item.size && (
-                    <p
-                      className={`text-sm mb-4 ${
-                        theme === "green"
-                          ? "text-brand-charcoal/60"
-                          : "text-white/60"
-                      }`}
-                    >
-                      المقاس: <span className="font-semibold">{item.size}</span>
-                    </p>
+                  {item.selectedSize && (
+                    <div className="mb-4">
+                      <p
+                        className={`text-sm mb-2 ${
+                          theme === "green"
+                            ? "text-brand-charcoal/60"
+                            : "text-white/60"
+                        }`}
+                      >
+                        المقاس:
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        {item.sizes &&
+                          item.sizes.map((size) => (
+                            <button
+                              key={size}
+                              onClick={() => {
+                                const newItem = { ...item, selectedSize: size };
+                                removeFromCart(item.id, item.selectedSize);
+                                setTimeout(() => addToCart(newItem), 100);
+                              }}
+                              className={`px-3 py-1 border-2 rounded text-sm font-medium transition-all ${
+                                item.selectedSize === size
+                                  ? "border-brand-gold bg-brand-gold text-white"
+                                  : theme === "green"
+                                    ? "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
+                                    : "border-white/20 text-white hover:border-brand-gold"
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
                   )}
 
                   <p className="text-brand-gold font-bold text-lg mb-4">
@@ -271,7 +302,10 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
               </div>
             </div>
 
-            <button className="w-full bg-brand-gold text-brand-charcoal py-4 uppercase tracking-widest font-bold hover:shadow-lg transition-all duration-300 active:scale-95 mb-4">
+            <button
+              onClick={() => setCurrentPage("checkout")}
+              className="w-full bg-brand-gold text-brand-charcoal py-4 uppercase tracking-widest font-bold hover:shadow-lg transition-all duration-300 active:scale-95 mb-4"
+            >
               متابعة الشراء
             </button>
 

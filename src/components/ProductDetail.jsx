@@ -1,269 +1,148 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
-import { Play, Minus, Plus, ChevronLeft, ChevronRight } from "lucide-react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { Heart } from "lucide-react";
+import { products } from "../data/products";
 
-const ProductDetail = ({ theme }) => {
-  const contentRef = useRef(null);
-  const [selectedSize, setSelectedSize] = useState("54");
-  const [quantity, setQuantity] = useState(1);
-  const [alterationChecked, setAlterationChecked] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+gsap.registerPlugin(ScrollTrigger);
 
-  const images = [
-    { src: "/assets/product1.png", alt: "عباءة ستوريا" },
-    { src: "/assets/detail.png", alt: "تفاصيل العباءة" },
-    { src: "/assets/product1.png", alt: "إطلالة جانبية", mirrored: true },
+const ProductDetail = ({ theme, goToProduct }) => {
+  const containerRef = useRef(null);
+  const [filter, setFilter] = useState("all");
+  const [visibleProducts, setVisibleProducts] = useState(products);
+
+  const categories = [
+    { id: "all", label: "جميع العبايات" },
+    { id: "official", label: "رسمية" },
+    { id: "practical", label: "عملية" },
+    { id: "luxury", label: "فاخرة" },
+    { id: "cloche", label: "كلوش" },
+    { id: "classic", label: "نواعم" },
   ];
 
+  // Helper to translate category id to label for display on card
+  const getCategoryLabel = (catId) => {
+    return categories.find((c) => c.id === catId)?.label || "";
+  };
+
   useEffect(() => {
-    gsap.fromTo(
-      contentRef.current.children,
-      { opacity: 0, x: 30 },
-      {
-        opacity: 1,
-        x: 0,
-        duration: 1.2,
-        stagger: 0.15,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: contentRef.current,
-          start: "top 70%",
-        },
+    // Filter products with animation
+    const filtered =
+      filter === "all"
+        ? products
+        : products.filter((p) => p.category === filter);
+
+    // Animate out
+    gsap.to(containerRef.current.children, {
+      opacity: 0,
+      y: 20,
+      duration: 0.3,
+      stagger: 0.05,
+      onComplete: () => {
+        setVisibleProducts(filtered);
+        // Animate in
+        gsap.fromTo(
+          containerRef.current.children,
+          { opacity: 0, y: 20 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 0.5,
+            stagger: 0.1,
+            delay: 0.1,
+            clearProps: "all",
+          },
+        );
       },
-    );
-  }, []);
-
-  const handleQuantityChange = (delta) => {
-    setQuantity((prev) => Math.max(1, prev + delta));
-  };
-
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
+    });
+  }, [filter]);
 
   return (
-    <section className="bg-brand-offwhite min-h-screen py-24 px-12 lg:flex gap-16 overflow-hidden text-right transition-colors duration-500">
-      <div className="flex-1 h-fit">
-        {/* Main Carousel */}
-        <div className="relative aspect-[4/5] bg-brand-offwhite border border-brand-charcoal/5 overflow-hidden group mb-4">
-          <img
-            src={images[currentImageIndex].src}
-            alt={images[currentImageIndex].alt}
-            className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-105 ${
-              images[currentImageIndex].mirrored
-                ? "scale-x-[-1] group-hover:scale-x-[-1.05]"
-                : ""
-            }`}
-          />
-          {currentImageIndex === 0 && (
-            <button className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center group/btn hover:scale-110 hover:bg-white/40 transition-all duration-300 shadow-lg">
-              <Play fill="white" className="text-white transform rotate-180" />
-            </button>
-          )}
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={prevImage}
-            className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-all duration-300 opacity-0 group-hover:opacity-100"
-          >
-            <ChevronRight className="text-white" size={24} />
-          </button>
-          <button
-            onClick={nextImage}
-            className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/40 transition-all duration-300 opacity-0 group-hover:opacity-100"
-          >
-            <ChevronLeft className="text-white" size={24} />
-          </button>
-        </div>
-
-        {/* Thumbnail Navigation */}
-        <div className="grid grid-cols-3 gap-4">
-          {images.map((image, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentImageIndex(index)}
-              className={`aspect-[4/5] bg-brand-offwhite border-2 overflow-hidden transition-all duration-300 ${
-                currentImageIndex === index
-                  ? "border-brand-gold scale-105 shadow-lg"
-                  : "border-brand-charcoal/5 hover:border-brand-gold/50"
-              }`}
-            >
-              <img
-                src={image.src}
-                alt={image.alt}
-                className={`w-full h-full object-cover ${
-                  image.mirrored ? "scale-x-[-1]" : ""
-                }`}
-              />
-            </button>
-          ))}
-        </div>
+    // bg-brand-offwhite handled by CSS var(--bg-site) in body?
+    // No, we should use explicit bg to ensure it covers.
+    // But index.css sets body bg. So generic bg-transparent or bg-brand-offwhite is ok.
+    // User requested "background use the light and dark mode".
+    // In index.css, --bg-site changes.
+    // So using `bg-brand-offwhite` (which is var(--bg-site)) is correct.
+    <section className="bg-brand-offwhite min-h-screen pt-32 pb-20 px-6 md:px-12 transition-colors duration-500">
+      {/* Header */}
+      <div className="flex flex-col items-end mb-16 text-right">
+        <h1 className="text-5xl md:text-7xl font-serif text-brand-charcoal mb-4">
+          مجموعة ستوريا
+        </h1>
+        <p className="text-brand-charcoal/70 font-light text-lg md:text-xl max-w-2xl leading-relaxed">
+          اختاري من مجموعتنا الفاخرة من العبايات المصممة بعناية لتناسب أناقتك في
+          كل المناسبات
+        </p>
       </div>
 
-      <div ref={contentRef} className="flex-1 mt-12 lg:mt-0 flex flex-col">
-        <div className="mb-16">
-          <span className="uppercase tracking-[0.3em] text-sm text-brand-gold mb-4 block font-medium">
-            الأحدث إطلالة
-          </span>
-          <h2 className="text-5xl font-serif mb-6 italic leading-tight">
-            عباءة سوداء بشت بتطريز ملكي
-          </h2>
-          <p className="text-3xl font-light text-brand-charcoal">480.00 ر.س</p>
-        </div>
-
-        <div className="mb-16 border-t border-brand-charcoal/10 pt-10">
-          <h3 className="uppercase tracking-widest text-base mb-6 font-semibold">
-            تفاصيل التصميم
-          </h3>
-          <p className="font-serif italic text-xl leading-relaxed text-brand-charcoal/80 mb-8 font-light">
-            عباءة بشت فاخرة من ستوريا، صممت خصيصاً للمرأة التي تبحث عن الفخامة
-            والراحة معاً. استخدمنا أفضل أنواع الكريب الكوري "صالونا" مع تطريز
-            يدوي دقيق على الأكمام يمنحكِ حضوراً ملكياً في جميع مناسباتك. تتميز
-            بقصة واسعة ومريحة تضمن لكِ حرية الحركة بأناقة لا تضاهى.
-          </p>
+      {/* Filters */}
+      <div className="flex flex-wrap flex-row-reverse gap-4 mb-12 justify-start">
+        {categories.map((cat) => (
           <button
-            className={`text-sm uppercase tracking-widest border-b-2 pb-2 font-semibold hover:scale-105 transition-all duration-300 inline-block ${
-              theme === "green"
-                ? "border-brand-gold text-brand-gold hover:text-brand-charcoal hover:border-brand-charcoal"
-                : "border-brand-gold text-brand-gold hover:text-brand-light hover:border-brand-light"
+            key={cat.id}
+            onClick={() => setFilter(cat.id)}
+            className={`px-6 py-2 border transition-all duration-300 text-sm md:text-base font-medium ${
+              filter === cat.id
+                ? "bg-brand-gold text-white border-brand-gold shadow-md" // Active
+                : theme === "green"
+                  ? "bg-transparent text-brand-charcoal border-brand-charcoal/20 hover:border-brand-gold hover:text-brand-gold" // Green Theme Inactive
+                  : "bg-transparent text-brand-charcoal border-brand-charcoal/20 hover:border-brand-gold hover:text-brand-gold" // Burgundy Theme (handled via CSS vars usually, but hardcoded here for now. brand-charcoal changes with theme!)
             }`}
           >
-            اقرئي المزيد عن جودة الأقمشة
+            {cat.label}
           </button>
-        </div>
+        ))}
+      </div>
 
-        <div className="mb-16">
-          <div className="flex justify-between items-center mb-8">
-            <h3 className="uppercase tracking-widest text-base font-semibold">
-              اختاري المقاس
-            </h3>
-            <button className="text-xs uppercase tracking-widest underline decoration-brand-gold/50 font-medium hover:decoration-brand-gold transition-colors">
-              دليل المقاسات
-            </button>
-          </div>
-          <div className="flex gap-4">
-            {["50", "52", "54", "56", "58", "60"].map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`w-14 h-14 border-2 flex items-center justify-center text-sm font-medium transition-all duration-300 hover:scale-105 active:scale-95 ${
-                  selectedSize === size
-                    ? "border-brand-gold bg-brand-gold text-white shadow-lg scale-105"
-                    : "border-brand-charcoal/20 hover:border-brand-gold hover:shadow-md"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-16">
-          <h3 className="uppercase tracking-widest text-base font-semibold mb-8">
-            خدمات التعديل
-          </h3>
-          <label className="flex items-start gap-4 cursor-pointer group">
-            <div
-              onClick={() => setAlterationChecked(!alterationChecked)}
-              className={`w-6 h-6 border-2 mt-1 flex-shrink-0 flex items-center justify-center transition-all duration-300 ${
-                alterationChecked
-                  ? "border-brand-gold bg-brand-gold"
-                  : "border-brand-charcoal/30 group-hover:border-brand-gold"
-              }`}
-            >
-              {alterationChecked && (
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="3"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M5 13l4 4L19 7"></path>
-                </svg>
-              )}
-            </div>
-            <span className="text-sm font-light leading-snug">
-              تقصير الطول (مجاني)
-            </span>
-          </label>
-        </div>
-
-        <div className="mt-auto pt-10 flex gap-6">
+      {/* Grid */}
+      <div
+        ref={containerRef}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 rtl"
+        dir="rtl"
+      >
+        {visibleProducts.map((product) => (
           <div
-            className={`flex border-2 items-center h-16 shadow-sm transition-colors duration-300 ${
-              theme === "green"
-                ? "border-brand-charcoal/20 hover:border-brand-gold/50"
-                : "border-brand-light/30 hover:border-brand-gold"
-            }`}
+            key={product.id}
+            onClick={() => goToProduct(product)}
+            className="group cursor-pointer flex flex-col gap-4"
           >
-            <button
-              onClick={() => handleQuantityChange(-1)}
-              className={`p-5 transition-all duration-300 active:scale-95 ${
-                theme === "green"
-                  ? "hover:bg-brand-charcoal hover:text-white"
-                  : "hover:bg-brand-light hover:text-brand-charcoal"
-              }`}
-              disabled={quantity <= 1}
-            >
-              <Minus size={16} />
-            </button>
-            <span className="w-12 text-center text-base font-medium font-sans">
-              {quantity}
-            </span>
-            <button
-              onClick={() => handleQuantityChange(1)}
-              className={`p-5 transition-all duration-300 active:scale-95 ${
-                theme === "green"
-                  ? "hover:bg-brand-charcoal hover:text-white"
-                  : "hover:bg-brand-light hover:text-brand-charcoal"
-              }`}
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-          <button
-            className={`flex-1 border-2 uppercase tracking-[0.3em] text-sm py-5 hover:scale-[1.02] hover:shadow-xl transition-all duration-500 font-bold active:scale-100 ${
-              theme === "green"
-                ? "bg-brand-charcoal text-brand-light border-brand-gold/30 hover:bg-brand-gold hover:border-brand-gold hover:text-brand-charcoal"
-                : "bg-brand-gold text-brand-charcoal border-brand-gold hover:bg-brand-charcoal hover:border-brand-charcoal hover:text-brand-gold"
-            }`}
-          >
-            أضيفي للحقيبة
-          </button>
-        </div>
-
-        <div className="mt-20 bg-brand-charcoal/[0.02] backdrop-blur-sm p-10 border border-brand-charcoal/10 hover:border-brand-gold/30 transition-all duration-500">
-          <h3 className="uppercase tracking-widest text-[10px] font-semibold mb-8 text-center text-brand-charcoal/60">
-            تنسيقات ستوريا
-          </h3>
-          <div className="flex gap-6 items-center">
-            <div className="w-24 aspect-square bg-brand-beige p-2 border border-brand-charcoal/5 overflow-hidden group">
+            {/* Image Container */}
+            <div className="relative aspect-[3/4] overflow-hidden bg-white/5 shadow-sm border border-brand-charcoal/5">
               <img
-                src="/assets/detail.png"
-                alt="طرحة"
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
               />
+
+              {/* Overlay Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-black/0 group-hover:from-black/10 transition-all duration-300" />
+
+              {/* Top Icons/Tags */}
+              <button className="absolute top-4 left-4 w-10 h-10 rounded-full bg-white/30 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">
+                <Heart size={20} />
+              </button>
+
+              <div className="absolute top-4 right-4">
+                <span className="px-3 py-1 bg-brand-charcoal/10 backdrop-blur-md text-brand-charcoal text-xs font-bold uppercase tracking-wider border border-brand-charcoal/20">
+                  {getCategoryLabel(product.category)}
+                </span>
+              </div>
             </div>
-            <div className="flex-1">
-              <h4 className="font-serif text-base mb-2">
-                طرحة ليزر سوداء بتطريز ناعم
-              </h4>
-              <p className="text-sm font-light text-brand-charcoal/60">
-                45.00 ر.س
+
+            {/* Info */}
+            <div className="text-right">
+              <div className="flex justify-between items-start mb-1">
+                <h3 className="font-serif text-lg text-brand-charcoal group-hover:text-brand-gold transition-colors duration-300 line-clamp-1">
+                  {product.name}
+                </h3>
+              </div>
+              <p className="text-brand-gold font-medium font-sans">
+                {product.price}
               </p>
             </div>
-            <button className="text-xs uppercase tracking-widest border-b-2 border-brand-gold text-brand-gold pb-1 hover:border-brand-charcoal hover:text-brand-charcoal transition-all duration-300 font-semibold">
-              أضف
-            </button>
           </div>
-        </div>
+        ))}
       </div>
     </section>
   );

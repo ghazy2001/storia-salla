@@ -16,12 +16,20 @@ export default {
         },
       },
       fontFamily: {
-        alexandria: ["Alexandria", "sans-serif"],
-        serif: ["Alexandria", "sans-serif"], // Aligning with design
-        sans: ["Alexandria", "sans-serif"],
+        sans: ["Almarai", "sans-serif"],
+        serif: ["Amiri", "serif"],
       },
       letterSpacing: {
         widest: ".2em",
+      },
+      animation: {
+        breathe: "breathe 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      },
+      keyframes: {
+        breathe: {
+          "0%, 100%": { opacity: "0.2", transform: "scale(1)" },
+          "50%": { opacity: "0.1", transform: "scale(1.4)" },
+        },
       },
     },
   },

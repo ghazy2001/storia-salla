@@ -1,13 +1,18 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ShoppingBag, Menu, X, Sun, Moon } from "lucide-react";
+import { ShoppingBag, Menu, X, Sun, Moon, User } from "lucide-react";
 import gsap from "gsap";
 import { useCart } from "../context/useCart";
+import { useAdmin } from "../context/AdminContext";
 
-const Navbar = ({ theme, toggleTheme }) => {
+const Navbar = ({ theme, toggleTheme, onNavigate }) => {
   const navRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { getCartCount, setCurrentPage } = useCart();
+  const { getCartCount, setCurrentPage, currentPage } = useCart();
+  const { toggleLoginModal, isAdmin } = useAdmin();
+  const isHomePage = currentPage === "home";
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
 
   useEffect(() => {
     // Initial entry animation - more graceful
@@ -18,24 +23,51 @@ const Navbar = ({ theme, toggleTheme }) => {
     );
 
     const handleScroll = () => {
-      if (window.scrollY > 50) {
+      const currentScrollY = window.scrollY;
+
+      if (currentScrollY > 50) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
       }
+
+      // Mobile visibility logic
+      if (window.innerWidth < 1024) {
+        if (currentScrollY > lastScrollY.current && currentScrollY > 100) {
+          setIsVisible(false); // Scrolling down
+        } else if (currentScrollY < lastScrollY.current) {
+          setIsVisible(true); // Scrolling up
+        }
+      } else {
+        setIsVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = ["عبايات سوداء", "رسمية", "عملية", "كلوش", "بشت"];
+  // Updated navLinks with IDs for store filtering
+  const navLinks = [
+    { label: "عبايات سوداء", id: "all" }, // Assuming 'all' or specific category
+    { label: "رسمية", id: "official" },
+    { label: "عملية", id: "practical" },
+    { label: "كلوش", id: "cloche" },
+    { label: "بشت", id: "bisht" },
+  ];
 
-  // Dynamic class for text and icons based on scroll state and theme
-  const colorClass = isScrolled ? "text-brand-charcoal" : "text-white";
-  // When not scrolled (transparent navbar): always show white logo (logo2 inverted)
-  // When scrolled: light mode = dark logo2, dark mode = inverted white logo
-  const logoFilter = !isScrolled
+  // Dynamic appearance logic
+  const isTransparent = isHomePage && !isScrolled;
+
+  const effectiveTextColor = isTransparent
+    ? "text-white"
+    : theme === "green"
+      ? "text-brand-charcoal"
+      : "text-brand-light";
+
+  const logoFilter = isTransparent
     ? "brightness-0 invert"
     : theme === "green"
       ? ""
@@ -45,34 +77,44 @@ const Navbar = ({ theme, toggleTheme }) => {
     <>
       <nav
         ref={navRef}
-        className={`fixed top-0 left-0 w-full z-50 flex justify-between items-center transition-all duration-700 ease-in-out px-12 ${
-          isScrolled
-            ? "py-3 bg-white/80 backdrop-blur-md shadow-sm border-b border-brand-charcoal/5"
-            : "py-8 bg-transparent"
-        } ${colorClass}`}
+        className={`fixed top-0 left-0 w-full z-50 flex justify-between items-center transition-all duration-500 ease-in-out px-6 md:px-12 ${
+          !isVisible
+            ? "-translate-y-full opacity-0"
+            : "translate-y-0 opacity-100"
+        } ${
+          !isTransparent
+            ? "py-4 bg-white/80 backdrop-blur-md shadow-sm border-b border-brand-charcoal/5"
+            : "py-4 md:py-8 bg-transparent"
+        } ${effectiveTextColor}`}
         style={{
-          backgroundColor: isScrolled ? "var(--nav-bg)" : "transparent",
+          backgroundColor: !isTransparent ? "var(--nav-bg)" : "transparent",
         }}
       >
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-4 md:gap-10">
           <Menu
             size={24}
-            className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${colorClass}`}
+            className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
             onClick={() => setIsMobileMenuOpen(true)}
+          />
+          <User
+            size={20}
+            className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
+            onClick={toggleLoginModal}
           />
           <div className="hidden lg:flex items-center gap-10 overflow-hidden">
             {navLinks.map((cat) => (
               <span
-                key={cat}
-                className={`uppercase tracking-[0.1em] text-[13px] font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 relative group ${colorClass}`}
+                key={cat.id}
+                onClick={() => onNavigate && onNavigate(cat.id)}
+                className={`uppercase tracking-[0.1em] text-[13px] font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
               >
-                {cat}
+                {cat.label}
                 <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
               </span>
             ))}
             <button
-              onClick={() => setCurrentPage("store")}
-              className={`uppercase tracking-[0.1em] text-[13px] font-bold hover:text-brand-gold transition-all duration-300 relative group ${colorClass}`}
+              onClick={() => onNavigate && onNavigate("all")}
+              className={`uppercase tracking-[0.1em] text-[13px] font-bold hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
             >
               المتجر
               <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
@@ -87,11 +129,11 @@ const Navbar = ({ theme, toggleTheme }) => {
           <img
             src={theme === "green" ? "/assets/logo2.png" : "/assets/logo.png"}
             alt="Storia Logo"
-            className={`transition-all duration-700 ease-in-out object-contain w-auto ${isScrolled ? "h-14" : "h-24"} ${logoFilter}`}
+            className={`transition-all duration-700 ease-in-out object-contain w-auto ${!isTransparent ? "h-7 md:h-14" : "h-12 md:h-24"} ${logoFilter}`}
           />
         </div>
 
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-3 md:gap-8">
           <button
             onClick={toggleTheme}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${
@@ -111,14 +153,47 @@ const Navbar = ({ theme, toggleTheme }) => {
           >
             <ShoppingBag
               size={22}
-              className={`group-hover:text-brand-gold transition-colors duration-300 ${colorClass}`}
+              className={`group-hover:text-brand-gold transition-colors duration-300 ${effectiveTextColor}`}
             />
             <span
-              className={`absolute -top-1 -right-1 bg-brand-gold text-white text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-bold ring-2 ring-transparent transition-all duration-500 ${isScrolled ? "scale-90" : "scale-100"}`}
+              className={`absolute -top-1 -right-1 bg-brand-gold text-white text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-bold ring-2 ring-transparent transition-all duration-500 ${!isTransparent ? "scale-90" : "scale-100"}`}
             >
               {getCartCount()}
             </span>
           </div>
+
+          <button
+            onClick={() => {
+              if (isAdmin) {
+                onNavigate("admin-dashboard");
+                setCurrentPage("admin-dashboard");
+              } else {
+                toggleLoginModal();
+              }
+            }}
+            className={`hidden lg:flex w-10 h-10 rounded-full items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${
+              theme === "green"
+                ? "bg-brand-charcoal/5 text-brand-charcoal"
+                : "bg-brand-gold/20 text-brand-gold"
+            }`}
+            title={isAdmin ? "لوحة التحكم" : "تسجيل دخول"}
+          >
+            {isAdmin ? (
+              <User
+                size={20}
+                className={
+                  theme === "green" ? "text-brand-burgundy" : "text-brand-gold"
+                }
+                fill="currentColor"
+              />
+            ) : (
+              <User size={20} />
+            )}
+
+            {isAdmin && (
+              <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
+            )}
+          </button>
         </div>
       </nav>
 
@@ -142,18 +217,37 @@ const Navbar = ({ theme, toggleTheme }) => {
             />
           </div>
           <div className="flex flex-col gap-8">
-            {navLinks.concat(["قصتنا"]).map((cat) => (
+            {navLinks.map((cat) => (
               <span
-                key={cat}
+                key={cat.id}
                 className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer"
-                onClick={() => setIsMobileMenuOpen(false)}
+                onClick={() => {
+                  onNavigate && onNavigate(cat.id);
+                  setIsMobileMenuOpen(false);
+                }}
               >
-                {cat}
+                {cat.label}
               </span>
             ))}
+            <span
+              className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer"
+              onClick={() => {
+                // Navigate to 'our-story' if page exists, or just close menu for now since 'our-story' wasn't in original navLinks array but was appended logic
+                // Original logic: navLinks.concat(["قصتنا"])
+                // 'قصتنا' probably not a store filter.
+                // Let's assume 'store' for now or handle separately.
+                // The user request concentrated on 'models names'.
+                // I will leave 'قصتنا' out for a second or add it as a non-filter link?
+                // I'll add it manually.
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              قصتنا
+            </span>
+
             <button
               onClick={() => {
-                setCurrentPage("store");
+                onNavigate && onNavigate("all");
                 setIsMobileMenuOpen(false);
               }}
               className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer text-left"

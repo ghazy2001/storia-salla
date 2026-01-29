@@ -2,13 +2,24 @@ import React, { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ProductListing from "./components/ProductListing";
-import ProductDetail from "./components/ProductDetail";
+import ProductDetails from "./components/ProductDetails";
 import Preloader from "./components/Preloader";
 import CustomCursor from "./components/CustomCursor";
 import Store from "./components/Store";
 import ShoppingCart from "./components/ShoppingCart";
+import Checkout from "./components/Checkout";
 import { CartProvider } from "./context/CartContext";
 import { useCart } from "./context/useCart";
+import WhatsAppButton from "./components/WhatsAppButton";
+import OurStory from "./components/OurStory";
+import BestSellers from "./components/BestSellers";
+import Reviews from "./components/Reviews";
+import FAQ from "./components/FAQ";
+import { AdminProvider } from "./context/AdminContext";
+import { ProductProvider } from "./context/ProductContext";
+import { ContentProvider } from "./context/ContentContext";
+import LoginModal from "./components/admin/LoginModal";
+import AdminDashboard from "./components/admin/AdminDashboard";
 
 const Footer = ({ theme }) => (
   <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500">
@@ -85,7 +96,6 @@ const Footer = ({ theme }) => (
     <div className="mt-12 flex flex-col md:flex-row justify-between items-center text-[10px] font-light tracking-widest text-brand-light/30 uppercase gap-4">
       <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
       <div className="flex gap-8">
-        <span>منصة سلة</span>
         <span>الرقم الضريبي</span>
       </div>
     </div>
@@ -96,7 +106,7 @@ function AppContent() {
   const [isReady, setIsReady] = useState(false);
   const [theme, setTheme] = useState("green");
   const { currentPage, setCurrentPage } = useCart();
-
+  const [selectedProductId, setSelectedProductId] = useState(null);
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
@@ -119,10 +129,23 @@ function AppContent() {
     return () => window.removeEventListener("load", handleLoad);
   }, []);
 
+  const [selectedCategory, setSelectedCategory] = useState("all");
+
   const renderPage = () => {
     switch (currentPage) {
       case "store":
-        return <Store theme={theme} />;
+        return (
+          <Store
+            theme={theme}
+            initialFilter={selectedCategory}
+            onProductSelect={(id) => {
+              setSelectedProductId(id);
+              setCurrentPage("product-details");
+            }}
+          />
+        );
+      case "admin-dashboard":
+        return <AdminDashboard theme={theme} />;
       case "cart":
         return (
           <ShoppingCart
@@ -130,15 +153,47 @@ function AppContent() {
             onContinueShopping={() => setCurrentPage("store")}
           />
         );
+      case "checkout":
+        return <Checkout theme={theme} />;
+      case "product-details":
+        return (
+          <ProductDetails
+            theme={theme}
+            productId={selectedProductId}
+            // onBack now navigates to store instead of home, which is more logical after viewing a product
+            onBack={() => setCurrentPage("store")}
+          />
+        );
       default:
         return (
           <>
-            <Hero goToStore={() => setCurrentPage("store")} />
+            <Hero
+              goToStore={() => {
+                setSelectedCategory("all");
+                setCurrentPage("store");
+              }}
+            />
             <ProductListing
               theme={theme}
-              goToStore={() => setCurrentPage("store")}
+              goToStore={() => {
+                setSelectedCategory("all");
+                setCurrentPage("store");
+              }}
+              onProductSelect={(id) => {
+                setSelectedProductId(id);
+                setCurrentPage("product-details");
+              }}
             />
-            <ProductDetail theme={theme} />
+            <OurStory theme={theme} />
+            <BestSellers
+              theme={theme}
+              onProductSelect={(id) => {
+                setSelectedProductId(id);
+                setCurrentPage("product-details");
+              }}
+            />
+            <Reviews theme={theme} />
+            <FAQ theme={theme} />
           </>
         );
     }
@@ -148,12 +203,21 @@ function AppContent() {
     <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal">
       <CustomCursor />
       <Preloader isReady={isReady} />
+      <WhatsAppButton />
+      <LoginModal theme={theme} />
 
       <div
         className={`transition-opacity duration-1000 ease-in-out ${isReady ? "opacity-100" : "opacity-0"}`}
         aria-hidden={!isReady}
       >
-        <Navbar theme={theme} toggleTheme={toggleTheme} />
+        <Navbar
+          theme={theme}
+          toggleTheme={toggleTheme}
+          onNavigate={(category) => {
+            setSelectedCategory(category);
+            setCurrentPage("store");
+          }}
+        />
         <main>{renderPage()}</main>
         <Footer theme={theme} />
       </div>
@@ -164,7 +228,13 @@ function AppContent() {
 function App() {
   return (
     <CartProvider>
-      <AppContent />
+      <AdminProvider>
+        <ProductProvider>
+          <ContentProvider>
+            <AppContent />
+          </ContentProvider>
+        </ProductProvider>
+      </AdminProvider>
     </CartProvider>
   );
 }

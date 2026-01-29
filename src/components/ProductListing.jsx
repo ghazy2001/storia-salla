@@ -5,82 +5,10 @@ import { ChevronRight, ChevronLeft } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const products = [
-  {
-    id: 1,
-    name: "عباية سوداء رسمية - كريب ملكي",
-    price: "390 ر.س",
-    image: "/assets/product1.png",
-  },
-  {
-    id: 2,
-    name: "عباية كلوش - قماش إنترنت ناعم",
-    price: "350 ر.س",
-    image: "/assets/product2.png",
-  },
-  {
-    id: 3,
-    name: "عباية بشت مطرزة - شك يدوي",
-    price: "480 ر.س",
-    image: "/assets/product3.png",
-  },
-  {
-    id: 4,
-    name: "عباية نواعم - تصميم كلاسيكي",
-    price: "320 ر.س",
-    image: "/assets/product1.png",
-  },
-  {
-    id: 5,
-    name: "عباية رسمية بتطريز هادئ",
-    price: "420 ر.س",
-    image: "/assets/product2.png",
-  },
-  {
-    id: 6,
-    name: "عباية عملية يومية بجيوب",
-    price: "290 ر.س",
-    image: "/assets/product3.png",
-  },
-  {
-    id: 7,
-    name: "عباية حرير طبيعي - فاخرة",
-    price: "550 ر.س",
-    image: "/assets/product1.png",
-  },
-  {
-    id: 8,
-    name: "عباية بتطريز ذهبي - ملكية",
-    price: "500 ر.س",
-    image: "/assets/product2.png",
-  },
-  {
-    id: 9,
-    name: "عباية كلوش فضية - أنيقة",
-    price: "380 ر.س",
-    image: "/assets/product3.png",
-  },
-  {
-    id: 10,
-    name: "عباية بشت بتطريز ناعم",
-    price: "450 ر.س",
-    image: "/assets/product1.png",
-  },
-  {
-    id: 11,
-    name: "عباية سوداء بتفاصيل مزدوجة",
-    price: "400 ر.س",
-    image: "/assets/product2.png",
-  },
-  {
-    id: 12,
-    name: "عباية فاخرة بتصميم عصري",
-    price: "520 ر.س",
-    image: "/assets/product3.png",
-  },
-];
+import { useProducts } from "../context/ProductContext";
 
-const ProductListing = ({ theme, goToStore }) => {
+const ProductListing = ({ theme, goToStore, onProductSelect }) => {
+  const { products } = useProducts();
   const sectionRef = useRef(null);
   const trackRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -156,7 +84,7 @@ const ProductListing = ({ theme, goToStore }) => {
 
   useEffect(() => {
     gsap.to(trackRef.current, {
-      xPercent: -currentIndex * (100 / itemsToShow),
+      xPercent: currentIndex * (100 / itemsToShow),
       duration: 1,
       ease: "power3.inOut",
     });
@@ -213,7 +141,10 @@ const ProductListing = ({ theme, goToStore }) => {
                 className="px-4 product-card-reveal flex-shrink-0"
                 style={{ width: `${100 / itemsToShow}%` }}
               >
-                <div className="group cursor-pointer text-right">
+                <div
+                  onClick={() => onProductSelect(product.id)}
+                  className="group cursor-pointer text-right"
+                >
                   <div className="aspect-[3/4] overflow-hidden bg-brand-beige mb-6 relative">
                     <img
                       src={product.image}
@@ -222,23 +153,27 @@ const ProductListing = ({ theme, goToStore }) => {
                     />
                     <div className="absolute inset-0 bg-brand-charcoal/0 group-hover:bg-brand-charcoal/10 transition-colors duration-700"></div>
 
-                    {/* Add to Bag Button Refined */}
+                    {/* View Details Button */}
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onProductSelect(product.id);
+                      }}
                       className={`absolute bottom-6 left-6 right-6 py-4 flex items-center justify-center gap-2 uppercase tracking-[0.2em] text-[10px] font-bold opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 backdrop-blur-md shadow-2xl ${
                         theme === "green"
                           ? "bg-brand-charcoal text-white hover:bg-brand-gold"
                           : "bg-brand-gold text-brand-charcoal hover:bg-white"
                       }`}
                     >
-                      إضافة للحقيبة
+                      عرض التفاصيل
                     </button>
                   </div>
                   <div className="px-2 transition-transform duration-500 group-hover:translate-x-[-8px]">
                     <h4 className="text-lg font-serif mb-1 group-hover:text-brand-gold transition-colors">
                       {product.name}
                     </h4>
-                    <p className="text-sm font-light text-brand-charcoal/70 uppercase tracking-widest group-hover:text-brand-gold/70 transition-colors">
-                      {product.price}
+                    <p className="text-xs font-light text-brand-charcoal/60 leading-relaxed line-clamp-2 pl-4">
+                      {product.description}
                     </p>
                   </div>
                 </div>
@@ -249,14 +184,14 @@ const ProductListing = ({ theme, goToStore }) => {
 
         {/* Navigation Buttons */}
         <button
-          onClick={prevSlide}
+          onClick={nextSlide}
           className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-brand-charcoal hover:bg-brand-gold hover:text-white transition-all duration-300 opacity-0 group-hover/listing:opacity-100 z-10"
           aria-label="Previous Slide"
         >
           <ChevronLeft size={24} />
         </button>
         <button
-          onClick={nextSlide}
+          onClick={prevSlide}
           className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-12 h-12 bg-white/80 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-brand-charcoal hover:bg-brand-gold hover:text-white transition-all duration-300 opacity-0 group-hover/listing:opacity-100 z-10"
           aria-label="Next Slide"
         >
