@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import ProductListing from "./components/ProductListing";
@@ -107,6 +107,40 @@ function AppContent() {
   const [theme, setTheme] = useState("green");
   const { currentPage, setCurrentPage } = useCart();
   const [selectedProductId, setSelectedProductId] = useState(null);
+
+  // History Management Refs
+  const isBackNav = useRef(false);
+  const isFirstLoad = useRef(true);
+
+  // Sync with Browser History
+  useEffect(() => {
+    const onPopState = (event) => {
+      if (event.state) {
+        isBackNav.current = true;
+        if (event.state.page) setCurrentPage(event.state.page);
+        if (event.state.productId) setSelectedProductId(event.state.productId);
+      }
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [setCurrentPage]);
+
+  useEffect(() => {
+    if (isBackNav.current) {
+      isBackNav.current = false;
+      return;
+    }
+
+    const state = { page: currentPage, productId: selectedProductId };
+    if (isFirstLoad.current) {
+      window.history.replaceState(state, "");
+      isFirstLoad.current = false;
+    } else {
+      window.history.pushState(state, "");
+    }
+  }, [currentPage, selectedProductId]);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
@@ -158,10 +192,9 @@ function AppContent() {
       case "product-details":
         return (
           <ProductDetails
+            key={selectedProductId}
             theme={theme}
             productId={selectedProductId}
-            // onBack now navigates to store instead of home, which is more logical after viewing a product
-            onBack={() => setCurrentPage("store")}
           />
         );
       default:
@@ -216,6 +249,16 @@ function AppContent() {
           onNavigate={(category) => {
             setSelectedCategory(category);
             setCurrentPage("store");
+          }}
+          currentPage={currentPage}
+          onBack={() => {
+            if (currentPage === "product-details") {
+              setCurrentPage("store");
+            } else if (currentPage === "store") {
+              setCurrentPage("home");
+            } else {
+              setCurrentPage("home");
+            }
           }}
         />
         <main>{renderPage()}</main>

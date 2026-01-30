@@ -95,7 +95,38 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
       </div>
 
       {/* Carousel Section - Now Second (Left in RTL) */}
-      <div className="relative w-full lg:w-1/2 aspect-[3/4] max-h-[80vh] overflow-hidden rounded-sm group">
+      <div
+        className="relative w-full lg:w-1/2 aspect-[3/4] max-h-[80vh] overflow-hidden rounded-sm group"
+        onTouchStart={(e) => {
+          const touch = e.touches[0];
+          mediaRef.current.touchStartX = touch.clientX;
+        }}
+        onTouchMove={(e) => {
+          const touch = e.touches[0];
+          mediaRef.current.touchEndX = touch.clientX;
+        }}
+        onTouchEnd={() => {
+          if (!mediaRef.current.touchStartX || !mediaRef.current.touchEndX)
+            return;
+          const distance =
+            mediaRef.current.touchStartX - mediaRef.current.touchEndX;
+          const isLeftSwipe = distance > 50;
+          const isRightSwipe = distance < -50;
+
+          if (isLeftSwipe) {
+            // Next Slide logic
+            setCurrentIndex((prev) => (prev + 1) % product.media.length);
+          } else if (isRightSwipe) {
+            // Prev Slide logic
+            setCurrentIndex((prev) =>
+              prev === 0 ? product.media.length - 1 : prev - 1,
+            );
+          }
+          // Reset
+          mediaRef.current.touchStartX = null;
+          mediaRef.current.touchEndX = null;
+        }}
+      >
         <div ref={mediaRef} className="w-full h-full bg-brand-charcoal/5">
           {currentMedia.type === "video" ? (
             <video
@@ -110,21 +141,21 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
             <img
               src={currentMedia.src}
               alt={`${product.name} view ${currentIndex + 1}`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
             />
           )}
         </div>
 
-        {/* Navigation Arrows */}
+        {/* Navigation Arrows - Always visible on mobile, hover on desktop */}
         <button
           onClick={prevSlide}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
         >
           <ChevronLeft size={24} />
         </button>
         <button
           onClick={nextSlide}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-0 group-hover:opacity-100"
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
         >
           <ChevronRight size={24} />
         </button>

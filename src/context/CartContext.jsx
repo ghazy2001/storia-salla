@@ -6,20 +6,25 @@ export const CartProvider = ({ children }) => {
   const [currentPage, setCurrentPage] = useState("home");
 
   const addToCart = (product, quantity = 1, size = null) => {
+    const finalSize = size || product.selectedSize;
+
     setCartItems((prevItems) => {
       const existingItem = prevItems.find(
-        (item) => item.id === product.id && item.size === size,
+        (item) => item.id === product.id && item.size === finalSize,
       );
 
       if (existingItem) {
         return prevItems.map((item) =>
-          item.id === product.id && item.size === size
+          item.id === product.id && item.size === finalSize
             ? { ...item, quantity: item.quantity + quantity }
             : item,
         );
       }
 
-      return [...prevItems, { ...product, quantity, size }];
+      return [
+        ...prevItems,
+        { ...product, quantity, size: finalSize, selectedSize: finalSize },
+      ];
     });
   };
 
@@ -29,6 +34,44 @@ export const CartProvider = ({ children }) => {
         (item) => !(item.id === productId && item.size === size),
       ),
     );
+  };
+
+  const updateItemSize = (productId, oldSize, newSize) => {
+    if (oldSize === newSize) return;
+
+    setCartItems((prevItems) => {
+      const itemToUpdate = prevItems.find(
+        (item) => item.id === productId && item.size === oldSize,
+      );
+
+      if (!itemToUpdate) return prevItems;
+
+      const targetItem = prevItems.find(
+        (item) => item.id === productId && item.size === newSize,
+      );
+
+      if (targetItem) {
+        // Merge: Update target quantity and remove the old item
+        return prevItems
+          .map((item) => {
+            if (item.id === productId && item.size === newSize) {
+              return {
+                ...item,
+                quantity: item.quantity + itemToUpdate.quantity,
+              };
+            }
+            return item;
+          })
+          .filter((item) => !(item.id === productId && item.size === oldSize));
+      } else {
+        // Just update size
+        return prevItems.map((item) =>
+          item.id === productId && item.size === oldSize
+            ? { ...item, size: newSize, selectedSize: newSize }
+            : item,
+        );
+      }
+    });
   };
 
   const updateQuantity = (productId, quantity, size = null) => {
@@ -68,6 +111,7 @@ export const CartProvider = ({ children }) => {
         addToCart,
         removeFromCart,
         updateQuantity,
+        updateItemSize,
         clearCart,
         getCartTotal,
         getCartCount,

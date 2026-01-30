@@ -3,7 +3,7 @@ import { X, User } from "lucide-react";
 import { useAdmin } from "../../context/AdminContext";
 import { useCart } from "../../context/useCart";
 
-const LoginModal = ({ theme }) => {
+const LoginModal = () => {
   const { showLoginModal, setShowLoginModal, login } = useAdmin();
   const { setCurrentPage } = useCart();
   const [email, setEmail] = useState("");

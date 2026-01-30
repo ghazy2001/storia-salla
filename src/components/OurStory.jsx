@@ -1,11 +1,13 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useCart } from "../context/useCart";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const OurStory = ({ theme }) => {
   const sectionRef = useRef(null);
+  const { setCurrentPage } = useCart();
 
   const isLightTheme = theme === "green";
 
@@ -102,24 +104,38 @@ const OurStory = ({ theme }) => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20 xl:gap-32 items-center">
           {/* Image Side - Order 3 (Left in RTL) */}
           <div className="lg:col-span-5 order-2 lg:order-3 relative">
-            <div
-              className={`relative aspect-[3/4] overflow-hidden rounded-sm story-image shadow-2xl border ${borderColorClass}`}
-            >
-              <img
-                src="/assets/storia_about.png"
-                alt="Storia Details"
-                className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-all duration-1000 hover:scale-105"
-              />
-              {/* Decorative Frame */}
-              <div className="absolute inset-4 border border-brand-gold/20 pointer-events-none"></div>
+            <div className="relative">
+              <div
+                className={`relative aspect-[3/4] overflow-hidden rounded-sm story-image shadow-2xl border ${borderColorClass}`}
+              >
+                <img
+                  src="/assets/storia_about.png"
+                  alt="Storia Details"
+                  className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-all duration-1000 hover:scale-105"
+                />
+                {/* Decorative Frame */}
+                <div className="absolute inset-4 border border-brand-gold/20 pointer-events-none"></div>
+              </div>
+              {/* Floating Badge - Left Side */}
+              <div className="absolute -bottom-6 -left-6 lg:-left-12 bg-brand-gold text-brand-charcoal w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full p-4 text-center font-bold text-xs md:text-sm leading-tight shadow-xl story-text origin-center animate-spin-slow">
+                هوية
+                <br />
+                عصرية
+                <br />
+                أصيلة
+              </div>
             </div>
-            {/* Floating Badge - Left Side */}
-            <div className="absolute -bottom-6 -left-6 lg:-left-12 bg-brand-gold text-brand-charcoal w-24 h-24 md:w-32 md:h-32 flex items-center justify-center rounded-full p-4 text-center font-bold text-xs md:text-sm leading-tight shadow-xl story-text origin-center animate-spin-slow">
-              هوية
-              <br />
-              عصرية
-              <br />
-              أصيلة
+            {/* Mobile Shop Button */}
+            <div className="flex lg:hidden justify-center mt-20 relative z-20">
+              <button
+                onClick={() => setCurrentPage("store")}
+                className="group relative px-10 py-4 overflow-hidden border border-brand-gold/70 bg-transparent transition-colors duration-300 hover:border-brand-gold"
+              >
+                <span className="relative z-10 text-white font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300">
+                  تسوقي الآن
+                </span>
+                <div className="absolute inset-0 bg-brand-gold translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
+              </button>
             </div>
           </div>
 
@@ -133,12 +149,13 @@ const OurStory = ({ theme }) => {
               >
                 قصة ستوريا
               </span>
-
+              <br />
+              <br />
               <h2
                 className={`text-6xl md:text-4xl lg:text-6xl font-serif mb-12 leading-[1.1] story-text text-white`}
               >
                 رؤية تُلهم.. <br />
-                <div className="mt-[20px]">
+                <div className="mt-[25px]">
                   <span className="text-brand-gold italic">
                     وشغفٌ يصنع الأناقة
                   </span>
@@ -148,7 +165,7 @@ const OurStory = ({ theme }) => {
               <div className="w-40 h-1 bg-gradient-to-l from-brand-gold via-brand-gold/60 to-transparent mb-14 story-line origin-right"></div>
 
               <div
-                className={`space-y-8 leading-[1.9] text-lg md:text-xl lg:text-2xl tracking-wide max-w-3xl story-text text-white/95`}
+                className={`space-y-8 leading-loose text-base md:text-lg tracking-wide max-w-3xl story-text text-white/95 text-justify pl-4`}
               >
                 <p className="font-light">
                   بدأت الحكاية حين التقى شغف التصميم برؤية ريادة الأعمال.
@@ -169,11 +186,23 @@ const OurStory = ({ theme }) => {
                     </span>
                   </div>
                   <p
-                    className={`font-normal text-xl md:text-2xl story-text text-white italic pr-20 leading-[1.6]`}
+                    className={`font-normal text-lg md:text-xl story-text text-white italic pr-20 leading-[1.8]`}
                   >
                     نطمح لنكون الخيار الأول لكل سيدة تبحث عن التميز، ونشارككِ
                     لحظات التألق في كل مناسبة.
                   </p>
+                </div>
+
+                <div className="pt-16 hidden lg:flex justify-start story-text">
+                  <button
+                    onClick={() => setCurrentPage("store")}
+                    className="group relative px-10 py-4 overflow-hidden border border-brand-gold/70 bg-transparent transition-colors duration-300 hover:border-brand-gold"
+                  >
+                    <span className="relative z-10 text-white font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300">
+                      تسوقي الآن
+                    </span>
+                    <div className="absolute inset-0 bg-brand-gold translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
+                  </button>
                 </div>
               </div>
             </div>

@@ -1,14 +1,22 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ShoppingBag, Menu, X, Sun, Moon, User } from "lucide-react";
+import {
+  ShoppingBag,
+  Menu,
+  X,
+  Sun,
+  Moon,
+  User,
+  ArrowRight,
+} from "lucide-react";
 import gsap from "gsap";
 import { useCart } from "../context/useCart";
 import { useAdmin } from "../context/AdminContext";
 
-const Navbar = ({ theme, toggleTheme, onNavigate }) => {
+const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
   const navRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { getCartCount, setCurrentPage, currentPage } = useCart();
+  const { getCartCount, setCurrentPage } = useCart(); // Added setCurrentPage back
   const { toggleLoginModal, isAdmin } = useAdmin();
   const isHomePage = currentPage === "home";
   const [isVisible, setIsVisible] = useState(true);
@@ -91,6 +99,15 @@ const Navbar = ({ theme, toggleTheme, onNavigate }) => {
         }}
       >
         <div className="flex items-center gap-4 md:gap-10">
+          {!isHomePage && (
+            <button
+              onClick={onBack}
+              className={`p-2 -mr-2 hover:bg-black/5 rounded-full transition-colors ${effectiveTextColor}`}
+              title="العودة"
+            >
+              <ArrowRight size={24} className="rotate-180" />
+            </button>
+          )}
           <Menu
             size={24}
             className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}

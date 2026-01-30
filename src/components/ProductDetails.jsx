@@ -4,22 +4,20 @@ import { useCart } from "../context/useCart";
 import { useProducts } from "../context/ProductContext";
 import Toast from "./Toast";
 
-const ProductDetails = ({ productId, onBack, theme }) => {
+const ProductDetails = ({ productId, theme }) => {
+  const { products } = useProducts();
+  const product = products.find((p) => p.id === productId);
+
   const [activeMedia, setActiveMedia] = useState(0);
   const [showToast, setShowToast] = useState(false);
-  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedSize, setSelectedSize] = useState(
+    product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
+  );
   const { addToCart } = useCart();
-  const { products } = useProducts();
-
-  const product = products.find((p) => p.id === productId);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Set default size when product changes
-    if (product?.sizes && product.sizes.length > 0) {
-      setSelectedSize(product.sizes[0]);
-    }
-  }, [productId, product]);
+  }, []);
 
   const handleAddToCart = () => {
     if (!selectedSize && product.sizes && product.sizes.length > 0) {
@@ -40,21 +38,40 @@ const ProductDetails = ({ productId, onBack, theme }) => {
         onClose={() => setShowToast(false)}
         theme={theme}
       />
-      {/* Back Button */}
-      <div className="px-6 md:px-12 mb-8 text-right">
-        <button
-          onClick={onBack}
-          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest hover:text-brand-rose transition-colors flex-row-reverse"
-        >
-          <ArrowRight size={16} className="rotate-180" /> <span>العودة</span>
-        </button>
-      </div>
 
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
         {/* Gallery Section */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 lg:order-2">
           {/* Main Display */}
-          <div className="relative aspect-[3/4] bg-brand-beige rounded-4xl overflow-hidden shadow-sm">
+          {/* Main Display */}
+          <div
+            className="relative aspect-[3/4] bg-brand-beige rounded-4xl overflow-hidden shadow-sm group"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              e.target.touchStartX = touch.clientX;
+            }}
+            onTouchMove={(e) => {
+              const touch = e.touches[0];
+              e.target.touchEndX = touch.clientX;
+            }}
+            onTouchEnd={(e) => {
+              if (!e.target.touchStartX || !e.target.touchEndX) return;
+              const distance = e.target.touchStartX - e.target.touchEndX;
+              const isLeftSwipe = distance > 50;
+              const isRightSwipe = distance < -50;
+
+              if (isLeftSwipe) {
+                setActiveMedia((prev) => (prev + 1) % product.media.length);
+              } else if (isRightSwipe) {
+                setActiveMedia((prev) =>
+                  prev === 0 ? product.media.length - 1 : prev - 1,
+                );
+              }
+              // Reset
+              e.target.touchStartX = null;
+              e.target.touchEndX = null;
+            }}
+          >
             {product.media[activeMedia].type === "video" ? (
               <video
                 src={product.media[activeMedia].src}
@@ -68,7 +85,7 @@ const ProductDetails = ({ productId, onBack, theme }) => {
               <img
                 src={product.media[activeMedia].src}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             )}
           </div>
@@ -100,7 +117,7 @@ const ProductDetails = ({ productId, onBack, theme }) => {
         </div>
 
         {/* Product Info */}
-        <div className="flex flex-col justify-center lg:items-start text-right">
+        <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
           <h1 className="text-4xl md:text-6xl font-serif font-black mb-4 text-brand-charcoal w-full">
             {product.name}
           </h1>

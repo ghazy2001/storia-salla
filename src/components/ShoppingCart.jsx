@@ -10,7 +10,6 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
     updateQuantity,
     getCartTotal,
     clearCart,
-    addToCart,
     setCurrentPage,
   } = useCart();
   const containerRef = useRef(null);
@@ -105,14 +104,14 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
             {cartItems.map((item) => (
               <div
                 key={`${item.id}-${item.size}`}
-                className={`flex gap-6 p-6 border-2 transition-all duration-300 hover:border-brand-gold ${
+                className={`flex gap-4 md:gap-6 p-4 md:p-6 border-2 transition-all duration-300 hover:border-brand-gold ${
                   theme === "green"
                     ? "border-brand-charcoal/10 bg-white/50"
                     : "border-white/10 bg-white/5"
                 }`}
               >
                 {/* Product Image */}
-                <div className="w-24 h-24 md:w-32 md:h-32 flex-shrink-0">
+                <div className="w-20 h-20 md:w-32 md:h-32 flex-shrink-0">
                   <img
                     src={item.image}
                     alt={item.name}
@@ -122,59 +121,18 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
 
                 {/* Product Details */}
                 <div className="flex-1 text-right">
-                  <h3
-                    className={`font-serif italic text-lg mb-2 ${
-                      theme === "green" ? "text-brand-charcoal" : "text-white"
-                    }`}
-                  >
-                    {item.name}
-                  </h3>
-
-                  {item.selectedSize && (
-                    <div className="mb-4">
-                      <p
-                        className={`text-sm mb-2 ${
-                          theme === "green"
-                            ? "text-brand-charcoal/60"
-                            : "text-white/60"
-                        }`}
-                      >
-                        المقاس:
-                      </p>
-                      <div className="flex gap-2 flex-wrap">
-                        {item.sizes &&
-                          item.sizes.map((size) => (
-                            <button
-                              key={size}
-                              onClick={() => {
-                                const newItem = { ...item, selectedSize: size };
-                                removeFromCart(item.id, item.selectedSize);
-                                setTimeout(() => addToCart(newItem), 100);
-                              }}
-                              className={`px-3 py-1 border-2 rounded text-sm font-medium transition-all ${
-                                item.selectedSize === size
-                                  ? "border-brand-gold bg-brand-gold text-white"
-                                  : theme === "green"
-                                    ? "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
-                                    : "border-white/20 text-white hover:border-brand-gold"
-                              }`}
-                            >
-                              {size}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <p className="text-brand-gold font-bold text-lg mb-4">
-                    {item.price}
-                  </p>
-
-                  {/* Quantity Control */}
-                  <div className="flex items-center gap-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3
+                      className={`font-serif italic text-base md:text-lg ${
+                        theme === "green" ? "text-brand-charcoal" : "text-white"
+                      }`}
+                    >
+                      {item.name}{" "}
+                      {item.selectedSize && `(${item.selectedSize})`}
+                    </h3>
                     <button
                       onClick={() => removeFromCart(item.id, item.size)}
-                      className={`p-2 transition-all duration-300 hover:scale-110 ${
+                      className={`p-1 transition-all duration-300 hover:scale-110 flex-shrink-0 ${
                         theme === "green"
                           ? "text-red-500 hover:bg-red-50"
                           : "text-red-400 hover:bg-red-900/20"
@@ -182,9 +140,11 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
                     >
                       <Trash2 size={18} />
                     </button>
+                  </div>
 
+                  <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-4 mt-4">
                     <div
-                      className={`flex items-center border-2 ${
+                      className={`flex items-center self-end md:self-auto border-2 ${
                         theme === "green"
                           ? "border-brand-charcoal/20"
                           : "border-white/20"
@@ -194,16 +154,16 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
                         onClick={() =>
                           updateQuantity(item.id, item.quantity - 1, item.size)
                         }
-                        className={`p-2 transition-all ${
+                        className={`p-1 md:p-2 transition-all ${
                           theme === "green"
                             ? "hover:bg-brand-charcoal/10"
                             : "hover:bg-white/10"
                         }`}
                       >
-                        <Minus size={16} />
+                        <Minus size={14} />
                       </button>
                       <span
-                        className={`w-12 text-center font-semibold ${
+                        className={`w-8 md:w-12 text-center font-semibold text-sm md:text-base ${
                           theme === "green"
                             ? "text-brand-charcoal"
                             : "text-white"
@@ -215,18 +175,18 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
                         onClick={() =>
                           updateQuantity(item.id, item.quantity + 1, item.size)
                         }
-                        className={`p-2 transition-all ${
+                        className={`p-1 md:p-2 transition-all ${
                           theme === "green"
                             ? "hover:bg-brand-charcoal/10"
                             : "hover:bg-white/10"
                         }`}
                       >
-                        <Plus size={16} />
+                        <Plus size={14} />
                       </button>
                     </div>
 
-                    <span
-                      className={`text-lg font-bold ml-auto ${
+                    <p
+                      className={`text-base md:text-lg font-bold ${
                         theme === "green" ? "text-brand-charcoal" : "text-white"
                       }`}
                     >
@@ -235,7 +195,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
                         item.quantity
                       ).toFixed(2)}{" "}
                       ر.س
-                    </span>
+                    </p>
                   </div>
                 </div>
               </div>

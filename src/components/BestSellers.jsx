@@ -11,7 +11,7 @@ const BestSellers = ({ theme, onProductSelect }) => {
   const sectionRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const { products } = useProducts();
-  const { addToCart, setCurrentPage } = useCart();
+  const { setCurrentPage } = useCart();
 
   // Featured product for the banner (using the first one as an example)
   const featuredProduct = products[0];
@@ -121,16 +121,16 @@ const BestSellers = ({ theme, onProductSelect }) => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(featuredProduct);
+                        onProductSelect(featuredProduct.id);
                       }}
                       className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden transition-all duration-300 hover:w-32 w-10 shadow-lg z-10"
-                      title="Add to Cart"
+                      title="View Details"
                     >
                       <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover/btn:text-brand-gold transition-colors">
-                        <Plus size={20} />
+                        <ArrowRight size={20} className="-rotate-45" />
                       </div>
                       <span className="whitespace-nowrap text-xs font-bold opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 pr-2">
-                        أضف للسلة
+                        التفاصيل
                       </span>
                     </button>
                   </div>
