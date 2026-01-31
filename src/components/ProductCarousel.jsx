@@ -10,6 +10,10 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
   const mediaRef = useRef(null);
   const infoRef = useRef(null);
 
+  const [selectedSize, setSelectedSize] = useState(() => {
+    return product.sizes && product.sizes.length > 0 ? product.sizes[0] : null;
+  });
+
   const nextSlide = (e) => {
     e.stopPropagation();
     setCurrentIndex((prev) => (prev + 1) % product.media.length);
@@ -53,18 +57,23 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
 
         {/* Available Sizes */}
         {product.sizes && product.sizes.length > 0 && (
-          <div className="mb-6">
-            <p className="text-sm text-brand-charcoal/60 mb-2">
+          <div className="mb-8">
+            <p className="text-sm text-brand-charcoal/60 mb-3">
               المقاسات المتاحة:
             </p>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               {product.sizes.map((size) => (
-                <span
+                <button
                   key={size}
-                  className="px-3 py-1 border border-brand-charcoal/20 text-brand-charcoal text-sm rounded"
+                  onClick={() => setSelectedSize(size)}
+                  className={`px-6 py-2 border rounded-sm transition-all duration-300 ${
+                    selectedSize === size
+                      ? "bg-brand-gold text-white border-brand-gold"
+                      : "bg-transparent text-brand-charcoal border-brand-charcoal/20 hover:border-brand-gold hover:text-brand-gold"
+                  }`}
                 >
                   {size}
-                </span>
+                </button>
               ))}
             </div>
           </div>
@@ -82,7 +91,7 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
             onClick={() => {
               if (product.sizes && product.sizes.length > 0) {
                 onAddToCart &&
-                  onAddToCart({ ...product, selectedSize: product.sizes[0] });
+                  onAddToCart({ ...product, selectedSize: selectedSize });
               } else {
                 onAddToCart && onAddToCart(product);
               }
@@ -148,13 +157,13 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
 
         {/* Navigation Arrows - Always visible on mobile, hover on desktop */}
         <button
-          onClick={prevSlide}
+          onClick={nextSlide}
           className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
         >
           <ChevronLeft size={24} />
         </button>
         <button
-          onClick={nextSlide}
+          onClick={prevSlide}
           className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-brand-gold hover:scale-110 transition-all duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
         >
           <ChevronRight size={24} />
