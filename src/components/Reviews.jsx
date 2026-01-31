@@ -35,7 +35,7 @@ const Reviews = ({ theme }) => {
         <div className="flex flex-col md:flex-row justify-between items-end mb-12">
           <div className="text-right w-full md:w-auto mb-8 md:mb-0 order-2 md:order-1">
             <h2
-              className={`text-3xl md:text-5xl font-serif mb-4 ${
+              className={`text-3xl md:text-5xl font-sans mb-4 ${
                 theme === "green" ? "text-brand-charcoal" : "text-white"
               }`}
             >
@@ -57,10 +57,10 @@ const Reviews = ({ theme }) => {
             {duplicatedReviews.map((review, index) => (
               <div
                 key={`${review.id}-${index}`}
-                className={`w-[85vw] md:w-[400px] p-8 rounded-3xl relative group transition-all duration-300 hover:-translate-y-2 ${
+                className={`w-[85vw] md:w-[400px] p-8 rounded-3xl relative group transition-all duration-300 ${
                   theme === "green"
-                    ? "bg-white/80 backdrop-blur-sm border border-brand-charcoal/5 shadow-sm hover:shadow-xl"
-                    : "bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10"
+                    ? "bg-white border border-brand-charcoal/5"
+                    : "bg-white/5 border border-white/10"
                 }`}
                 dir="rtl"
               >
@@ -105,7 +105,7 @@ const Reviews = ({ theme }) => {
 
                 {/* Review Text */}
                 <p
-                  className={`text-sm md:text-base font-serif leading-relaxed line-clamp-4 ${
+                  className={`text-sm md:text-base font-sans leading-relaxed line-clamp-4 ${
                     theme === "green"
                       ? "text-brand-charcoal/80"
                       : "text-white/80"
@@ -148,7 +148,7 @@ const Reviews = ({ theme }) => {
             </button>
 
             <h3
-              className={`text-3xl font-serif text-center mb-2 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+              className={`text-3xl font-sans text-center mb-2 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
             >
               شاركنا برأيك
             </h3>

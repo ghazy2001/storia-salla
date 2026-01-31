@@ -116,7 +116,7 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
           <span className="uppercase tracking-widest text-base mb-2 block text-brand-gold font-medium">
             الأكثر مبيعاً
           </span>
-          <h3 className="text-4xl md:text-5xl font-serif uppercase tracking-tighter">
+          <h3 className="text-4xl md:text-5xl font-sans uppercase tracking-tighter">
             مجموعة ستوريا المختارة
           </h3>
         </div>
@@ -169,7 +169,7 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
                     </button>
                   </div>
                   <div className="px-2 transition-transform duration-500 group-hover:translate-x-[-8px]">
-                    <h4 className="text-xl font-serif mb-1 group-hover:text-brand-gold transition-colors">
+                    <h4 className="text-xl font-sans mb-1 group-hover:text-brand-gold transition-colors">
                       {product.name}
                     </h4>
                     <p className="text-lg font-bold text-brand-gold mb-2">

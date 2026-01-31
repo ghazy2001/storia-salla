@@ -62,10 +62,13 @@ export const products = [
     id: 4,
     name: "عباية نواعم - تصميم كلاسيكي",
     price: "320 ر.س",
+    originalPrice: "500 ر.س",
     category: "classic",
     sizes: ["S", "M", "L", "XL"],
     description:
       "البساطة هي عنوان الأناقة.، تصميم نواعم الكلاسيكي يبرز جمالك الطبيعي بتفاصيل هادئة وخامة عملية مريحة تدوم طويلاً.",
+    bestSellerDescription:
+      "تجسيد للأناقة الخالدة مع عباية نواعم الكلاسيكية. تصميم يجمع بين الفخامة والعملية، منسوجة من أجود الخامات لتمنحك إطلالة راقية وراحة تدوم طوال اليوم.",
     image: "/assets/products/p04/p04_1.jpg",
     media: [
       { type: "video", src: "/assets/products/p04/p04_10.mov" },

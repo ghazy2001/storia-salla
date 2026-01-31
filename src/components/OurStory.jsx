@@ -13,15 +13,18 @@ const OurStory = ({ theme }) => {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Define colors
-      // Light Mode: Transition from Offwhite (#FDFCF8) to Burgundy (#4D1330)
-      // Dark Mode: Transition from Burgundy (#4D1330) to Green (#0e352f)
+      const isDark = theme === "burgundy";
+      const startColor = isDark ? "#4D1330" : "#FDFCF8";
+      const endColor = isDark ? "#0e352f" : "#4D1330";
 
-      const startColor = isLightTheme ? "#FDFCF8" : "#4D1330";
-      const endColor = isLightTheme ? "#4D1330" : "#0e352f";
+      const textStartColor = isDark ? "#FFFFFF" : "#4D1330";
+      const textEndColor = "#FFFFFF";
 
-      const textStartColor = isLightTheme ? "#4D1330" : "#FFFFFF";
-      const textEndColor = isLightTheme ? "#FFFFFF" : "#FFFFFF";
+      // Set initial state explicitly
+      gsap.set(sectionRef.current, {
+        backgroundColor: startColor,
+        "--story-text-color": textStartColor,
+      });
 
       // Background Color and Text Color Scrub Animation
       const tl = gsap.timeline({

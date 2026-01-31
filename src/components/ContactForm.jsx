@@ -106,7 +106,7 @@ const ContactForm = ({ isOpen, onClose, onShowToast, theme }) => {
               : "from-brand-primary via-brand-secondary to-brand-primary"
           } p-8 text-center border-b border-white/5 transition-all duration-500`}
         >
-          <h2 className="text-3xl md:text-4xl font-serif text-white mb-2">
+          <h2 className="text-3xl md:text-4xl font-sans text-white mb-2">
             تواصلي معنا
           </h2>
           <p className="text-white/70 text-sm tracking-wide">

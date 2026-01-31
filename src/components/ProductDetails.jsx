@@ -118,7 +118,7 @@ const ProductDetails = ({ productId, theme }) => {
 
         {/* Product Info */}
         <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
-          <h1 className="text-4xl md:text-5xl font-serif font-black mb-4 text-brand-charcoal w-full">
+          <h1 className="text-4xl md:text-5xl font-sans font-black mb-4 text-brand-charcoal w-full">
             {product.name}
           </h1>
           <p className="text-2xl font-bold tracking-widest text-brand-gold mb-8 font-sans w-full">

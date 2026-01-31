@@ -532,7 +532,7 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 font-serif">
+          <h1 className="text-3xl font-bold text-gray-900 font-sans">
             لوحة التحكم
           </h1>
           <button
@@ -580,7 +580,7 @@ const AdminDashboard = () => {
                 <X size={24} />
               </button>
 
-              <h2 className="text-2xl font-bold mb-8 text-center font-serif">
+              <h2 className="text-2xl font-bold mb-8 text-center font-sans">
                 {isEditing ? "تعديل" : "إضافة جديد"}
               </h2>
 

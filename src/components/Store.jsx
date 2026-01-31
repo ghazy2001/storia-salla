@@ -78,7 +78,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     <section className="bg-brand-offwhite min-h-screen pt-32 pb-20 px-6 md:px-12 transition-colors duration-500">
       {/* Header */}
       <div className="flex flex-col items-start mb-16 text-right">
-        <h1 className="text-5xl md:text-7xl font-serif text-brand-charcoal mb-4">
+        <h1 className="text-5xl md:text-7xl font-sans text-brand-charcoal mb-4">
           مجموعة ستوريا
         </h1>
         <p className="text-brand-charcoal/70 font-light text-lg md:text-xl max-w-2xl leading-relaxed">

@@ -12,7 +12,15 @@ import gsap from "gsap";
 import { useCart } from "../context/useCart";
 import { useAdmin } from "../context/AdminContext";
 
-const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
+const Navbar = ({
+  theme,
+  toggleTheme,
+  onNavigate,
+  onBack,
+  currentPage,
+  onContactClick,
+  onFAQClick,
+}) => {
   const navRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -21,6 +29,8 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
   const isHomePage = currentPage === "home";
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+
+  // ... (keep useEffects and constants same, I will use replace_file_content for specific blocks if possible, but the prompt implies complete file replacement or specific chunks. I'll target the PROPS line first, then the MENU items.)
 
   useEffect(() => {
     // Initial entry animation - more graceful
@@ -243,7 +253,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
             {navLinks.map((cat) => (
               <span
                 key={cat.id}
-                className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer"
+                className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer"
                 onClick={() => {
                   onNavigate && onNavigate(cat.id);
                   setIsMobileMenuOpen(false);
@@ -253,7 +263,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
               </span>
             ))}
             <span
-              className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer"
+              className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer"
               onClick={() => {
                 // Navigate to 'our-story' if page exists, or just close menu for now since 'our-story' wasn't in original navLinks array but was appended logic
                 // Original logic: navLinks.concat(["قصتنا"])
@@ -273,14 +283,30 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
                 onNavigate && onNavigate("all");
                 setIsMobileMenuOpen(false);
               }}
-              className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer text-left"
+              className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer text-right"
             >
               المتجر
             </button>
           </div>
           <div className="mt-auto flex flex-col gap-4 text-sm font-light tracking-widest opacity-60">
-            <span>اتصل بنا</span>
-            <span>الأسئلة الشائعة</span>
+            <span
+              onClick={() => {
+                onContactClick && onContactClick();
+                setIsMobileMenuOpen(false);
+              }}
+              className="cursor-pointer hover:text-brand-gold transition-colors"
+            >
+              اتصل بنا
+            </span>
+            <span
+              onClick={() => {
+                onFAQClick && onFAQClick();
+                setIsMobileMenuOpen(false);
+              }}
+              className="cursor-pointer hover:text-brand-gold transition-colors"
+            >
+              الأسئلة الشائعة
+            </span>
           </div>
         </div>
       </div>

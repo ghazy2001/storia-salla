@@ -41,7 +41,7 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
         className="w-full lg:w-1/2 text-right flex flex-col items-start"
         dir="rtl"
       >
-        <h2 className="text-3xl lg:text-5xl font-serif text-brand-charcoal mb-4">
+        <h2 className="text-3xl lg:text-5xl font-sans text-brand-charcoal mb-4">
           {product.name}
         </h2>
         <p className="text-brand-gold text-2xl font-sans mb-6 font-medium">

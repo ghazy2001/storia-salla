@@ -153,7 +153,7 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
             </div>
           </div>
           <h1
-            className={`text-4xl md:text-5xl font-serif italic text-right ${
+            className={`text-4xl md:text-5xl font-sans italic text-right ${
               theme === "green" ? "text-brand-charcoal" : "text-white"
             }`}
           >
@@ -177,7 +177,7 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
                   }`}
                 >
                   <h3
-                    className={`text-2xl font-serif italic mb-6 text-right ${
+                    className={`text-2xl font-sans italic mb-6 text-right ${
                       theme === "green" ? "text-brand-charcoal" : "text-white"
                     }`}
                   >
@@ -287,7 +287,7 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
                   className={`border-2 p-8 ${theme === "green" ? "border-brand-charcoal/10 bg-white/50" : "border-white/10 bg-white/5"}`}
                 >
                   <h3
-                    className={`text-2xl font-serif italic mb-6 text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+                    className={`text-2xl font-sans italic mb-6 text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
                   >
                     طريقة الدفع
                   </h3>
@@ -354,7 +354,7 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
                       </span>
                     </div>
                     <h3
-                      className={`text-2xl font-serif italic text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+                      className={`text-2xl font-sans italic text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
                     >
                       بيانات الدفع
                     </h3>
@@ -492,14 +492,14 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
                 رقم الطلب
               </p>
               <p
-                className={`text-xl font-serif ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+                className={`text-xl font-sans ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
               >
                 {orderId}
               </p>
             </div>
 
             <h3
-              className={`text-2xl font-serif italic mb-8 text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+              className={`text-2xl font-sans italic mb-8 text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
             >
               ملخص الطلب
             </h3>
@@ -511,7 +511,7 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
                   className={`pb-4 border-b ${theme === "green" ? "border-brand-charcoal/10" : "border-white/10"}`}
                 >
                   <p
-                    className={`font-serif text-right mb-1 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+                    className={`font-sans text-right mb-1 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
                   >
                     {item.name}
                   </p>

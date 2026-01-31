@@ -74,7 +74,7 @@ const Footer = ({
   };
 
   return (
-    <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500">
+    <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500 font-sans">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-12 border-b border-white/10 pb-20">
         <div className="col-span-1 md:col-span-2 order-1">
           <img
@@ -204,7 +204,7 @@ const Footer = ({
           </form>
         </div>
       </div>
-      <div className="mt-12 flex flex-col items-end text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2 text-right">
+      <div className="mt-12 flex flex-col text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2 text-right">
         <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
         <span>الرقم الضريبي</span>
       </div>
@@ -399,6 +399,16 @@ function AppContent() {
             } else {
               setCurrentPage("home");
             }
+          }}
+          onContactClick={() => setContactFormOpen(true)}
+          onFAQClick={() => {
+            setCurrentPage("home");
+            setTimeout(() => {
+              const faqSection = document.getElementById("faq");
+              if (faqSection) {
+                faqSection.scrollIntoView({ behavior: "smooth" });
+              }
+            }, 100);
           }}
         />
         <main>{renderPage()}</main>

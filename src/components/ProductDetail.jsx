@@ -67,7 +67,7 @@ const ProductDetail = ({ theme, goToProduct }) => {
     <section className="bg-brand-offwhite min-h-screen pt-32 pb-20 px-6 md:px-12 transition-colors duration-500">
       {/* Header */}
       <div className="flex flex-col items-end mb-16 text-right">
-        <h1 className="text-5xl md:text-7xl font-serif text-brand-charcoal mb-4">
+        <h1 className="text-5xl md:text-7xl font-sans text-brand-charcoal mb-4">
           مجموعة ستوريا
         </h1>
         <p className="text-brand-charcoal/70 font-light text-lg md:text-xl max-w-2xl leading-relaxed">
@@ -133,7 +133,7 @@ const ProductDetail = ({ theme, goToProduct }) => {
             {/* Info */}
             <div className="text-right">
               <div className="flex justify-between items-start mb-1">
-                <h3 className="font-serif text-lg text-brand-charcoal group-hover:text-brand-gold transition-colors duration-300 line-clamp-1">
+                <h3 className="font-sans text-lg text-brand-charcoal group-hover:text-brand-gold transition-colors duration-300 line-clamp-1">
                   {product.name}
                 </h3>
               </div>

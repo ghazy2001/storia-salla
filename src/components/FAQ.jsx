@@ -52,6 +52,7 @@ const FAQ = ({ theme }) => {
 
   return (
     <section
+      id="faq"
       ref={sectionRef}
       className={`py-24 px-6 md:px-12 transition-colors duration-500 ${
         theme === "green" ? "bg-brand-offwhite" : "bg-brand-burgundy"
@@ -60,7 +61,7 @@ const FAQ = ({ theme }) => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16 faq-header">
           <h2
-            className={`text-2xl md:text-5xl font-serif mb-6 ${
+            className={`text-2xl md:text-5xl font-sans mb-6 ${
               theme === "green" ? "text-brand-charcoal" : "text-white"
             }`}
           >
@@ -90,7 +91,7 @@ const FAQ = ({ theme }) => {
                 className="w-full flex items-center justify-between p-6 md:p-8 text-right focus:outline-none"
               >
                 <span
-                  className={`font-serif text-lg md:text-xl ${
+                  className={`font-sans text-lg md:text-xl ${
                     theme === "green" ? "text-brand-charcoal" : "text-white"
                   }`}
                 >

@@ -36,7 +36,7 @@ const LoginModal = () => {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <User size={32} className="text-gray-500" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 font-serif">
+          <h2 className="text-2xl font-bold text-gray-900 font-sans">
             تسجيل الدخول
           </h2>
         </div>

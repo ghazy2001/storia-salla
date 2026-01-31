@@ -108,7 +108,7 @@ const BestSellers = ({ theme, onProductSelect }) => {
 
             {/* Banner Content */}
             <div className="absolute bottom-0 left-0 right-0 p-10 flex flex-col items-center text-center">
-              <h2 className="text-4xl md:text-5xl font-serif text-white mb-2">
+              <h2 className="text-4xl md:text-5xl font-sans text-white mb-2">
                 الأكثر مبيعاً
               </h2>
               <p className="text-white/80 text-lg mb-8 font-light">
@@ -125,74 +125,116 @@ const BestSellers = ({ theme, onProductSelect }) => {
           </div>
 
           {/* LEFT SIDE: Carousel */}
-          <div className="w-full lg:w-[60%] flex flex-col justify-center">
-            {/* Scroll Container */}
-            <div
-              ref={scrollContainerRef}
-              className="flex gap-6 overflow-x-auto pb-12 pt-4 px-4 snap-x scrollbar-hide scroll-smooth"
-              style={{ direction: "rtl" }}
-            >
-              {carouselImages.map((mediaItem, index) => (
-                <div
-                  key={index}
-                  className="min-w-[280px] md:min-w-[320px] snap-start group relative"
-                >
-                  {/* Card Container */}
-                  <div
-                    className={`rounded-[2rem] p-2 transition-all duration-300 hover:shadow-xl ${theme === "green" ? "bg-[#F9F9F9]" : "bg-white/5 border border-white/10"}`}
-                  >
-                    {/* Image Area */}
-                    <div
-                      onClick={() => openLightbox(index)}
-                      className="aspect-[3/4] rounded-3xl overflow-hidden mb-4 relative cursor-pointer"
-                    >
-                      <img
-                        src={mediaItem.src}
-                        alt={`${featuredProduct.name} - View ${index + 1}`}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
+          <div className="w-full lg:w-[60%] flex flex-col justify-center group/carousel">
+            <div className="relative">
+              {/* New Side Navigation Arrows (Mobile/Tablet Visible) */}
+              <button
+                onClick={() => scroll("left")}
+                className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 disabled:opacity-0 md:hidden backdrop-blur-md border ${
+                  theme === "green"
+                    ? "bg-white/70 border-brand-charcoal/10 text-brand-charcoal hover:bg-white"
+                    : "bg-black/30 border-white/10 text-white hover:bg-black/50"
+                }`}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <button
+                onClick={() => scroll("right")}
+                className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 disabled:opacity-0 md:hidden backdrop-blur-md border ${
+                  theme === "green"
+                    ? "bg-white/70 border-brand-charcoal/10 text-brand-charcoal hover:bg-white"
+                    : "bg-black/30 border-white/10 text-white hover:bg-black/50"
+                }`}
+              >
+                <ArrowRight size={20} />
+              </button>
 
-                      {/* Add to Cart Button (Absolute) */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onProductSelect(featuredProduct.id);
-                        }}
-                        className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden transition-all duration-300 hover:w-32 w-10 shadow-lg z-10"
-                        title="View Details"
+              {/* Scroll Container */}
+              <div
+                ref={scrollContainerRef}
+                className="flex gap-6 overflow-x-auto pb-12 pt-4 px-4 snap-x scrollbar-hide scroll-smooth"
+                style={{ direction: "rtl" }}
+              >
+                {carouselImages.map((mediaItem, index) => (
+                  <div
+                    key={index}
+                    className="min-w-[280px] md:min-w-[320px] snap-start group relative"
+                  >
+                    {/* Card Container */}
+                    <div
+                      className={`rounded-[2rem] p-2 transition-all duration-300 hover:shadow-xl ${theme === "green" ? "bg-[#F9F9F9]" : "bg-white/5 border border-white/10"}`}
+                    >
+                      {/* Image Area */}
+                      <div
+                        onClick={() => openLightbox(index)}
+                        className="aspect-[3/4] rounded-3xl overflow-hidden mb-4 relative cursor-pointer"
                       >
-                        <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover/btn:text-brand-gold transition-colors">
-                          <ArrowRight size={20} className="-rotate-45" />
-                        </div>
-                        <span className="whitespace-nowrap text-xs font-bold opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 pr-2">
-                          التفاصيل
-                        </span>
-                      </button>
+                        <img
+                          src={mediaItem.src}
+                          alt={`${featuredProduct.name} - View ${index + 1}`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+
+                        {/* Add to Cart Button (Absolute) */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onProductSelect(featuredProduct.id);
+                          }}
+                          className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden transition-all duration-300 hover:w-32 w-10 shadow-lg z-10"
+                          title="View Details"
+                        >
+                          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover/btn:text-brand-gold transition-colors">
+                            <ArrowRight size={20} className="-rotate-45" />
+                          </div>
+                          <span className="whitespace-nowrap text-xs font-bold opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300 pr-2">
+                            التفاصيل
+                          </span>
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Navigation & Info */}
             <div
-              className={`flex justify-between items-center px-8 mt-6 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+              className={`flex justify-between items-center px-8 mt-6 gap-12 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
             >
-              <p className="max-w-md text-right opacity-80 text-lg font-light leading-relaxed hidden md:block">
-                تصفحي تشكيلة مميزة من العبايات المصممة بأعلى معايير الجودة
-                والأناقة لتناسب جميع مناسباتك.
-              </p>
+              <div className="w-full text-right">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="text-brand-gold text-3xl font-bold">
+                    {featuredProduct.price}
+                  </div>
+                </div>
+                <p
+                  className={`${theme === "green" ? "text-brand-charcoal" : "text-white"} opacity-80 text-lg font-light leading-relaxed`}
+                >
+                  {featuredProduct.bestSellerDescription ||
+                    featuredProduct.description}
+                </p>
+              </div>
 
-              <div className="flex gap-4">
+              <div className="gap-4 hidden md:flex">
+                {/* Hidden on mobile, flex on md */}
                 <button
-                  onClick={() => scroll("right")}
-                  className="hover:scale-110 transition-transform p-2 border border-current rounded-full"
+                  onClick={() => scroll("left")}
+                  className={`group/arrow transition-all duration-300 p-3 border rounded-full ${
+                    theme === "green"
+                      ? "border-brand-charcoal/20 hover:bg-brand-charcoal hover:text-white"
+                      : "border-white/20 hover:bg-white hover:text-custom-burgundy"
+                  }`}
                 >
                   <ArrowLeft size={24} />
                 </button>
                 <button
-                  onClick={() => scroll("left")}
-                  className="hover:scale-110 transition-transform p-2 border border-current rounded-full"
+                  onClick={() => scroll("right")}
+                  className={`group/arrow transition-all duration-300 p-3 border rounded-full ${
+                    theme === "green"
+                      ? "border-brand-charcoal/20 hover:bg-brand-charcoal hover:text-white"
+                      : "border-white/20 hover:bg-white hover:text-custom-burgundy"
+                  }`}
                 >
                   <ArrowRight size={24} />
                 </button>

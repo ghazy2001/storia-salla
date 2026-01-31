@@ -132,7 +132,7 @@ const TrackOrder = ({ isOpen, onClose, theme }) => {
               <div className="mx-auto w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 ring-1 ring-white/10">
                 <Package className="text-brand-gold" size={40} />
               </div>
-              <h2 className="text-3xl font-serif text-white mb-3">تتبع طلبك</h2>
+              <h2 className="text-3xl font-sans text-white mb-3">تتبع طلبك</h2>
               <p className="text-white/60 text-sm">
                 أدخلي تفاصيل طلبك لمعرفة حالته الحالية
               </p>
