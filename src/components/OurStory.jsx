@@ -172,9 +172,7 @@ const OurStory = ({ theme }) => {
               >
                 رؤية تُلهم.. <br />
                 <div className="mt-[25px]">
-                  <span className="text-brand-gold italic">
-                    وشغفٌ يصنع الأناقة
-                  </span>
+                  <span className="text-brand-gold">وشغفٌ يصنع الأناقة</span>
                 </div>
               </h2>
 
@@ -202,7 +200,7 @@ const OurStory = ({ theme }) => {
                     </span>
                   </div>
                   <p
-                    className={`font-normal text-lg md:text-xl story-text text-white italic pr-20 leading-[1.8]`}
+                    className={`font-normal text-lg md:text-xl story-text text-white pr-20 leading-[1.8]`}
                   >
                     نطمح لنكون الخيار الأول لكل سيدة تبحث عن التميز، ونشارككِ
                     لحظات التألق في كل مناسبة.

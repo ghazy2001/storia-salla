@@ -41,7 +41,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
       >
         <div className="max-w-6xl mx-auto">
           <h1
-            className={`text-4xl md:text-5xl font-sans italic mb-12 text-right ${
+            className={`text-4xl md:text-5xl font-sans mb-12 text-right ${
               theme === "green" ? "text-brand-charcoal" : "text-white"
             }`}
           >
@@ -56,7 +56,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
             }`}
           >
             <h2
-              className={`text-2xl font-sans italic mb-4 ${
+              className={`text-2xl font-sans mb-4 ${
                 theme === "green" ? "text-brand-charcoal" : "text-white"
               }`}
             >
@@ -91,7 +91,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
     >
       <div className="max-w-6xl mx-auto">
         <h1
-          className={`text-4xl md:text-5xl font-sans italic mb-12 text-right ${
+          className={`text-4xl md:text-5xl font-sans mb-12 text-right ${
             theme === "green" ? "text-brand-charcoal" : "text-white"
           }`}
         >
@@ -123,7 +123,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
                 <div className="flex-1 text-right">
                   <div className="flex justify-between items-start mb-2">
                     <h3
-                      className={`font-sans italic text-base md:text-lg ${
+                      className={`font-sans text-base md:text-lg ${
                         theme === "green" ? "text-brand-charcoal" : "text-white"
                       }`}
                     >
@@ -211,7 +211,7 @@ const ShoppingCart = ({ theme, onContinueShopping }) => {
             }`}
           >
             <h3
-              className={`text-2xl font-sans italic mb-8 text-right ${
+              className={`text-2xl font-sans mb-8 text-right ${
                 theme === "green" ? "text-brand-charcoal" : "text-white"
               }`}
             >

@@ -139,7 +139,7 @@ const Hero = ({ goToStore }) => {
         ref={textRef}
         className="relative z-30 text-center text-white px-4 pt-32 md:pt-40 pointer-events-none select-none"
       >
-        <h2 className="text-4xl sm:text-6xl md:text-8xl font-sans italic mb-6 drop-shadow-2xl leading-tight uppercase font-medium tracking-tight">
+        <h2 className="text-4xl sm:text-6xl md:text-8xl font-sans mb-6 drop-shadow-2xl leading-tight uppercase font-medium tracking-tight">
           STORIA <br />{" "}
           <span className="not-italic text-xl sm:text-2xl md:text-4xl block mt-2 font-light opacity-95 tracking-[0.4em]">
             DESIGN
