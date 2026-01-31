@@ -30,7 +30,7 @@ const Footer = ({ theme }) => (
           alt="STORIA DESIGN"
           className={`h-16 mb-6 ml-auto ${theme === "green" ? "brightness-0 invert" : ""}`}
         />
-        <p className="text-sm font-light text-brand-light/50 leading-relaxed uppercase tracking-widest">
+        <p className="text-xs md:text-sm font-light text-brand-light/50 leading-relaxed uppercase tracking-widest">
           STORIA علامة تجارية فاخرة للعبايات، تستمد إلهامها من الأناقة والذوق
           السعودي الأصيل. يجسد اللون البترولى الفخامة والهوية العميقة، بينما
           يعكس الشعار الأنوثة الراقية وقيم الموضة السعودية الحديثة. يوازن

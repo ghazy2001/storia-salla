@@ -60,14 +60,14 @@ const FAQ = ({ theme }) => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16 faq-header">
           <h2
-            className={`text-3xl md:text-5xl font-serif mb-6 ${
+            className={`text-2xl md:text-5xl font-serif mb-6 ${
               theme === "green" ? "text-brand-charcoal" : "text-white"
             }`}
           >
             الأسئلة الشائعة
           </h2>
           <p
-            className={`text-lg tracking-wide opacity-80 font-light ${
+            className={`text-base md:text-lg tracking-wide opacity-80 font-light ${
               theme === "green" ? "text-brand-charcoal" : "text-white"
             }`}
           >
@@ -87,10 +87,10 @@ const FAQ = ({ theme }) => {
             >
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full flex items-center justify-between p-8 text-right focus:outline-none"
+                className="w-full flex items-center justify-between p-6 md:p-8 text-right focus:outline-none"
               >
                 <span
-                  className={`font-serif text-xl ${
+                  className={`font-serif text-lg md:text-xl ${
                     theme === "green" ? "text-brand-charcoal" : "text-white"
                   }`}
                 >

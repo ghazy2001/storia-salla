@@ -16,19 +16,25 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Almarai", "sans-serif"],
-        serif: ["Amiri", "serif"],
+        sans: ["Cairo", "sans-serif"],
+        serif: ["Cairo", "sans-serif"],
+        cairo: ["Cairo", "sans-serif"], // Keeping this alias just in case
       },
       letterSpacing: {
         widest: ".2em",
       },
       animation: {
         breathe: "breathe 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        marquee: "marquee 40s linear infinite",
       },
       keyframes: {
         breathe: {
           "0%, 100%": { opacity: "0.2", transform: "scale(1)" },
           "50%": { opacity: "0.1", transform: "scale(1.4)" },
+        },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
         },
       },
     },

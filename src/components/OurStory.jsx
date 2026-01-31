@@ -20,21 +20,34 @@ const OurStory = ({ theme }) => {
       const startColor = isLightTheme ? "#FDFCF8" : "#4D1330";
       const endColor = isLightTheme ? "#4D1330" : "#0e352f";
 
-      // Background Color Scrub Animation
-      gsap.fromTo(
-        sectionRef.current,
-        { backgroundColor: startColor },
-        {
-          backgroundColor: endColor,
-          ease: "none",
-          scrollTrigger: {
-            trigger: sectionRef.current,
-            start: "top 80%", // Start fading when top of section hits 80% viewport
-            end: "top 50%", // Finish fading faster (shorter distance)
-            scrub: 1, // Smooth interaction
-          },
+      const textStartColor = isLightTheme ? "#4D1330" : "#FFFFFF";
+      const textEndColor = isLightTheme ? "#FFFFFF" : "#FFFFFF";
+
+      // Background Color and Text Color Scrub Animation
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top 80%",
+          end: "bottom 60%",
+          scrub: 1,
         },
-      );
+      });
+
+      tl.to(sectionRef.current, {
+        backgroundColor: endColor,
+        "--story-text-color": textEndColor,
+        duration: 1,
+        ease: "none",
+      })
+        .to(sectionRef.current, {
+          duration: 1.5, // Hold phase
+        })
+        .to(sectionRef.current, {
+          backgroundColor: startColor,
+          "--story-text-color": textStartColor,
+          duration: 1,
+          ease: "none",
+        });
 
       // Image Reveal
       gsap.fromTo(
@@ -97,7 +110,7 @@ const OurStory = ({ theme }) => {
   return (
     <section
       ref={sectionRef}
-      className={`relative py-32 md:py-48 overflow-hidden`}
+      className={`relative py-32 md:py-48 overflow-hidden font-cairo`}
       style={{ backgroundColor: isLightTheme ? "#FDFCF8" : "#4D1330" }}
     >
       <div className="relative z-10 max-w-[1920px] mx-auto px-6 md:px-12 lg:px-16">
@@ -152,7 +165,7 @@ const OurStory = ({ theme }) => {
               <br />
               <br />
               <h2
-                className={`text-6xl md:text-4xl lg:text-6xl font-serif mb-12 leading-[1.1] story-text text-white`}
+                className={`text-4xl md:text-5xl lg:text-6xl font-cairo mb-12 leading-[1.1] story-text text-white`}
               >
                 رؤية تُلهم.. <br />
                 <div className="mt-[25px]">
@@ -181,7 +194,7 @@ const OurStory = ({ theme }) => {
                   className={`relative mt-16 pt-10 border-t-2 border-brand-gold/40`}
                 >
                   <div className="absolute -top-4 right-0 w-14 h-14 bg-brand-gold/15 rounded-full flex items-center justify-center">
-                    <span className="text-brand-gold text-3xl font-serif">
+                    <span className="text-brand-gold text-3xl font-cairo">
                       "
                     </span>
                   </div>
