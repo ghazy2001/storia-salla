@@ -158,7 +158,11 @@ const ProductDetails = ({ productId, theme }) => {
           <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
             <button
               onClick={handleAddToCart}
-              className="w-full py-5 bg-brand-charcoal text-white rounded-full uppercase tracking-widest text-xs hover:bg-brand-rose transition-colors shadow-lg"
+              className={`w-full py-5 rounded-full uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-lg ${
+                theme === "green"
+                  ? "bg-brand-charcoal text-white hover:bg-brand-gold"
+                  : "bg-brand-gold text-brand-burgundy hover:bg-brand-burgundy hover:text-brand-gold"
+              }`}
             >
               إضافة للسلة
             </button>

@@ -13,6 +13,8 @@ export default {
           gold: "var(--accent-gold)", // Metallic gold matching logo
           "gold-light": "#E5C860", // Lighter variant of metallic gold
           footer: "var(--bg-footer)",
+          primary: "#0e352f", // Brand Green
+          secondary: "#1a4d46", // Lighter Green for gradients
         },
       },
       fontFamily: {

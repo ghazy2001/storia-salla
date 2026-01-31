@@ -59,9 +59,9 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
 
   // Updated navLinks with IDs for store filtering
   const navLinks = [
-    { label: "عبايات سوداء", id: "all" }, // Assuming 'all' or specific category
     { label: "رسمية", id: "official" },
     { label: "عملية", id: "practical" },
+    { label: "فاخرة", id: "luxury" },
     { label: "كلوش", id: "cloche" },
     { label: "بشت", id: "bisht" },
   ];
@@ -141,7 +141,13 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
 
         <div
           className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out cursor-pointer hover:opacity-80"
-          onClick={() => setCurrentPage("home")}
+          onClick={() => {
+            if (isHomePage) {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              setCurrentPage("home");
+            }
+          }}
         >
           <img
             src={theme === "green" ? "/assets/logo2.png" : "/assets/logo.png"}

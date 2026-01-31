@@ -162,7 +162,7 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
                       className={`absolute bottom-6 left-6 right-6 py-4 flex items-center justify-center gap-2 uppercase tracking-[0.2em] text-xs font-bold opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 backdrop-blur-md shadow-2xl ${
                         theme === "green"
                           ? "bg-brand-charcoal text-white hover:bg-brand-gold"
-                          : "bg-brand-gold text-brand-charcoal hover:bg-white"
+                          : "bg-brand-gold text-brand-burgundy hover:bg-brand-burgundy hover:text-brand-gold"
                       }`}
                     >
                       عرض التفاصيل
