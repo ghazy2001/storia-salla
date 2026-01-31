@@ -113,9 +113,6 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
     >
       <div className="flex justify-between items-end mb-16 px-4">
         <div className="text-right">
-          <span className="uppercase tracking-widest text-base mb-2 block text-brand-gold font-medium">
-            الأكثر مبيعاً
-          </span>
           <h3 className="text-4xl md:text-5xl font-sans uppercase tracking-tighter">
             مجموعة ستوريا المختارة
           </h3>
