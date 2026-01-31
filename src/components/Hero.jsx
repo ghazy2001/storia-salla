@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { products } from "../data/products";
@@ -9,6 +9,7 @@ const Hero = ({ goToStore }) => {
   const containerRef = useRef(null);
   const textRef = useRef(null);
   const stripsRef = useRef([]);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   // Neutral "Normal" Overlay Colors - Lightened
   const overlayOpacity = "bg-black/35";
@@ -54,6 +55,13 @@ const Hero = ({ goToStore }) => {
       borderBottomRightRadius: "50% 120px",
       ease: "none",
     });
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Create a specific order for the Hero strips
@@ -81,7 +89,9 @@ const Hero = ({ goToStore }) => {
       className="relative h-screen w-full flex items-center justify-center overflow-hidden transition-colors duration-1000"
     >
       {/* Interactive Background Strips - No limiting z-index on container */}
-      <div className="absolute inset-0 flex w-full h-full opacity-90">
+      <div
+        className={`absolute inset-0 flex w-full h-full opacity-90 transition-all duration-700 ${isScrolled ? "pointer-events-none" : ""}`}
+      >
         {heroProducts.map((product, index) => (
           <div
             key={product.id}

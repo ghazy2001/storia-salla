@@ -172,6 +172,9 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
                     <h4 className="text-xl font-serif mb-1 group-hover:text-brand-gold transition-colors">
                       {product.name}
                     </h4>
+                    <p className="text-lg font-bold text-brand-gold mb-2">
+                      {product.price}
+                    </p>
                     <p className="text-sm font-light text-brand-charcoal/60 leading-relaxed line-clamp-2 pl-4">
                       {product.description}
                     </p>

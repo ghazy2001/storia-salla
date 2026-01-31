@@ -121,7 +121,7 @@ const ProductDetails = ({ productId, theme }) => {
           <h1 className="text-4xl md:text-5xl font-serif font-black mb-4 text-brand-charcoal w-full">
             {product.name}
           </h1>
-          <p className="text-2xl font-light tracking-widest text-brand-charcoal/60 mb-8 font-sans w-full">
+          <p className="text-2xl font-bold tracking-widest text-brand-gold mb-8 font-sans w-full">
             {product.price}
           </p>
 

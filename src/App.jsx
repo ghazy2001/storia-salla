@@ -204,7 +204,7 @@ const Footer = ({
           </form>
         </div>
       </div>
-      <div className="mt-12 flex flex-col items-start text-xs font-light tracking-widest text-brand-light/30 uppercase gap-2 text-left">
+      <div className="mt-12 flex flex-col items-end text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2 text-right">
         <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
         <span>الرقم الضريبي</span>
       </div>
