@@ -113,16 +113,16 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
     >
       <div className="flex justify-between items-end mb-16 px-4">
         <div className="text-right">
-          <span className="uppercase tracking-widest text-lg mb-2 block text-brand-gold font-medium">
+          <span className="uppercase tracking-widest text-base mb-2 block text-brand-gold font-medium">
             الأكثر مبيعاً
           </span>
-          <h3 className="text-5xl font-serif uppercase tracking-tighter">
+          <h3 className="text-4xl md:text-5xl font-serif uppercase tracking-tighter">
             مجموعة ستوريا المختارة
           </h3>
         </div>
         <button
           onClick={goToStore}
-          className={`uppercase tracking-widest text-sm pb-1 border-b-2 font-semibold hover:scale-105 transition-all duration-300 hidden md:block cursor-pointer ${
+          className={`uppercase tracking-widest text-xs pb-1 border-b-2 font-semibold hover:scale-105 transition-all duration-300 hidden md:block cursor-pointer ${
             theme === "green"
               ? "border-brand-charcoal text-brand-charcoal hover:text-brand-gold hover:border-brand-gold"
               : "border-brand-light text-brand-light hover:text-brand-gold hover:border-brand-gold"
@@ -159,7 +159,7 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
                         e.stopPropagation();
                         onProductSelect(product.id);
                       }}
-                      className={`absolute bottom-6 left-6 right-6 py-4 flex items-center justify-center gap-2 uppercase tracking-[0.2em] text-[10px] font-bold opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 backdrop-blur-md shadow-2xl ${
+                      className={`absolute bottom-6 left-6 right-6 py-4 flex items-center justify-center gap-2 uppercase tracking-[0.2em] text-xs font-bold opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 backdrop-blur-md shadow-2xl ${
                         theme === "green"
                           ? "bg-brand-charcoal text-white hover:bg-brand-gold"
                           : "bg-brand-gold text-brand-charcoal hover:bg-white"
@@ -169,10 +169,10 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
                     </button>
                   </div>
                   <div className="px-2 transition-transform duration-500 group-hover:translate-x-[-8px]">
-                    <h4 className="text-lg font-serif mb-1 group-hover:text-brand-gold transition-colors">
+                    <h4 className="text-xl font-serif mb-1 group-hover:text-brand-gold transition-colors">
                       {product.name}
                     </h4>
-                    <p className="text-xs font-light text-brand-charcoal/60 leading-relaxed line-clamp-2 pl-4">
+                    <p className="text-sm font-light text-brand-charcoal/60 leading-relaxed line-clamp-2 pl-4">
                       {product.description}
                     </p>
                   </div>
@@ -202,7 +202,7 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
         <div className="flex justify-center mt-24">
           <div className="flex items-center gap-10">
             <span
-              className={`text-[10px] font-bold tracking-[0.4em] opacity-30 font-mono transition-opacity group-hover/listing:opacity-100 ${
+              className={`text-[10px] font-bold tracking-[0.4em] opacity-30 font-sans transition-opacity group-hover/listing:opacity-100 ${
                 theme === "green" ? "text-brand-charcoal" : "text-white"
               }`}
             >
@@ -232,7 +232,7 @@ const ProductListing = ({ theme, goToStore, onProductSelect }) => {
             </div>
 
             <span
-              className={`text-[10px] font-bold tracking-[0.4em] opacity-30 font-mono transition-opacity group-hover/listing:opacity-100 ${
+              className={`text-[10px] font-bold tracking-[0.4em] opacity-30 font-sans transition-opacity group-hover/listing:opacity-100 ${
                 theme === "green" ? "text-brand-charcoal" : "text-white"
               }`}
             >

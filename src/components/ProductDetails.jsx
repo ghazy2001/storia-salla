@@ -118,16 +118,16 @@ const ProductDetails = ({ productId, theme }) => {
 
         {/* Product Info */}
         <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
-          <h1 className="text-4xl md:text-6xl font-serif font-black mb-4 text-brand-charcoal w-full">
+          <h1 className="text-4xl md:text-5xl font-serif font-black mb-4 text-brand-charcoal w-full">
             {product.name}
           </h1>
-          <p className="text-xl font-light tracking-widest text-brand-charcoal/60 mb-8 font-sans w-full">
+          <p className="text-2xl font-light tracking-widest text-brand-charcoal/60 mb-8 font-sans w-full">
             {product.price}
           </p>
 
           <div className="w-20 h-[1px] bg-brand-charcoal/20 mb-8 ml-auto lg:ml-auto"></div>
 
-          <p className="leading-loose text-brand-charcoal/80 mb-8 max-w-lg ml-auto lg:ml-auto text-lg">
+          <p className="leading-loose text-brand-charcoal/80 mb-8 max-w-lg ml-auto lg:ml-auto text-base">
             {product.description}
           </p>
 
@@ -158,7 +158,7 @@ const ProductDetails = ({ productId, theme }) => {
           <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
             <button
               onClick={handleAddToCart}
-              className="w-full py-5 bg-brand-charcoal text-white rounded-full uppercase tracking-widest text-sm hover:bg-brand-rose transition-colors shadow-lg"
+              className="w-full py-5 bg-brand-charcoal text-white rounded-full uppercase tracking-widest text-xs hover:bg-brand-rose transition-colors shadow-lg"
             >
               إضافة للسلة
             </button>

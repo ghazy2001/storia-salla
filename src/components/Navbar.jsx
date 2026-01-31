@@ -123,7 +123,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
               <span
                 key={cat.id}
                 onClick={() => onNavigate && onNavigate(cat.id)}
-                className={`uppercase tracking-[0.1em] text-[13px] font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
+                className={`uppercase tracking-[0.1em] text-xs font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
               >
                 {cat.label}
                 <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
@@ -131,7 +131,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
             ))}
             <button
               onClick={() => onNavigate && onNavigate("all")}
-              className={`uppercase tracking-[0.1em] text-[13px] font-bold hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
+              className={`uppercase tracking-[0.1em] text-xs font-bold hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
             >
               المتجر
               <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
@@ -237,7 +237,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
             {navLinks.map((cat) => (
               <span
                 key={cat.id}
-                className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer"
+                className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer"
                 onClick={() => {
                   onNavigate && onNavigate(cat.id);
                   setIsMobileMenuOpen(false);
@@ -247,7 +247,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
               </span>
             ))}
             <span
-              className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer"
+              className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer"
               onClick={() => {
                 // Navigate to 'our-story' if page exists, or just close menu for now since 'our-story' wasn't in original navLinks array but was appended logic
                 // Original logic: navLinks.concat(["قصتنا"])
@@ -267,7 +267,7 @@ const Navbar = ({ theme, toggleTheme, onNavigate, onBack, currentPage }) => {
                 onNavigate && onNavigate("all");
                 setIsMobileMenuOpen(false);
               }}
-              className="text-3xl font-alexandria hover:text-brand-gold transition-all duration-300 cursor-pointer text-left"
+              className="text-3xl font-serif hover:text-brand-gold transition-all duration-300 cursor-pointer text-left"
             >
               المتجر
             </button>

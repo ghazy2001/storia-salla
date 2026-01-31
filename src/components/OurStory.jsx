@@ -109,7 +109,7 @@ const OurStory = ({ theme }) => {
                 className={`relative aspect-[3/4] overflow-hidden rounded-sm story-image shadow-2xl border ${borderColorClass}`}
               >
                 <img
-                  src="/assets/storia_about.png"
+                  src="/assets/storia_about.jpg"
                   alt="Storia Details"
                   className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-all duration-1000 hover:scale-105"
                 />

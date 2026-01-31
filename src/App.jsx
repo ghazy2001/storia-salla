@@ -40,7 +40,7 @@ const Footer = ({ theme }) => (
         </p>
       </div>
       <div>
-        <h4 className="uppercase tracking-[0.3em] text-[10px] mb-8 font-semibold">
+        <h4 className="uppercase tracking-[0.3em] text-xs mb-8 font-semibold">
           تصنيفات المتجر
         </h4>
         <ul className="flex flex-col gap-4 text-sm font-light tracking-widest text-brand-light/70">
@@ -59,7 +59,7 @@ const Footer = ({ theme }) => (
         </ul>
       </div>
       <div>
-        <h4 className="uppercase tracking-[0.3em] text-[10px] mb-8 font-semibold">
+        <h4 className="uppercase tracking-[0.3em] text-xs mb-8 font-semibold">
           روابط مہمة
         </h4>
         <ul className="flex flex-col gap-4 text-sm font-light tracking-widest text-brand-light/70">
@@ -78,7 +78,7 @@ const Footer = ({ theme }) => (
         </ul>
       </div>
       <div>
-        <h4 className="uppercase tracking-[0.3em] text-[10px] mb-8 font-semibold">
+        <h4 className="uppercase tracking-[0.3em] text-xs mb-8 font-semibold">
           اشتراك النشرة البريدية
         </h4>
         <div className="flex border-b border-white/30 pb-2">
@@ -87,13 +87,13 @@ const Footer = ({ theme }) => (
             placeholder="البريد الإلكتروني"
             className="bg-transparent text-xs tracking-widest focus:outline-none w-full placeholder:text-white/20"
           />
-          <button className="uppercase tracking-widest text-[10px] text-brand-gold">
+          <button className="uppercase tracking-widest text-xs text-brand-gold">
             اشتراك
           </button>
         </div>
       </div>
     </div>
-    <div className="mt-12 flex flex-col md:flex-row justify-between items-center text-[10px] font-light tracking-widest text-brand-light/30 uppercase gap-4">
+    <div className="mt-12 flex flex-col md:flex-row justify-between items-center text-xs font-light tracking-widest text-brand-light/30 uppercase gap-4">
       <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
       <div className="flex gap-8">
         <span>الرقم الضريبي</span>
