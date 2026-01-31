@@ -282,6 +282,11 @@ function AppContent() {
 
   const [selectedCategory, setSelectedCategory] = useState("all");
 
+  // Scroll to top on navigation/page changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage, selectedProductId, selectedCategory]);
+
   const renderPage = () => {
     switch (currentPage) {
       case "store":
@@ -318,6 +323,7 @@ function AppContent() {
         return (
           <>
             <Hero
+              theme={theme}
               goToStore={() => {
                 setSelectedCategory("all");
                 setCurrentPage("store");
