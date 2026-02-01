@@ -461,7 +461,17 @@ const AdminDashboard = () => {
             </h3>
             <p className="text-brand-gold font-bold">{product.price}</p>
             <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-              {product.category}
+              {(() => {
+                const categoryLabels = {
+                  official: "رسمية",
+                  practical: "عملية",
+                  luxury: "فاخرة",
+                  cloche: "كلوش",
+                  bisht: "بشت",
+                  classic: "نواعم",
+                };
+                return categoryLabels[product.category] || product.category;
+              })()}
             </span>
           </div>
         </div>
