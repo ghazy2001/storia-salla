@@ -31,7 +31,7 @@ const OurStory = ({ theme }) => {
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top 80%",
-          end: "bottom 60%",
+          end: "bottom 20%",
           scrub: 1,
         },
       });
@@ -147,7 +147,7 @@ const OurStory = ({ theme }) => {
                 onClick={() => setCurrentPage("store")}
                 className="group relative px-10 py-4 overflow-hidden border border-brand-gold/70 bg-transparent transition-colors duration-300 hover:border-brand-gold"
               >
-                <span className="relative z-10 text-white font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300">
+                <span className="relative z-10 font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300 text-[var(--story-text-color)]">
                   تسوقي الآن
                 </span>
                 <div className="absolute inset-0 bg-brand-gold translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>
@@ -168,7 +168,7 @@ const OurStory = ({ theme }) => {
               <br />
               <br />
               <h2
-                className={`text-4xl md:text-5xl lg:text-6xl font-cairo mb-12 leading-[1.1] story-text text-white`}
+                className={`text-4xl md:text-5xl lg:text-6xl font-cairo mb-12 leading-[1.1] story-text text-[var(--story-text-color)]`}
               >
                 رؤية تُلهم.. <br />
                 <div className="mt-[25px]">
@@ -179,7 +179,7 @@ const OurStory = ({ theme }) => {
               <div className="w-40 h-1 bg-gradient-to-l from-brand-gold via-brand-gold/60 to-transparent mb-14 story-line origin-right"></div>
 
               <div
-                className={`space-y-8 leading-loose text-base md:text-lg tracking-wide max-w-3xl story-text text-white/95 text-justify pl-4`}
+                className={`space-y-8 leading-loose text-base md:text-lg tracking-wide max-w-3xl story-text text-[var(--story-text-color)] opacity-95 text-justify pl-4`}
               >
                 <p className="font-light">
                   بدأت الحكاية حين التقى شغف التصميم برؤية ريادة الأعمال.
@@ -200,7 +200,7 @@ const OurStory = ({ theme }) => {
                     </span>
                   </div>
                   <p
-                    className={`font-normal text-lg md:text-xl story-text text-white pr-20 leading-[1.8]`}
+                    className={`font-normal text-lg md:text-xl story-text text-[var(--story-text-color)] pr-20 leading-[1.8]`}
                   >
                     نطمح لنكون الخيار الأول لكل سيدة تبحث عن التميز، ونشارككِ
                     لحظات التألق في كل مناسبة.
@@ -212,7 +212,7 @@ const OurStory = ({ theme }) => {
                     onClick={() => setCurrentPage("store")}
                     className="group relative px-10 py-4 overflow-hidden border border-brand-gold/70 bg-transparent transition-colors duration-300 hover:border-brand-gold"
                   >
-                    <span className="relative z-10 text-white font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300">
+                    <span className="relative z-10 font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300 text-[var(--story-text-color)]">
                       تسوقي الآن
                     </span>
                     <div className="absolute inset-0 bg-brand-gold translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out"></div>

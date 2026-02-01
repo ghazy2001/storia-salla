@@ -10,8 +10,8 @@ export const ProductProvider = ({ children }) => {
 
   const addProduct = (newProduct) => {
     setProducts((prev) => [
-      ...prev,
       { ...newProduct, id: Math.max(...prev.map((p) => p.id), 0) + 1 },
+      ...prev,
     ]);
   };
 

@@ -83,6 +83,9 @@ const AdminDashboard = () => {
     image: "/assets/products/p01/p01_1.jpg",
     category: "official",
     sizes: ["S", "M", "L", "XL"],
+    media: [],
+    originalPrice: "",
+    bestSellerDescription: "",
   };
 
   const initialFAQState = {
@@ -588,7 +591,10 @@ const AdminDashboard = () => {
                 {/* Product Form */}
                 {activeTab === "products" && (
                   <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                        المعلومات الأساسية
+                      </h3>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           اسم المنتج
@@ -602,48 +608,65 @@ const AdminDashboard = () => {
                               name: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold outline-none"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
+                          placeholder="مثال: عباية نجد الرسمية"
                           required
                         />
                       </div>
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           السعر
                         </label>
-                        <input
-                          type="text"
-                          value={productForm.price}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={productForm.price}
+                            onChange={(e) =>
+                              setProductForm({
+                                ...productForm,
+                                price: e.target.value,
+                              })
+                            }
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all text-left"
+                            placeholder="350"
+                            dir="ltr"
+                            required
+                          />
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+                            ر.س
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section: Details */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                        التفاصيل الوصف
+                      </h3>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          وصف المنتج
+                        </label>
+                        <textarea
+                          value={productForm.description}
                           onChange={(e) =>
                             setProductForm({
                               ...productForm,
-                              price: e.target.value,
+                              description: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold outline-none"
-                          placeholder="مثال: 350 ر.س"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all min-h-[120px]"
+                          placeholder="اكتب وصفاً جذاباً للمنتج..."
                           required
                         />
                       </div>
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        الوصف
-                      </label>
-                      <textarea
-                        value={productForm.description}
-                        onChange={(e) =>
-                          setProductForm({
-                            ...productForm,
-                            description: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold outline-none h-32"
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Section: Category & Sizes */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {/* Category */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           التصنيف
@@ -656,102 +679,268 @@ const AdminDashboard = () => {
                               category: e.target.value,
                             })
                           }
-                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold outline-none"
+                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all bg-white"
                         >
-                          <option value="official">عربي: رسمي</option>
-                          <option value="cloche">عربي: كلوش</option>
-                          <option value="bisht">عربي: بشت</option>
-                          <option value="classic">عربي: كلاسك</option>
-                          <option value="practical">عربي: عملي</option>
-                          <option value="luxury">عربي: فاخر</option>
+                          <option value="official">رسمي</option>
+                          <option value="cloche">كلوش</option>
+                          <option value="bisht">بشت</option>
+                          <option value="classic">كلاسك (نواعم)</option>
+                          <option value="practical">عملي</option>
+                          <option value="luxury">فاخر</option>
                         </select>
                       </div>
+
+                      {/* Sizes */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          صورة المنتج
+                          المقاسات
                         </label>
-                        <div className="flex gap-4">
-                          <input
-                            type="text"
-                            value={productForm.image}
-                            onChange={(e) =>
-                              setProductForm({
-                                ...productForm,
-                                image: e.target.value,
-                              })
-                            }
-                            className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-brand-gold outline-none text-left"
-                            dir="ltr"
-                            placeholder="/assets/..."
-                          />
-                          <label className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg flex items-center justify-center transition-colors">
-                            <Upload size={20} />
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={(e) => {
-                                if (e.target.files && e.target.files[0]) {
-                                  const file = e.target.files[0];
-                                  const imageUrl = URL.createObjectURL(file);
-                                  setProductForm({
-                                    ...productForm,
-                                    image: imageUrl,
-                                  });
-                                }
-                              }}
-                            />
-                          </label>
+                        <div className="flex flex-wrap gap-2">
+                          {["S", "M", "L", "XL", "XXL"].map((size) => {
+                            const isSelected =
+                              productForm.sizes?.includes(size);
+                            return (
+                              <label
+                                key={size}
+                                className={`cursor-pointer px-4 py-2 rounded-lg border transition-all duration-200 flex items-center justify-center min-w-[50px] text-sm ${
+                                  isSelected
+                                    ? "bg-brand-burgundy text-white border-brand-burgundy shadow-md transform scale-105"
+                                    : "bg-white text-gray-600 border-gray-200 hover:border-brand-burgundy/30 hover:bg-gray-50"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={(e) => {
+                                    const currentSizes =
+                                      productForm.sizes || [];
+                                    if (e.target.checked) {
+                                      setProductForm({
+                                        ...productForm,
+                                        sizes: [...currentSizes, size],
+                                      });
+                                    } else {
+                                      setProductForm({
+                                        ...productForm,
+                                        sizes: currentSizes.filter(
+                                          (s) => s !== size,
+                                        ),
+                                      });
+                                    }
+                                  }}
+                                  className="hidden"
+                                />
+                                <span className="font-bold">{size}</span>
+                              </label>
+                            );
+                          })}
                         </div>
-                        {productForm.image && (
-                          <div className="mt-2 text-xs text-green-600 flex items-center gap-1 justify-end">
-                            تم تحديد الصورة بنجاح
-                          </div>
-                        )}
                       </div>
                     </div>
 
-                    {/* Sizes Selection */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
-                        المقاسات المتوفرة
-                      </label>
-                      <div className="flex flex-wrap gap-3">
-                        {["S", "M", "L", "XL", "XXL"].map((size) => (
-                          <label
-                            key={size}
-                            className="flex items-center gap-2 cursor-pointer"
-                          >
+                    {/* Section: Images */}
+                    <div className="space-y-6">
+                      <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                        الصور والوسائط
+                      </h3>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Main Image */}
+                        <div className="md:col-span-1">
+                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                            الصورة الرئيسية
+                          </label>
+                          <div className="bg-gray-50 p-4 rounded-xl border-2 border-dashed border-gray-300 hover:border-brand-gold transition-colors text-center group h-full flex flex-col items-center justify-center">
+                            {productForm.image ? (
+                              <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden shadow-md mb-3 group-hover:shadow-lg transition-all">
+                                <img
+                                  src={productForm.image}
+                                  alt="Main"
+                                  className="w-full h-full object-cover"
+                                />
+                                <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                  <span className="text-white text-xs font-bold bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full border border-white/50">
+                                    تغيير الصورة
+                                  </span>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) {
+                                        const url = URL.createObjectURL(
+                                          e.target.files[0],
+                                        );
+                                        setProductForm({
+                                          ...productForm,
+                                          image: url,
+                                        });
+                                      }
+                                    }}
+                                  />
+                                </label>
+                              </div>
+                            ) : (
+                              <label className="cursor-pointer flex flex-col items-center gap-2 p-6 w-full h-full justify-center">
+                                <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
+                                  <Upload size={20} />
+                                </div>
+                                <span className="text-sm text-gray-500 font-medium">
+                                  اختر صورة رئيسية
+                                </span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    if (e.target.files?.[0]) {
+                                      const url = URL.createObjectURL(
+                                        e.target.files[0],
+                                      );
+                                      setProductForm({
+                                        ...productForm,
+                                        image: url,
+                                      });
+                                    }
+                                  }}
+                                />
+                              </label>
+                            )}
+
+                            {/* URL Input Fallback */}
+                            <div className="w-full mt-2">
+                              <input
+                                type="text"
+                                value={productForm.image || ""}
+                                onChange={(e) =>
+                                  setProductForm({
+                                    ...productForm,
+                                    image: e.target.value,
+                                  })
+                                }
+                                placeholder="أو رابط صورة..."
+                                className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:ring-1 focus:ring-brand-gold/50 outline-none text-center text-gray-600 bg-white"
+                                dir="ltr"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Gallery */}
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-bold text-gray-700 mb-2">
+                            المعرض (صور إضافية)
+                          </label>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            {productForm.media?.map((item, index) => (
+                              <div
+                                key={index}
+                                className="aspect-[3/4] relative group rounded-lg overflow-hidden shadow-sm border border-gray-100 bg-gray-50"
+                              >
+                                {item.type === "video" ? (
+                                  <video
+                                    src={item.src}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <img
+                                    src={item.src}
+                                    alt={`Gallery ${index}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                )}
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const newMedia = [
+                                        ...(productForm.media || []),
+                                      ];
+                                      newMedia.splice(index, 1);
+                                      setProductForm({
+                                        ...productForm,
+                                        media: newMedia,
+                                      });
+                                    }}
+                                    className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors shadow-sm transform hover:scale-110"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+
+                            {/* Add New Media Button */}
+                            <label className="aspect-[3/4] rounded-lg border-2 border-dashed border-gray-200 hover:border-brand-gold hover:bg-brand-gold/5 flex flex-col items-center justify-center gap-2 cursor-pointer transition-all group bg-gray-50/50">
+                              <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-gray-100 group-hover:border-brand-gold/30 flex items-center justify-center transition-colors">
+                                <Plus
+                                  size={16}
+                                  className="text-gray-400 group-hover:text-brand-gold"
+                                />
+                              </div>
+                              <span className="text-[10px] font-bold text-gray-400 group-hover:text-brand-gold">
+                                إضافة
+                              </span>
+                              <input
+                                type="file"
+                                multiple
+                                accept="image/*,video/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files) {
+                                    const newFiles = Array.from(
+                                      e.target.files,
+                                    ).map((file) => ({
+                                      type: file.type.startsWith("video/")
+                                        ? "video"
+                                        : "image",
+                                      src: URL.createObjectURL(file),
+                                    }));
+                                    setProductForm({
+                                      ...productForm,
+                                      media: [
+                                        ...(productForm.media || []),
+                                        ...newFiles,
+                                      ],
+                                    });
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+
+                          <div className="mt-4">
                             <input
-                              type="checkbox"
-                              checked={productForm.sizes?.includes(size)}
-                              onChange={(e) => {
-                                const currentSizes = productForm.sizes || [];
-                                if (e.target.checked) {
+                              type="text"
+                              placeholder="أو أضف رابط (صورة/فيديو) واضغط Enter..."
+                              className="w-full px-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-gold/50 outline-none transition-all"
+                              onKeyDown={(e) => {
+                                if (
+                                  e.key === "Enter" &&
+                                  e.currentTarget.value
+                                ) {
+                                  e.preventDefault();
+                                  const url = e.currentTarget.value;
+                                  const isVideo =
+                                    url.match(/\.(mp4|webm|ogg)$/i);
                                   setProductForm({
                                     ...productForm,
-                                    sizes: [...currentSizes, size],
+                                    media: [
+                                      ...(productForm.media || []),
+                                      {
+                                        type: isVideo ? "video" : "image",
+                                        src: url,
+                                      },
+                                    ],
                                   });
-                                } else {
-                                  setProductForm({
-                                    ...productForm,
-                                    sizes: currentSizes.filter(
-                                      (s) => s !== size,
-                                    ),
-                                  });
+                                  e.currentTarget.value = "";
                                 }
                               }}
-                              className="w-4 h-4 text-brand-gold border-gray-300 rounded focus:ring-brand-gold"
+                              dir="ltr"
                             />
-                            <span className="text-sm font-medium text-gray-700">
-                              {size}
-                            </span>
-                          </label>
-                        ))}
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        اختر المقاسات المتاحة للمنتج
-                      </p>
                     </div>
                   </>
                 )}
