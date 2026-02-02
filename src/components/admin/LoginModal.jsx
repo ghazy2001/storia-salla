@@ -1,11 +1,18 @@
 import React, { useState } from "react";
 import { X, User } from "lucide-react";
-import { useAdmin } from "../../context/AdminContext";
-import { useCart } from "../../context/useCart";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectShowLoginModal,
+  setShowLoginModal,
+  login,
+} from "../../store/slices/adminSlice";
+import { setCurrentPage } from "../../store/slices/cartSlice";
+
+import { CONTACT_INFO } from "../../utils/constants";
 
 const LoginModal = () => {
-  const { showLoginModal, setShowLoginModal, login } = useAdmin();
-  const { setCurrentPage } = useCart();
+  const showLoginModal = useSelector(selectShowLoginModal);
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
@@ -13,10 +20,11 @@ const LoginModal = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (login(email)) {
+    if (email === CONTACT_INFO.EMAIL) {
+      dispatch(login(email));
       setError("");
       setEmail("");
-      setCurrentPage("admin-dashboard"); // Navigate to admin dashboard
+      dispatch(setCurrentPage("admin-dashboard")); // Navigate to admin dashboard
     } else {
       setError("البريد الإلكتروني غير صحيح");
     }
@@ -26,7 +34,7 @@ const LoginModal = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-lg p-8 w-full max-w-md relative animate-fade-in shadow-2xl">
         <button
-          onClick={() => setShowLoginModal(false)}
+          onClick={() => dispatch(setShowLoginModal(false))}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X size={24} />
