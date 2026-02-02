@@ -21,6 +21,7 @@ import {
   setContactFormOpen,
 } from "../../store/slices/uiSlice";
 import { NAV_LINKS } from "../../utils/constants";
+import { getButtonTheme, getThemeValue } from "../../utils/themeUtils";
 
 const Navbar = ({ theme, toggleTheme }) => {
   const navRef = useRef(null);
@@ -105,15 +106,11 @@ const Navbar = ({ theme, toggleTheme }) => {
 
   const effectiveTextColor = isTransparent
     ? "text-white"
-    : theme === "green"
-      ? "text-brand-charcoal"
-      : "text-brand-light";
+    : getThemeValue(theme, "text-brand-charcoal", "text-brand-light");
 
   const logoFilter = isTransparent
     ? "brightness-0 invert"
-    : theme === "green"
-      ? ""
-      : "brightness-0 invert";
+    : getThemeValue(theme, "", "brightness-0 invert");
 
   return (
     <>
@@ -184,7 +181,7 @@ const Navbar = ({ theme, toggleTheme }) => {
           }}
         >
           <img
-            src={theme === "green" ? "/assets/logo2.png" : "/assets/logo.png"}
+            src={getThemeValue(theme, "/assets/logo2.png", "/assets/logo.png")}
             alt="Storia Logo"
             className={`transition-all duration-700 ease-in-out object-contain w-auto ${!isTransparent ? "h-7 md:h-14" : "h-12 md:h-24"} ${logoFilter}`}
           />
@@ -193,16 +190,14 @@ const Navbar = ({ theme, toggleTheme }) => {
         <div className="flex items-center gap-3 md:gap-8">
           <button
             onClick={toggleTheme}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${
-              theme === "green"
-                ? "bg-brand-charcoal/5 text-brand-charcoal"
-                : "bg-brand-gold/20 text-brand-gold"
-            }`}
-            title={
-              theme === "green" ? "Switch to Dark Mode" : "Switch to Light Mode"
-            }
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
+            title={getThemeValue(
+              theme,
+              "Switch to Dark Mode",
+              "Switch to Light Mode",
+            )}
           >
-            {theme === "green" ? <Moon size={20} /> : <Sun size={20} />}
+            {getThemeValue(theme, <Moon size={20} />, <Sun size={20} />)}
           </button>
           <div
             className="relative group cursor-pointer flex items-center justify-center"
@@ -227,19 +222,17 @@ const Navbar = ({ theme, toggleTheme }) => {
                 dispatch(toggleLoginModal());
               }
             }}
-            className={`hidden lg:flex w-10 h-10 rounded-full items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${
-              theme === "green"
-                ? "bg-brand-charcoal/5 text-brand-charcoal"
-                : "bg-brand-gold/20 text-brand-gold"
-            }`}
+            className={`hidden lg:flex w-10 h-10 rounded-full items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
             title={isAdmin ? "لوحة التحكم" : "تسجيل دخول"}
           >
             {isAdmin ? (
               <User
                 size={20}
-                className={
-                  theme === "green" ? "text-brand-burgundy" : "text-brand-gold"
-                }
+                className={getThemeValue(
+                  theme,
+                  "text-brand-burgundy",
+                  "text-brand-gold",
+                )}
                 fill="currentColor"
               />
             ) : (

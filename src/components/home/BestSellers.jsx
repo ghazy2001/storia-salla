@@ -1,34 +1,43 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector, useDispatch } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import { setCurrentPage } from "../../store/slices/cartSlice";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { selectTheme } from "../../store/slices/uiSlice";
+import { ArrowRight } from "lucide-react";
+import { useScrollContainer } from "../../hooks/useScrollContainer";
+import { useLightbox } from "../../hooks/useLightbox";
+import {
+  getThemeValue,
+  getCardClass,
+  getTextClass,
+} from "../../utils/themeUtils";
+import NavigationArrows from "../common/NavigationArrows";
+import Lightbox from "../common/Lightbox";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const BestSellers = ({ theme, onProductSelect }) => {
+const BestSellers = ({ onProductSelect }) => {
   const sectionRef = useRef(null);
-  const scrollContainerRef = useRef(null);
   const products = useSelector(selectProducts);
+  const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { containerRef, scrollLeft, scrollRight } = useScrollContainer(320);
 
   // Featured product for the banner - نواعم (classic category)
   const featuredProduct =
     products.find((p) => p.category === "classic") || products[0];
 
   // Carousel images: Get media from the featured product
-  // Fallback to just the main image if no media array
   const carouselImages =
     featuredProduct?.media?.filter((m) => m.type === "image") ||
     (featuredProduct ? [{ src: featuredProduct.image, type: "image" }] : []);
 
+  const lightbox = useLightbox(carouselImages);
+
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Simple fade in for the whole section
       gsap.fromTo(
         sectionRef.current,
         { opacity: 0, y: 50 },
@@ -43,56 +52,16 @@ const BestSellers = ({ theme, onProductSelect }) => {
     return () => ctx.revert();
   }, []);
 
-  // Handle body scroll lock when lightbox is open
-  useEffect(() => {
-    if (lightboxOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
-    }
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, [lightboxOpen]);
-
-  const scroll = (direction) => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 320; // Card width + gap
-      scrollContainerRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
-  };
-
-  const openLightbox = (index) => {
-    setCurrentImageIndex(index);
-    setLightboxOpen(true);
-  };
-
-  const closeLightbox = () => {
-    setLightboxOpen(false);
-  };
-
-  const navigateLightbox = (direction) => {
-    if (direction === "next") {
-      setCurrentImageIndex((prev) => (prev + 1) % carouselImages.length);
-    } else {
-      setCurrentImageIndex(
-        (prev) => (prev - 1 + carouselImages.length) % carouselImages.length,
-      );
-    }
-  };
-
   if (!featuredProduct) return null;
+
+  const sectionBgClass = getThemeValue(theme, "bg-white", "bg-brand-burgundy");
+  const textColorClass = getTextClass(theme);
 
   return (
     <>
       <section
         ref={sectionRef}
-        className={`py-12 md:py-24 px-6 md:px-12 transition-colors duration-500 overflow-hidden ${
-          theme === "green" ? "bg-white" : "bg-brand-burgundy"
-        }`}
+        className={`py-12 md:py-24 px-6 md:px-12 transition-colors duration-500 overflow-hidden ${sectionBgClass}`}
       >
         <div className="max-w-[1920px] mx-auto flex flex-col lg:flex-row gap-8 h-full">
           {/* RIGHT SIDE: Banner (RTL First) */}
@@ -128,31 +97,19 @@ const BestSellers = ({ theme, onProductSelect }) => {
           {/* LEFT SIDE: Carousel */}
           <div className="w-full lg:w-[60%] flex flex-col justify-center group/carousel">
             <div className="relative">
-              {/* New Side Navigation Arrows (Mobile/Tablet Visible) */}
-              <button
-                onClick={() => scroll("left")}
-                className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 disabled:opacity-0 md:hidden backdrop-blur-md border ${
-                  theme === "green"
-                    ? "bg-white/70 border-brand-charcoal/10 text-brand-charcoal hover:bg-white"
-                    : "bg-black/30 border-white/10 text-white hover:bg-black/50"
-                }`}
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <button
-                onClick={() => scroll("right")}
-                className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 p-3 rounded-full shadow-lg opacity-0 group-hover/carousel:opacity-100 transition-all duration-300 disabled:opacity-0 md:hidden backdrop-blur-md border ${
-                  theme === "green"
-                    ? "bg-white/70 border-brand-charcoal/10 text-brand-charcoal hover:bg-white"
-                    : "bg-black/30 border-white/10 text-white hover:bg-black/50"
-                }`}
-              >
-                <ArrowRight size={20} />
-              </button>
+              {/* Mobile Navigation Arrows (Overlay) */}
+              <div className="md:hidden">
+                <NavigationArrows
+                  onPrev={scrollLeft}
+                  onNext={scrollRight}
+                  theme={theme}
+                  variant="overlay"
+                />
+              </div>
 
               {/* Scroll Container */}
               <div
-                ref={scrollContainerRef}
+                ref={containerRef}
                 className="flex gap-6 overflow-x-auto pb-12 pt-4 px-4 snap-x scrollbar-hide scroll-smooth"
                 style={{ direction: "rtl" }}
               >
@@ -163,11 +120,11 @@ const BestSellers = ({ theme, onProductSelect }) => {
                   >
                     {/* Card Container */}
                     <div
-                      className={`rounded-[2rem] p-2 transition-all duration-300 hover:shadow-xl ${theme === "green" ? "bg-[#F9F9F9]" : "bg-white/5 border border-white/10"}`}
+                      className={`rounded-[2rem] p-2 transition-all duration-300 hover:shadow-xl ${getCardClass(theme)}`}
                     >
                       {/* Image Area */}
                       <div
-                        onClick={() => openLightbox(index)}
+                        onClick={() => lightbox.open(index)}
                         className="aspect-[3/4] rounded-3xl overflow-hidden mb-4 relative cursor-pointer"
                       >
                         <img
@@ -201,7 +158,7 @@ const BestSellers = ({ theme, onProductSelect }) => {
 
             {/* Navigation & Info */}
             <div
-              className={`flex justify-between items-center px-8 mt-6 gap-12 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+              className={`flex justify-between items-center px-8 mt-6 gap-12 ${textColorClass}`}
             >
               <div className="w-full text-right">
                 <div className="flex items-center gap-3 mb-2">
@@ -210,90 +167,37 @@ const BestSellers = ({ theme, onProductSelect }) => {
                   </div>
                 </div>
                 <p
-                  className={`${theme === "green" ? "text-brand-charcoal" : "text-white"} opacity-80 text-lg font-light leading-relaxed`}
+                  className={`${textColorClass} opacity-80 text-lg font-light leading-relaxed`}
                 >
                   {featuredProduct.bestSellerDescription ||
                     featuredProduct.description}
                 </p>
               </div>
 
-              <div className="gap-4 hidden md:flex">
-                {/* Hidden on mobile, flex on md */}
-                <button
-                  onClick={() => scroll("left")}
-                  className={`group/arrow transition-all duration-300 p-3 border rounded-full ${
-                    theme === "green"
-                      ? "border-brand-charcoal/20 hover:bg-brand-charcoal hover:text-white"
-                      : "border-white/20 hover:bg-white hover:text-custom-burgundy"
-                  }`}
-                >
-                  <ArrowLeft size={24} />
-                </button>
-                <button
-                  onClick={() => scroll("right")}
-                  className={`group/arrow transition-all duration-300 p-3 border rounded-full ${
-                    theme === "green"
-                      ? "border-brand-charcoal/20 hover:bg-brand-charcoal hover:text-white"
-                      : "border-white/20 hover:bg-white hover:text-custom-burgundy"
-                  }`}
-                >
-                  <ArrowRight size={24} />
-                </button>
-              </div>
+              {/* Desktop Navigation Arrows */}
+              <NavigationArrows
+                onPrev={scrollLeft}
+                onNext={scrollRight}
+                theme={theme}
+                variant="desktop"
+                className="hidden md:flex"
+              />
             </div>
           </div>
         </div>
       </section>
 
       {/* Lightbox Modal */}
-      {lightboxOpen && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
-          onClick={closeLightbox}
-        >
-          {/* Close Button */}
-          <button
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 z-[101] text-white hover:text-brand-gold transition-colors p-2 rounded-full bg-white/10 backdrop-blur-sm"
-          >
-            <X size={32} />
-          </button>
-
-          {/* Navigation Buttons */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateLightbox("prev");
-            }}
-            className="absolute left-6 z-[101] text-white hover:text-brand-gold transition-colors p-3 rounded-full bg-white/10 backdrop-blur-sm"
-          >
-            <ArrowLeft size={32} />
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              navigateLightbox("next");
-            }}
-            className="absolute right-6 z-[101] text-white hover:text-brand-gold transition-colors p-3 rounded-full bg-white/10 backdrop-blur-sm"
-          >
-            <ArrowRight size={32} />
-          </button>
-
-          {/* Image */}
-          <img
-            src={carouselImages[currentImageIndex]?.src}
-            alt={`${featuredProduct.name} - ${currentImageIndex + 1}`}
-            className="max-h-[90vh] max-w-[90vw] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          {/* Image Counter */}
-          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full text-sm">
-            {currentImageIndex + 1} / {carouselImages.length}
-          </div>
-        </div>
-      )}
+      <Lightbox
+        isOpen={lightbox.isOpen}
+        image={lightbox.currentImage?.src}
+        onClose={lightbox.close}
+        onPrev={lightbox.prev}
+        onNext={lightbox.next}
+        currentIndex={lightbox.currentIndex}
+        totalImages={carouselImages.length}
+        altText={`${featuredProduct.name} - ${lightbox.currentIndex + 1}`}
+      />
     </>
   );
 };

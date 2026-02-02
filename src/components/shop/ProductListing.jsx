@@ -7,8 +7,10 @@ gsap.registerPlugin(ScrollTrigger);
 
 import { useSelector } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
+import { selectTheme } from "../../store/slices/uiSlice";
 
-const ProductListing = ({ theme, goToStore, onProductSelect }) => {
+const ProductListing = ({ goToStore, onProductSelect }) => {
+  const theme = useSelector(selectTheme);
   const products = useSelector(selectProducts);
   const sectionRef = useRef(null);
   const trackRef = useRef(null);

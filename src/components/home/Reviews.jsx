@@ -1,22 +1,18 @@
 import React, { useState } from "react";
-import {
-  Star,
-  MessageCircle,
-  Send,
-  X,
-  Quote,
-  BadgeCheck,
-  Plus,
-} from "lucide-react";
+import { Star, MessageCircle, Send, X, Quote, BadgeCheck } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectReviews, addReview } from "../../store/slices/contentSlice";
+import {
+  getBackgroundClass,
+  getTextClass,
+  getThemeValue,
+} from "../../utils/themeUtils";
 
 const Reviews = ({ theme }) => {
   const reviews = useSelector(selectReviews);
   const dispatch = useDispatch();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newReview, setNewReview] = useState({ name: "", text: "", rating: 5 });
-  // Duplicate reviews for seamless marquee
   const duplicatedReviews = [...reviews, ...reviews, ...reviews, ...reviews];
 
   const handleAddReview = (e) => {
@@ -27,27 +23,30 @@ const Reviews = ({ theme }) => {
     setIsModalOpen(false);
   };
 
+  const bgClass = getBackgroundClass(theme);
+  const textClass = getTextClass(theme);
+  const cardBgClass = getThemeValue(
+    theme,
+    "bg-white border border-brand-charcoal/5",
+    "bg-white/5 border border-white/10",
+  );
+  const textOpacityClass = getThemeValue(
+    theme,
+    "text-brand-charcoal/80",
+    "text-white/80",
+  );
+
   return (
     <section
-      className={`py-24 relative overflow-hidden transition-colors duration-500 ${
-        theme === "green" ? "bg-brand-offwhite" : "bg-brand-burgundy"
-      }`}
+      className={`py-24 relative overflow-hidden transition-colors duration-500 ${bgClass}`}
     >
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12">
           <div className="text-right w-full md:w-auto mb-8 md:mb-0 order-2 md:order-1">
-            <h2
-              className={`text-3xl md:text-5xl font-sans mb-4 ${
-                theme === "green" ? "text-brand-charcoal" : "text-white"
-              }`}
-            >
+            <h2 className={`text-3xl md:text-5xl font-sans mb-4 ${textClass}`}>
               اراء العملاء
             </h2>
-            <p
-              className={`text-sm tracking-wide opacity-70 ${
-                theme === "green" ? "text-brand-charcoal" : "text-white"
-              }`}
-            >
+            <p className={`text-sm tracking-wide opacity-70 ${textClass}`}>
               تجارب استثنائية لأشخاص يقدرون الفخامة
             </p>
           </div>
@@ -59,18 +58,12 @@ const Reviews = ({ theme }) => {
             {duplicatedReviews.map((review, index) => (
               <div
                 key={`${review.id}-${index}`}
-                className={`w-[85vw] md:w-[400px] p-8 rounded-3xl relative group transition-all duration-300 ${
-                  theme === "green"
-                    ? "bg-white border border-brand-charcoal/5"
-                    : "bg-white/5 border border-white/10"
-                }`}
+                className={`w-[85vw] md:w-[400px] p-8 rounded-3xl relative group transition-all duration-300 ${cardBgClass}`}
                 dir="rtl"
               >
                 {/* Decorative Quote */}
                 <Quote
-                  className={`absolute top-6 left-6 opacity-10 rotate-180 transition-opacity group-hover:opacity-20 ${
-                    theme === "green" ? "text-brand-charcoal" : "text-white"
-                  }`}
+                  className={`absolute top-6 left-6 opacity-10 rotate-180 transition-opacity group-hover:opacity-20 ${textClass}`}
                   size={48}
                 />
 
@@ -78,9 +71,7 @@ const Reviews = ({ theme }) => {
                 <div className="flex items-center gap-4 mb-6">
                   <div className="text-right">
                     <h3
-                      className={`font-bold text-sm tracking-wide flex items-center gap-2 ${
-                        theme === "green" ? "text-brand-charcoal" : "text-white"
-                      }`}
+                      className={`font-bold text-sm tracking-wide flex items-center gap-2 ${textClass}`}
                     >
                       <BadgeCheck
                         size={14}
@@ -107,11 +98,7 @@ const Reviews = ({ theme }) => {
 
                 {/* Review Text */}
                 <p
-                  className={`text-sm md:text-base font-sans leading-relaxed line-clamp-4 ${
-                    theme === "green"
-                      ? "text-brand-charcoal/80"
-                      : "text-white/80"
-                  }`}
+                  className={`text-sm md:text-base font-sans leading-relaxed line-clamp-4 ${textOpacityClass}`}
                 >
                   "{review.text}"
                 </p>
@@ -125,56 +112,52 @@ const Reviews = ({ theme }) => {
       <div className="flex justify-center mt-12 relative z-10">
         <button
           onClick={() => setIsModalOpen(true)}
-          className={`inline-flex items-center gap-3 px-10 py-4 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-xl ${
-            theme === "green"
-              ? "bg-brand-charcoal text-white hover:bg-brand-gold"
-              : "bg-white/10 text-white hover:bg-white/20 border border-white/10"
-          }`}
+          className={`inline-flex items-center gap-3 px-10 py-4 rounded-full text-sm font-bold transition-all hover:scale-105 shadow-xl ${getThemeValue(
+            theme,
+            "bg-brand-charcoal text-white hover:bg-brand-gold",
+            "bg-white/10 text-white hover:bg-white/20 border border-white/10",
+          )}`}
         >
           <span>أضف تعليقك</span>
           <MessageCircle size={20} />
         </button>
       </div>
 
-      {/* Existing Modal Logic */}
+      {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all duration-300 dir-rtl">
           <div
-            className={`relative w-full max-w-lg p-10 rounded-[2rem] shadow-2xl transform transition-all scale-100 ${theme === "green" ? "bg-white" : "bg-brand-burgundy border border-white/10"}`}
+            className={`relative w-full max-w-lg p-10 rounded-[2rem] shadow-2xl transform transition-all scale-100 ${getThemeValue(theme, "bg-white", "bg-brand-burgundy border border-white/10")}`}
           >
             <button
               onClick={() => setIsModalOpen(false)}
-              className={`absolute top-6 left-6 p-2 rounded-full hover:bg-black/5 transition-colors ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
+              className={`absolute top-6 left-6 p-2 rounded-full hover:bg-black/5 transition-colors ${textClass}`}
             >
               <X size={24} />
             </button>
 
-            <h3
-              className={`text-3xl font-sans text-center mb-2 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
-            >
+            <h3 className={`text-3xl font-sans text-center mb-2 ${textClass}`}>
               شاركنا برأيك
             </h3>
-            <p
-              className={`text-center text-sm mb-8 opacity-60 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
-            >
+            <p className={`text-center text-sm mb-8 opacity-60 ${textClass}`}>
               رأيك يهمنا ويساعدنا في التطور
             </p>
 
             <form onSubmit={handleAddReview} className="space-y-6">
               <div className="space-y-2">
                 <label
-                  className={`block text-xs uppercase tracking-widest ${theme === "green" ? "text-brand-charcoal/60" : "text-white/60"}`}
+                  className={`block text-xs uppercase tracking-widest ${getThemeValue(theme, "text-brand-charcoal/60", "text-white/60")}`}
                 >
                   الاسم
                 </label>
                 <input
                   type="text"
                   required
-                  className={`w-full p-4 rounded-xl text-right outline-none ring-1 focus:ring-2 focus:ring-brand-gold transition-all ${
-                    theme === "green"
-                      ? "bg-gray-50 ring-gray-200 text-brand-charcoal"
-                      : "bg-white/5 ring-white/10 text-white"
-                  }`}
+                  className={`w-full p-4 rounded-xl text-right outline-none ring-1 focus:ring-2 focus:ring-brand-gold transition-all ${getThemeValue(
+                    theme,
+                    "bg-gray-50 ring-gray-200 text-brand-charcoal",
+                    "bg-white/5 ring-white/10 text-white",
+                  )}`}
                   value={newReview.name}
                   onChange={(e) =>
                     setNewReview({ ...newReview, name: e.target.value })
@@ -185,7 +168,7 @@ const Reviews = ({ theme }) => {
 
               <div className="space-y-2">
                 <label
-                  className={`block text-xs uppercase tracking-widest ${theme === "green" ? "text-brand-charcoal/60" : "text-white/60"}`}
+                  className={`block text-xs uppercase tracking-widest ${getThemeValue(theme, "text-brand-charcoal/60", "text-white/60")}`}
                 >
                   التقييم
                 </label>
@@ -214,18 +197,18 @@ const Reviews = ({ theme }) => {
 
               <div className="space-y-2">
                 <label
-                  className={`block text-xs uppercase tracking-widest ${theme === "green" ? "text-brand-charcoal/60" : "text-white/60"}`}
+                  className={`block text-xs uppercase tracking-widest ${getThemeValue(theme, "text-brand-charcoal/60", "text-white/60")}`}
                 >
                   التعليق
                 </label>
                 <textarea
                   required
                   rows="4"
-                  className={`w-full p-4 rounded-xl text-right outline-none ring-1 focus:ring-2 focus:ring-brand-gold transition-all resize-none ${
-                    theme === "green"
-                      ? "bg-gray-50 ring-gray-200 text-brand-charcoal"
-                      : "bg-white/5 ring-white/10 text-white"
-                  }`}
+                  className={`w-full p-4 rounded-xl text-right outline-none ring-1 focus:ring-2 focus:ring-brand-gold transition-all resize-none ${getThemeValue(
+                    theme,
+                    "bg-gray-50 ring-gray-200 text-brand-charcoal",
+                    "bg-white/5 ring-white/10 text-white",
+                  )}`}
                   value={newReview.text}
                   onChange={(e) =>
                     setNewReview({ ...newReview, text: e.target.value })

@@ -8,11 +8,13 @@ import {
   clearCart,
   setCurrentPage,
 } from "../../store/slices/cartSlice";
+import { selectTheme } from "../../store/slices/uiSlice";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 
-const ShoppingCart = ({ theme, onContinueShopping }) => {
+const ShoppingCart = ({ onContinueShopping }) => {
   const cartItems = useSelector(selectCartItems);
+  const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
   const subtotal = useSelector(selectCartTotal);
   const containerRef = useRef(null);

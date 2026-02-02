@@ -2,12 +2,14 @@ import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { addToCart } from "../../store/slices/cartSlice";
 import { selectProducts } from "../../store/slices/productSlice";
+import { selectTheme } from "../../store/slices/uiSlice";
 import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 
-const ProductDetails = ({ productId, theme }) => {
+const ProductDetails = ({ productId }) => {
   const products = useSelector(selectProducts);
+  const theme = useSelector(selectTheme);
   const product = products.find((p) => p.id === productId);
 
   const [activeMedia, setActiveMedia] = useState(0);
@@ -26,7 +28,7 @@ const ProductDetails = ({ productId, theme }) => {
       alert("الرجاء اختيار المقاس");
       return;
     }
-    dispatch(addToCart({ ...product, selectedSize }));
+    dispatch(addToCart({ product, quantity: 1, size: selectedSize }));
     setShowToast(true);
   };
 

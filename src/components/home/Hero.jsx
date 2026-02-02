@@ -184,13 +184,10 @@ const Hero = ({ goToStore, onProductSelect }) => {
           سعودية حديثة.
         </p>
         <button
-          className="group relative px-10 md:px-12 py-4 md:py-5 overflow-hidden border border-brand-gold/30 bg-black/20 backdrop-blur-xl cursor-pointer hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-1 pointer-events-auto"
+          className="px-10 md:px-12 py-4 md:py-5 border border-brand-gold/30 bg-black/20 backdrop-blur-xl cursor-pointer text-white hover:bg-brand-gold hover:border-brand-gold hover:text-white transition-all duration-300 transform hover:-translate-y-1 pointer-events-auto uppercase tracking-[0.3em] text-[10px] md:text-[11px] font-semibold"
           onClick={goToStore}
         >
-          <span className="relative z-10 uppercase tracking-[0.3em] text-[10px] md:text-[11px] font-semibold transition-colors duration-300">
-            تسوقي الآن
-          </span>
-          <div className="absolute inset-0 bg-brand-gold/80 translate-y-full group-hover:translate-y-0 transition-transform duration-700 ease-[cubic-bezier(0.19,1,0.22,1)]"></div>
+          تسوقي الآن
         </button>
       </div>
 

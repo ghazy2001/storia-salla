@@ -10,26 +10,10 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action) => {
-      let product = action.payload;
-      let quantity = 1;
-      let size = null;
-
-      // Handle structured payload { product, quantity, size }
-      if (action.payload.product) {
-        product = action.payload.product;
-        quantity = action.payload.quantity || 1;
-        size = action.payload.size || null;
-      }
-      // Handle flat payload (product object directly)
-      else {
-        quantity = product.quantity || 1;
-        size = product.selectedSize || product.size || null;
-      }
-
-      const finalSize = size || product.selectedSize;
+      const { product, quantity = 1, size = null } = action.payload;
 
       const existingItem = state.cartItems.find(
-        (item) => item.id === product.id && item.size === finalSize,
+        (item) => item.id === product.id && item.size === size,
       );
 
       if (existingItem) {
@@ -38,8 +22,8 @@ const cartSlice = createSlice({
         state.cartItems.push({
           ...product,
           quantity,
-          size: finalSize,
-          selectedSize: finalSize,
+          size,
+          selectedSize: size, // Keep selectedSize for compatibility if needed, or remove if fully migrated
         });
       }
     },

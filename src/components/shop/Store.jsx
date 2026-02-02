@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Search, SlidersHorizontal, ArrowLeft, ArrowRight } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import ProductCarousel from "./ProductCarousel";
 import { addToCart } from "../../store/slices/cartSlice";
 import Toast from "../common/Toast";
+import { NAV_LINKS } from "../../utils/constants";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,19 +24,10 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   }, [initialFilter]);
 
   const handleAddToCart = (product) => {
-    dispatch(addToCart(product));
+    // Default size logic could go here, for now passing null as Store doesn't select size
+    dispatch(addToCart({ product, quantity: 1, size: null }));
     setShowToast(true);
   };
-
-  const categories = [
-    { id: "all", label: "جميع العبايات" },
-    { id: "official", label: "رسمية" },
-    { id: "practical", label: "عملية" },
-    { id: "luxury", label: "فاخرة" },
-    { id: "cloche", label: "كلوش" },
-    { id: "bisht", label: "بشت" },
-    { id: "classic", label: "نواعم" },
-  ];
 
   useEffect(() => {
     // Filter products with animation
@@ -90,7 +81,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-16 justify-start">
-        {categories.map((cat) => (
+        {[{ id: "all", label: "جميع العبايات" }, ...NAV_LINKS].map((cat) => (
           <button
             key={cat.id}
             onClick={() => setFilter(cat.id)}

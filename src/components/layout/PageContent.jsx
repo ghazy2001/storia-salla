@@ -51,7 +51,6 @@ const PageContent = () => {
     case "store":
       return (
         <Store
-          theme={theme}
           initialFilter={selectedCategory}
           onProductSelect={handleProductSelect}
         />
@@ -59,34 +58,26 @@ const PageContent = () => {
     case "admin-dashboard":
       return <AdminDashboard theme={theme} />;
     case "cart":
-      return (
-        <ShoppingCart theme={theme} onContinueShopping={handleGoToStore} />
-      );
+      return <ShoppingCart onContinueShopping={handleGoToStore} />;
     case "checkout":
       return <Checkout theme={theme} />;
     case "product-details":
       return (
-        <ProductDetails
-          key={selectedProductId}
-          theme={theme}
-          productId={selectedProductId}
-        />
+        <ProductDetails key={selectedProductId} productId={selectedProductId} />
       );
     default:
       return (
         <>
           <Hero
-            theme={theme}
             goToStore={handleGoToStore}
             onProductSelect={handleProductSelect}
           />
           <ProductListing
-            theme={theme}
             goToStore={handleGoToStore}
             onProductSelect={handleProductSelect}
           />
           <OurStory theme={theme} />
-          <BestSellers theme={theme} onProductSelect={handleProductSelect} />
+          <BestSellers onProductSelect={handleProductSelect} />
           <Reviews theme={theme} />
           <FAQ theme={theme} />
         </>

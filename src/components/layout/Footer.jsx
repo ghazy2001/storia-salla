@@ -1,5 +1,6 @@
 import React from "react";
 import { Instagram, Facebook, Mail } from "lucide-react";
+import { getThemeValue } from "../../utils/themeUtils";
 import { useDispatch } from "react-redux";
 import { setCurrentPage } from "../../store/slices/cartSlice";
 import {
@@ -64,11 +65,9 @@ const Footer = ({ theme }) => {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-12 border-b border-white/10 pb-20">
         <div className="col-span-1 md:col-span-2 order-1">
           <img
-            src={theme === "green" ? "/assets/logo2.png" : "/assets/logo.png"}
+            src={getThemeValue(theme, "/assets/logo2.png", "/assets/logo.png")}
             alt="STORIA DESIGN"
-            className={`h-16 mb-6 ml-auto ${
-              theme === "green" ? "brightness-0 invert" : ""
-            }`}
+            className={`h-16 mb-6 ml-auto ${getThemeValue(theme, "brightness-0 invert", "")}`}
           />
           <p className="text-xs md:text-sm font-light text-brand-light/50 leading-relaxed tracking-wide mb-8">
             عباية STORIA علامة تجارية فاخرة للعبايات، تستمد إلهامها من الأناقة
