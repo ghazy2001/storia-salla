@@ -42,11 +42,12 @@ export const useAppInitialization = () => {
     }
 
     const state = { page: currentPage };
+    const url = currentPage === "home" ? "/" : `/${currentPage}`;
     if (isFirstLoad.current) {
-      window.history.replaceState(state, "");
+      window.history.replaceState(state, "", url);
       isFirstLoad.current = false;
     } else {
-      window.history.pushState(state, "");
+      window.history.pushState(state, "", url);
     }
   }, [currentPage]);
 

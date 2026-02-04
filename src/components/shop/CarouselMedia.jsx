@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import gsap from "gsap";
+import { resolveAsset } from "../../utils/assetUtils";
 
 const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
   const mediaRef = useRef(null);
@@ -59,7 +60,7 @@ const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
       <div ref={mediaRef} className="w-full h-full bg-brand-charcoal/5">
         {currentMedia.type === "video" ? (
           <video
-            src={currentMedia.src}
+            src={resolveAsset(currentMedia.src)}
             className="w-full h-full object-cover"
             autoPlay
             loop
@@ -68,7 +69,7 @@ const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
           />
         ) : (
           <img
-            src={currentMedia.src}
+            src={resolveAsset(currentMedia.src)}
             alt={`${product.name} view ${currentIndex + 1}`}
             className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
           />

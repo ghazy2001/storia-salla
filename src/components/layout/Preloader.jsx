@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { resolveAsset } from "../../utils/assetUtils";
 
 const Preloader = ({ isReady }) => {
   const [shouldRender, setShouldRender] = useState(true);
@@ -19,7 +20,7 @@ const Preloader = ({ isReady }) => {
     >
       <div className="relative">
         <img
-          src="/assets/logo.png"
+          src={resolveAsset("assets/logo.png")}
           alt="Storia Logo"
           className="h-16 brightness-0 invert animate-pulse"
           style={{ animationDuration: "2s" }}

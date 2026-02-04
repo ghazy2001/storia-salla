@@ -213,8 +213,9 @@ const ShoppingCart = ({ onContinueShopping }) => {
                       }`}
                     >
                       {(
-                        parseFloat(item.price.replace(/[^\d.-]/g, "")) *
-                        item.quantity
+                        (item.price && typeof item.price === "string"
+                          ? parseFloat(item.price.replace(/[^\d.-]/g, ""))
+                          : 0) * item.quantity
                       ).toFixed(2)}{" "}
                       ر.س
                     </p>

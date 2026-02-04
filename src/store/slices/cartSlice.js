@@ -12,6 +12,12 @@ const cartSlice = createSlice({
     addToCart: (state, action) => {
       const { product, quantity = 1, size = null } = action.payload;
 
+      // Defensive check to ensure we have a valid product object
+      if (!product || !product.id) {
+        console.error("Invalid product added to cart:", product);
+        return;
+      }
+
       const existingItem = state.cartItems.find(
         (item) => item.id === product.id && item.size === size,
       );
@@ -96,8 +102,9 @@ export const selectCartItems = (state) => state.cart.cartItems;
 export const selectCurrentPage = (state) => state.cart.currentPage;
 export const selectCartTotal = (state) =>
   state.cart.cartItems.reduce((total, item) => {
+    if (!item.price || typeof item.price !== "string") return total;
     const price = parseFloat(item.price.replace(/[^\d.-]/g, ""));
-    return total + price * item.quantity;
+    return total + (isNaN(price) ? 0 : price) * item.quantity;
   }, 0);
 export const selectCartCount = (state) =>
   state.cart.cartItems.reduce((count, item) => count + item.quantity, 0);

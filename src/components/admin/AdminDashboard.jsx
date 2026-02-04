@@ -16,6 +16,7 @@ import {
   deleteFAQ,
 } from "../../store/slices/contentSlice";
 import { setCurrentPage } from "../../store/slices/cartSlice";
+import { resolveAsset } from "../../utils/assetUtils";
 import {
   Plus,
   MessageSquare,
@@ -92,7 +93,7 @@ const AdminDashboard = () => {
     name: "",
     price: "",
     description: "",
-    image: "/assets/products/p01/p01_1.jpg",
+    image: "assets/products/p01/p01_1.jpg",
     category: "official",
     sizes: ["S", "M", "L", "XL"],
     media: [],

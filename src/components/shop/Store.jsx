@@ -23,9 +23,9 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     setFilter(initialFilter);
   }, [initialFilter]);
 
-  const handleAddToCart = (product) => {
-    // Default size logic could go here, for now passing null as Store doesn't select size
-    dispatch(addToCart({ product, quantity: 1, size: null }));
+  const handleAddToCart = (payload) => {
+    // payload is already { product, quantity, size } from CarouselInfo
+    dispatch(addToCart(payload));
     setShowToast(true);
   };
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { resolveAsset } from "../../utils/assetUtils";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useDispatch } from "react-redux";
 import { setCurrentPage } from "../../store/slices/cartSlice";
@@ -126,7 +127,7 @@ const OurStory = ({ theme }) => {
                 className={`relative aspect-[3/4] overflow-hidden rounded-sm story-image shadow-2xl border ${borderColorClass}`}
               >
                 <img
-                  src="/assets/storia_about.jpg"
+                  src={resolveAsset("assets/storia_about.jpg")}
                   alt="Storia Details"
                   className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-all duration-1000 hover:scale-105"
                 />

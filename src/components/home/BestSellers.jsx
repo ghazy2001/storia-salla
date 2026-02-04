@@ -15,6 +15,7 @@ import {
 } from "../../utils/themeUtils";
 import NavigationArrows from "../common/NavigationArrows";
 import Lightbox from "../common/Lightbox";
+import { resolveAsset } from "../../utils/assetUtils";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -69,7 +70,9 @@ const BestSellers = ({ onProductSelect }) => {
             {/* Banner Image */}
             <div className="absolute inset-0">
               <img
-                src={carouselImages[0]?.src || featuredProduct.image}
+                src={resolveAsset(
+                  carouselImages[0]?.src || featuredProduct.image,
+                )}
                 alt={featuredProduct.name}
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
@@ -128,7 +131,7 @@ const BestSellers = ({ onProductSelect }) => {
                         className="aspect-[3/4] rounded-3xl overflow-hidden mb-4 relative cursor-pointer"
                       >
                         <img
-                          src={mediaItem.src}
+                          src={resolveAsset(mediaItem.src)}
                           alt={`${featuredProduct.name} - View ${index + 1}`}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
