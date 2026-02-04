@@ -16,7 +16,6 @@ import {
   deleteFAQ,
 } from "../../store/slices/contentSlice";
 import { setCurrentPage } from "../../store/slices/cartSlice";
-import { resolveAsset } from "../../utils/assetUtils";
 import {
   Plus,
   MessageSquare,

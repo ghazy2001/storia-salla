@@ -6,8 +6,14 @@
  */
 export const resolveAsset = (path) => {
   if (!path) return "";
-  // If it's already an external URL, return it as is
-  if (path.startsWith("http") || path.startsWith("//")) return path;
+  // If it's already an external URL or a data/blob URL, return it as is
+  if (
+    path.startsWith("http") ||
+    path.startsWith("//") ||
+    path.startsWith("blob:") ||
+    path.startsWith("data:")
+  )
+    return path;
 
   const base = import.meta.env.BASE_URL || "/";
   // Ensure we don't have double slashes

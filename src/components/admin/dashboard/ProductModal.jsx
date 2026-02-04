@@ -1,4 +1,5 @@
 import { Upload, X } from "lucide-react";
+import { resolveAsset } from "../../../utils/assetUtils";
 
 const ProductModal = ({
   isOpen,
@@ -190,7 +191,7 @@ const ProductModal = ({
                       {productForm.image ? (
                         <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden shadow-md mb-3 group-hover:shadow-lg transition-all">
                           <img
-                            src={productForm.image}
+                            src={resolveAsset(productForm.image)}
                             alt="Main"
                             className="w-full h-full object-cover"
                           />
@@ -260,7 +261,7 @@ const ProductModal = ({
                             />
                           ) : (
                             <img
-                              src={media.src}
+                              src={resolveAsset(media.src)}
                               alt=""
                               className="w-full h-full object-cover"
                             />

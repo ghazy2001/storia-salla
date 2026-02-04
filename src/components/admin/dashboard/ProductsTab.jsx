@@ -1,5 +1,6 @@
 import React from "react";
 import { Edit2, Trash2 } from "lucide-react";
+import { resolveAsset } from "../../../utils/assetUtils";
 
 const ProductsTab = ({ products, handleEdit, handleDelete }) => {
   return (
@@ -11,7 +12,7 @@ const ProductsTab = ({ products, handleEdit, handleDelete }) => {
         >
           <div className="aspect-[3/4] relative">
             <img
-              src={product.image}
+              src={resolveAsset(product.image)}
               alt={product.name}
               className="w-full h-full object-cover"
             />
