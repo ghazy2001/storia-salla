@@ -56,7 +56,7 @@ const FAQ = ({ theme }) => {
         ease: "none",
         scrollTrigger: {
           trigger: sectionRef.current,
-          start: "bottom bottom",
+          start: "bottom+=400 bottom",
           pin: true,
           pinSpacing: false,
           end: "+=100%",
