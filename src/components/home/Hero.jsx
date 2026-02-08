@@ -180,8 +180,8 @@ const Hero = ({ goToStore, onProductSelect }) => {
             DESIGN
           </span>
         </h2>
-        <p className="text-white/90 text-[11px] md:text-sm max-w-[280px] md:max-w-md mx-auto mb-10 tracking-[0.1em] md:tracking-[0.2em] font-light leading-relaxed backdrop-blur-md px-6 md:px-8 py-3 rounded-full border border-white/5 bg-white/5">
-          مستوحاة من الأناقة والذوق السعودي الأصيل. أنثوية راقية وقيم موضة
+        <p className="text-white text-xs sm:text-sm md:text-lg max-w-[90%] sm:max-w-lg md:max-w-2xl mx-auto mb-12 font-medium tracking-normal leading-loose backdrop-blur-xl px-8 py-4 rounded-full border border-white/10 bg-black/30 shadow-2xl transition-all duration-300 hover:bg-black/40 hover:scale-[1.02]">
+          مستوحاة من الأناقة والذوق السعودي الأصيل، أنثوية راقية وقيم موضة
           سعودية حديثة.
         </p>
         <button
