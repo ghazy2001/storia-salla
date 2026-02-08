@@ -164,9 +164,12 @@ const Footer = ({ theme }) => {
           </form>
         </div>
       </div>
-      <div className="mt-12 flex flex-col text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2 text-right">
-        <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
-        <span>الرقم الضريبي</span>
+      <div className="mt-12 w-full grid grid-cols-1 md:grid-cols-3 items-center text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2">
+        <span className="text-center md:text-start">الرقم الضريبي</span>
+        <span dir="ltr" className="text-center">
+          &copy; 2026 STORIA DESIGN. All Rights Reserved.
+        </span>
+        <div className="hidden md:block"></div>
       </div>
     </footer>
   );
