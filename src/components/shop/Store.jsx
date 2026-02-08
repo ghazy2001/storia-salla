@@ -4,7 +4,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector, useDispatch } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import ProductCarousel from "./ProductCarousel";
-import { addToCart } from "../../store/slices/cartSlice";
+import { addToCart, setCurrentPage } from "../../store/slices/cartSlice";
 import Toast from "../common/Toast";
 import { NAV_LINKS } from "../../utils/constants";
 
@@ -102,6 +102,10 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
           message="تمت إضافة المنتج إلى السلة بنجاح"
           isVisible={showToast}
           onClose={() => setShowToast(false)}
+          action={{
+            label: "عرض السلة >>",
+            onClick: () => dispatch(setCurrentPage("cart")),
+          }}
         />
         {visibleProducts.map((product) => (
           <ProductCarousel

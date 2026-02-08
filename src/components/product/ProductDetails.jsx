@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addToCart } from "../../store/slices/cartSlice";
+import { addToCart, setCurrentPage } from "../../store/slices/cartSlice";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
 import Toast from "../common/Toast";
@@ -41,6 +41,10 @@ const ProductDetails = ({ productId }) => {
         isVisible={showToast}
         onClose={() => setShowToast(false)}
         theme={theme}
+        action={{
+          label: "عرض السلة >>",
+          onClick: () => dispatch(setCurrentPage("cart")),
+        }}
       />
 
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">

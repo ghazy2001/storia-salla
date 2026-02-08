@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback } from "react";
 import gsap from "gsap";
 import { Check, X } from "lucide-react";
 
-const Toast = ({ message, isVisible, onClose }) => {
+const Toast = ({ message, isVisible, onClose, action }) => {
   const toastRef = useRef(null);
 
   const handleClose = useCallback(() => {
@@ -47,11 +47,20 @@ const Toast = ({ message, isVisible, onClose }) => {
       </div>
 
       <div className="flex-1 text-right min-w-0">
-        {/* Whitespace-nowrap to prevent aggressive wrapping if space allows, or allow wrapping but clearer */}
-        <p className="font-sans font-medium text-sm md:text-base text-white whitespace-nowrap">
+        {/* Whitespace-normal allows wrapping, leading-tight for better line height */}
+        <p className="font-sans font-medium text-sm md:text-base text-white whitespace-normal leading-tight">
           {message}
         </p>
       </div>
+
+      {action && (
+        <button
+          onClick={action.onClick}
+          className="text-xs font-bold text-brand-gold hover:text-white transition-colors shrink-0 whitespace-nowrap underline underline-offset-4"
+        >
+          {action.label}
+        </button>
+      )}
 
       <button
         onClick={handleClose}
