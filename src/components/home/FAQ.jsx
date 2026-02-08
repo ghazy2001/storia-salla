@@ -47,22 +47,6 @@ const FAQ = ({ theme }) => {
           },
         },
       );
-
-      // Scrub animation for pinning and fading
-      gsap.to(".faq-content", {
-        scale: 0.95,
-        opacity: 0,
-        filter: "blur(5px)",
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "bottom+=400 bottom",
-          pin: true,
-          pinSpacing: false,
-          end: "+=100%",
-          scrub: true,
-        },
-      });
     }, sectionRef);
     return () => ctx.revert();
   }, []);
@@ -85,7 +69,7 @@ const FAQ = ({ theme }) => {
       ref={sectionRef}
       className={`py-24 px-6 md:px-12 transition-colors duration-500 ${bgClass}`}
     >
-      <div className="max-w-4xl mx-auto faq-content">
+      <div className="max-w-4xl mx-auto">
         <div className="text-center mb-16 faq-header">
           <h2 className={`text-2xl md:text-5xl font-sans mb-6 ${textClass}`}>
             الأسئلة الشائعة

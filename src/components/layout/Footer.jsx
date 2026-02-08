@@ -61,7 +61,7 @@ const Footer = ({ theme }) => {
   };
 
   return (
-    <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500 font-sans relative z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.3)]">
+    <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500 font-sans">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-12 border-b border-white/10 pb-20">
         <div className="col-span-1 md:col-span-2 order-1">
           <img
