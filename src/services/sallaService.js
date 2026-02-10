@@ -272,7 +272,7 @@ class SallaService {
         return null;
       }
 
-      const response = await this.salla.api.category.fetch();
+      const response = await this.salla.api.category.fetch({});
 
       if (response && response.data) {
         log("Fetched categories successfully:", response.data);
@@ -284,7 +284,12 @@ class SallaService {
       }
       return null;
     } catch (error) {
-      console.warn("[Storia] Error fetching categories:", error);
+      if (import.meta.env.DEV) {
+        console.warn(
+          "[Storia] Salla SDK category.fetch internal error:",
+          error,
+        );
+      }
       return null;
     }
   }
@@ -301,7 +306,11 @@ class SallaService {
       log("Attempting to fetch customer profile...");
 
       // Defensive check for the API path
-      if (!this.salla.api || !this.salla.api.customer || typeof this.salla.api.customer.fetch !== 'function') {
+      if (
+        !this.salla.api ||
+        !this.salla.api.customer ||
+        typeof this.salla.api.customer.fetch !== "function"
+      ) {
         return null;
       }
 
@@ -315,7 +324,10 @@ class SallaService {
     } catch (error) {
       // 401/403 is common for guest users, don't log as error in prod
       if (import.meta.env.DEV) {
-        console.warn("[Storia] Salla SDK customer.fetch internal error:", error);
+        console.warn(
+          "[Storia] Salla SDK customer.fetch internal error:",
+          error,
+        );
       }
       return null;
     }
