@@ -77,6 +77,22 @@ class SallaService {
   }
 
   /**
+   * Get the Salla Store Dashboard URL
+   */
+  getDashboardUrl() {
+    return "https://s.salla.sa";
+  }
+
+  /**
+   * Get the deep link to a specific product in Salla Dashboard
+   * @param {string|number} productId
+   */
+  getProductDashboardUrl(productId) {
+    if (!productId) return `${this.getDashboardUrl()}/products/index`;
+    return `${this.getDashboardUrl()}/products/update/${productId}`;
+  }
+
+  /**
    * Fetch products from Salla store
    *
    * Note: Salla doesn't provide a direct "get all products" API in Twilight SDK.

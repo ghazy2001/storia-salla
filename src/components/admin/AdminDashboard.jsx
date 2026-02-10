@@ -16,14 +16,8 @@ import {
   deleteFAQ,
 } from "../../store/slices/contentSlice";
 import { setCurrentPage } from "../../store/slices/cartSlice";
-import {
-  Plus,
-  MessageSquare,
-  HelpCircle,
-  Package,
-  BarChart3,
-  ShoppingBag,
-} from "lucide-react";
+import { BarChart3, ShoppingBag, RefreshCw, ExternalLink } from "lucide-react";
+import sallaService from "../../services/sallaService";
 
 // Components
 import AnalyticsTab from "./dashboard/AnalyticsTab";
@@ -133,6 +127,13 @@ const AdminDashboard = () => {
       setFaqForm(initialFAQState);
     }
     setIsModalOpen(true);
+  };
+
+  const handleSyncSalla = async () => {
+    const { fetchProductsFromSalla, fetchCategoriesFromSalla } =
+      await import("../../store/slices/productSlice");
+    dispatch(fetchProductsFromSalla());
+    dispatch(fetchCategoriesFromSalla());
   };
 
   const handleDelete = (id) => {
@@ -253,6 +254,28 @@ const AdminDashboard = () => {
                   : "إضافة سؤال جديد"}
               </span>
             </button>
+
+            {activeTab === "products" && (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleSyncSalla}
+                  className="bg-white text-gray-700 border border-gray-200 px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors"
+                  title="تحديث البيانات من سلة"
+                >
+                  <RefreshCw size={18} />
+                  <span>تحديث البيانات</span>
+                </button>
+                <a
+                  href={sallaService.getDashboardUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-white text-brand-gold border border-brand-gold/30 px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-gold/5 transition-colors"
+                >
+                  <ExternalLink size={18} />
+                  <span>لوحة تحكم سلة</span>
+                </a>
+              </div>
+            )}
           </div>
         )}
 
