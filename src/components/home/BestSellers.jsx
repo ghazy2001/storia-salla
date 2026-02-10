@@ -32,8 +32,12 @@ const BestSellers = ({ onProductSelect }) => {
 
   // Carousel images: Get media from the featured product
   const carouselImages =
-    featuredProduct?.media?.filter((m) => m.type === "image") ||
-    (featuredProduct ? [{ src: featuredProduct.image, type: "image" }] : []);
+    featuredProduct?.media
+      ?.filter((m) => m.type === "image")
+      .map((m) => ({ ...m, src: resolveAsset(m.src) })) ||
+    (featuredProduct
+      ? [{ src: resolveAsset(featuredProduct.image), type: "image" }]
+      : []);
 
   const lightbox = useLightbox(carouselImages);
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { resolveAsset } from "../../utils/assetUtils";
 import { Instagram, Facebook, Mail } from "lucide-react";
 import { getThemeValue } from "../../utils/themeUtils";
 import { useDispatch } from "react-redux";
@@ -65,7 +66,9 @@ const Footer = ({ theme }) => {
       <div className="grid grid-cols-1 md:grid-cols-5 gap-12 border-b border-white/10 pb-20">
         <div className="col-span-1 md:col-span-2 order-1">
           <img
-            src={getThemeValue(theme, "/assets/logo2.png", "/assets/logo.png")}
+            src={resolveAsset(
+              getThemeValue(theme, "/assets/logo2.png", "/assets/logo.png"),
+            )}
             alt="STORIA DESIGN"
             className={`h-16 mb-6 ml-auto ${getThemeValue(theme, "brightness-0 invert", "")}`}
           />

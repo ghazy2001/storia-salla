@@ -5,6 +5,8 @@ import { ChevronRight, ChevronLeft } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
+import { resolveAsset } from "../../utils/assetUtils";
+
 import { useSelector } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
@@ -147,7 +149,7 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                 >
                   <div className="aspect-[3/4] overflow-hidden bg-brand-beige mb-6 relative">
                     <img
-                      src={product.image}
+                      src={resolveAsset(product.image)}
                       alt={product.name}
                       className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 group-hover:brightness-90 group-hover:contrast-110"
                     />
