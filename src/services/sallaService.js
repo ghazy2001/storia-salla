@@ -15,7 +15,7 @@ class SallaService {
       log("Salla SDK initialized successfully");
       // Debug SDK structure
       if (import.meta.env.DEV || config.enableLogging) {
-        console.groupCollapsed("[Storia] Salla SDK Inspection");
+        console.group("[Storia] Salla SDK Inspection");
         console.log("SDK Keys:", Object.keys(this.salla));
         if (this.salla.api) {
           console.log("API Keys:", Object.keys(this.salla.api));
@@ -112,9 +112,12 @@ class SallaService {
       log("Product fetch returned no data, falling back to mock");
       return null;
     } catch (error) {
-      // Silence internal SDK crashes in production as we have a mock fallback
-      if (import.meta.env.DEV) {
-        console.warn("[Storia] Salla SDK product.fetch internal error:", error);
+      // Silence internal SDK crashes in production unless logging is enabled
+      if (import.meta.env.DEV || config.enableLogging) {
+        console.error(
+          "[Storia] Salla SDK product.fetch internal error:",
+          error,
+        );
       }
       return null;
     }
@@ -303,8 +306,8 @@ class SallaService {
       }
       return null;
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.warn(
+      if (import.meta.env.DEV || config.enableLogging) {
+        console.error(
           "[Storia] Salla SDK category.fetch internal error:",
           error,
         );
