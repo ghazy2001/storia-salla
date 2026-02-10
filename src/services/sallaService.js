@@ -304,6 +304,10 @@ class SallaService {
               log("Sample Mapped Product (V6):", mappedProduct);
               log("Product Image URL:", mappedProduct.image);
               log("Product Media Array:", mappedProduct.media);
+              log(
+                "First Media Item:",
+                JSON.stringify(mappedProduct.media[0], null, 2),
+              );
               log("Original Salla Product Image:", targetProduct.image);
             }
             return mappedProduct;
