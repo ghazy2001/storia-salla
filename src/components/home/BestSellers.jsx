@@ -26,15 +26,21 @@ const BestSellers = ({ onProductSelect }) => {
   const dispatch = useDispatch();
   const { containerRef, scrollLeft, scrollRight } = useScrollContainer(320);
 
-  // Featured product for the banner - نواعم (classic category)
+  // Featured product for the banner
+  // Prefer products with 'featured' in category/name or just the first product
   const featuredProduct =
-    products.find((p) => p.category === "classic") || products[0];
+    products.find(
+      (p) =>
+        p.isFeatured ||
+        p.category?.toLowerCase() === "featured" ||
+        p.category?.toLowerCase() === "classic",
+    ) || products[0];
 
   // Carousel images: Get media from the featured product
   const carouselImages =
     featuredProduct?.media
       ?.filter((m) => m.type === "image")
-      .map((m) => ({ ...m, src: resolveAsset(m.src) })) ||
+      .map((m) => ({ ...m, src: resolveAsset(m.src || m.url) })) ||
     (featuredProduct
       ? [{ src: resolveAsset(featuredProduct.image), type: "image" }]
       : []);

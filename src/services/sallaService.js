@@ -231,6 +231,60 @@ class SallaService {
   }
 
   /**
+   * Fetch categories/departments from Salla store
+   */
+  async fetchCategories() {
+    if (!this.isAvailable()) {
+      log("Salla SDK not available, cannot fetch categories");
+      return null;
+    }
+
+    try {
+      log("Attempting to fetch categories from Salla API...");
+      const response = await this.salla.api.category.fetch();
+
+      if (response && response.data) {
+        log("Fetched categories successfully:", response.data);
+        return response.data.map((cat) => ({
+          id: cat.id,
+          label: cat.name,
+          slug: cat.slug,
+        }));
+      }
+      return null;
+    } catch (error) {
+      console.error("[Storia] Error fetching categories:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch current customer profile from Salla
+   */
+  async fetchCustomer() {
+    if (!this.isAvailable()) {
+      return null;
+    }
+
+    try {
+      log("Attempting to fetch customer profile...");
+      const response = await this.salla.api.customer.fetch();
+
+      if (response && response.data) {
+        log("Fetched customer profile:", response.data);
+        return response.data;
+      }
+      return null;
+    } catch (error) {
+      // 401 is common for guest users, don't log as error in prod
+      if (import.meta.env.DEV) {
+        console.warn("[Storia] Customer not logged in or fetch error:", error);
+      }
+      return null;
+    }
+  }
+
+  /**
    * Listen to cart events
    */
   onCartUpdate(callback) {

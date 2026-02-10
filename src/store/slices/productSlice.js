@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { products as initialProducts } from "../../data/products";
+import { NAV_LINKS as initialCategories } from "../../utils/constants";
 import sallaService from "../../services/sallaService";
 
 // Async thunk to fetch products from Salla
@@ -8,10 +9,20 @@ export const fetchProductsFromSalla = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const products = await sallaService.fetchProducts();
-      if (!products) {
-        return rejectWithValue("Failed to fetch products from Salla");
-      }
-      return products;
+      return products; // Can return null, extraReducers handles it
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+// Async thunk to fetch categories from Salla
+export const fetchCategoriesFromSalla = createAsyncThunk(
+  "product/fetchCategoriesFromSalla",
+  async (_, { rejectWithValue }) => {
+    try {
+      const categories = await sallaService.fetchCategories();
+      return categories;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -20,6 +31,7 @@ export const fetchProductsFromSalla = createAsyncThunk(
 
 const initialState = {
   products: initialProducts,
+  categories: initialCategories,
   loading: false,
   error: null,
 };
@@ -67,7 +79,12 @@ const productSlice = createSlice({
       .addCase(fetchProductsFromSalla.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        // We keep the initialProducts as fallback
+      })
+      // Categories handle
+      .addCase(fetchCategoriesFromSalla.fulfilled, (state, action) => {
+        if (action.payload && action.payload.length > 0) {
+          state.categories = action.payload;
+        }
       });
   },
 });
@@ -76,6 +93,7 @@ export const { addProduct, updateProduct, deleteProduct } =
   productSlice.actions;
 
 export const selectProducts = (state) => state.product.products;
+export const selectCategories = (state) => state.product.categories;
 export const selectProductsLoading = (state) => state.product.loading;
 export const selectProductsError = (state) => state.product.error;
 

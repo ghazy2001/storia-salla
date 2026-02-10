@@ -4,6 +4,7 @@ import adminReducer from "./slices/adminSlice";
 import productReducer from "./slices/productSlice";
 import contentReducer from "./slices/contentSlice";
 import uiReducer from "./slices/uiSlice";
+import userReducer from "./slices/userSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,5 +13,6 @@ export const store = configureStore({
     product: productReducer,
     content: contentReducer,
     ui: uiReducer,
+    user: userReducer,
   },
 });

@@ -16,11 +16,12 @@ import {
   selectCurrentPage,
 } from "../../store/slices/cartSlice";
 import { selectIsAdmin, toggleLoginModal } from "../../store/slices/adminSlice";
+import { selectCustomer } from "../../store/slices/userSlice";
 import {
   setSelectedCategory,
   setContactFormOpen,
 } from "../../store/slices/uiSlice";
-import { NAV_LINKS } from "../../utils/constants";
+import { selectCategories } from "../../store/slices/productSlice";
 import { getButtonTheme, getThemeValue } from "../../utils/themeUtils";
 import { resolveAsset } from "../../utils/assetUtils";
 
@@ -30,6 +31,8 @@ const Navbar = ({ theme, toggleTheme }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const cartCount = useSelector(selectCartCount);
   const currentPage = useSelector(selectCurrentPage);
+  const navLinks = useSelector(selectCategories);
+  const customer = useSelector(selectCustomer);
   const dispatch = useDispatch();
   const isAdmin = useSelector(selectIsAdmin);
   const isHomePage = currentPage === "home";
@@ -151,7 +154,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             onClick={toggleLoginModal}
           />
           <div className="hidden lg:flex items-center gap-10 overflow-hidden">
-            {NAV_LINKS.map((cat) => (
+            {navLinks.map((cat) => (
               <span
                 key={cat.id}
                 onClick={() => handleNavigate(cat.id)}
@@ -222,12 +225,18 @@ const Navbar = ({ theme, toggleTheme }) => {
             onClick={() => {
               if (isAdmin) {
                 dispatch(setCurrentPage("admin-dashboard"));
+              } else if (customer) {
+                // If Salla SDK provides a profile page, we could redirect there
+                // For now, toggle login modal as a profile view or stay as is
+                dispatch(toggleLoginModal());
               } else {
                 dispatch(toggleLoginModal());
               }
             }}
-            className={`hidden lg:flex w-10 h-10 rounded-full items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
-            title={isAdmin ? "لوحة التحكم" : "تسجيل دخول"}
+            className={`hidden lg:flex px-4 h-10 rounded-full items-center justify-center transition-all duration-500 hover:scale-105 active:scale-95 gap-2 ${getButtonTheme(theme)}`}
+            title={
+              isAdmin ? "لوحة التحكم" : customer ? customer.name : "تسجيل دخول"
+            }
           >
             {isAdmin ? (
               <User
@@ -239,6 +248,10 @@ const Navbar = ({ theme, toggleTheme }) => {
                 )}
                 fill="currentColor"
               />
+            ) : customer ? (
+              <span className="text-xs font-bold whitespace-nowrap">
+                {customer.first_name || customer.name.split(" ")[0]}
+              </span>
             ) : (
               <User size={20} />
             )}
@@ -270,7 +283,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             />
           </div>
           <div className="flex flex-col gap-8">
-            {NAV_LINKS.map((cat) => (
+            {navLinks.map((cat) => (
               <span
                 key={cat.id}
                 className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer"
