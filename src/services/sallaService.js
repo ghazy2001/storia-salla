@@ -24,15 +24,21 @@ class SallaService {
               "Product API Keys:",
               Object.keys(this.salla.api.product),
             );
-          if (this.salla.api.category)
-            console.log(
-              "Category API Keys:",
-              Object.keys(this.salla.api.category),
-            );
           if (this.salla.api.navigation)
             console.log(
               "Navigation API Keys:",
               Object.keys(this.salla.api.navigation),
+            );
+
+          // Debug higher-level SDK objects
+          if (this.salla.product)
+            console.log("SDK Product Keys:", Object.keys(this.salla.product));
+          if (this.salla.profile)
+            console.log("SDK Profile Keys:", Object.keys(this.salla.profile));
+          if (this.salla.navigation)
+            console.log(
+              "SDK Navigation Keys:",
+              Object.keys(this.salla.navigation),
             );
         }
         console.groupEnd();
@@ -71,18 +77,17 @@ class SallaService {
       log("Attempting to fetch products from Salla API...");
 
       // Defensive check for the API path
-      if (
-        !this.salla.api ||
-        !this.salla.api.product ||
-        typeof this.salla.api.product.fetch !== "function"
-      ) {
-        log("Salla API path 'salla.api.product.fetch' is not available");
+      // The "Source value cannot be empty" error might be related to the API version or context.
+      // Let's try the higher-level SDK method first if it exists.
+      const productManager = this.salla.product || this.salla.api.product;
+
+      if (!productManager || typeof productManager.fetch !== "function") {
+        log("Salla Product fetch is not available");
         return null;
       }
 
-      // Some SDK versions crash if called without params or if internal state is not ready.
-      // The "Source cannot be empty" error indicates 'source' is required.
-      const response = await this.salla.api.product.fetch({ source: "web" });
+      // Trying different parameter styles
+      const response = await productManager.fetch();
 
       if (response && response.data) {
         log("Fetched products successfully:", response.data);
