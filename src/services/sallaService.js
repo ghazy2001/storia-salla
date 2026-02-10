@@ -13,6 +13,25 @@ class SallaService {
 
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK initialized successfully");
+      // Debug SDK structure
+      if (import.meta.env.DEV || config.enableLogging) {
+        console.groupCollapsed("[Storia] Salla SDK Inspection");
+        console.log("SDK Keys:", Object.keys(this.salla));
+        if (this.salla.api) {
+          console.log("API Keys:", Object.keys(this.salla.api));
+          if (this.salla.api.product)
+            console.log(
+              "Product API Keys:",
+              Object.keys(this.salla.api.product),
+            );
+          if (this.salla.api.category)
+            console.log(
+              "Category API Keys:",
+              Object.keys(this.salla.api.category),
+            );
+        }
+        console.groupEnd();
+      }
     } else if (config.useSallaBackend) {
       console.warn("[Storia] Salla backend requested but SDK not available");
     }

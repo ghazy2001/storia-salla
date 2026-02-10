@@ -15,8 +15,8 @@ export const config = {
   useSallaBackend: USE_SALLA_BACKEND,
   isSallaEnv: IS_SALLA_ENV,
 
-  // Logging disabled in production to keep console clean
-  enableLogging: false,
+  // Logging enabled temporarily for debugging integration
+  enableLogging: true,
 };
 
 // Helper to log only when enabled
