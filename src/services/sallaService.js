@@ -29,6 +29,11 @@ class SallaService {
               "Category API Keys:",
               Object.keys(this.salla.api.category),
             );
+          if (this.salla.api.navigation)
+            console.log(
+              "Navigation API Keys:",
+              Object.keys(this.salla.api.navigation),
+            );
         }
         console.groupEnd();
       }
@@ -75,8 +80,9 @@ class SallaService {
         return null;
       }
 
-      // Some SDK versions crash if called without params or if internal state is not ready
-      const response = await this.salla.api.product.fetch({});
+      // Some SDK versions crash if called without params or if internal state is not ready.
+      // The "Source cannot be empty" error indicates 'source' is required.
+      const response = await this.salla.api.product.fetch({ source: "web" });
 
       if (response && response.data) {
         log("Fetched products successfully:", response.data);
@@ -282,26 +288,26 @@ class SallaService {
     }
 
     try {
-      log("Attempting to fetch categories from Salla API...");
+      log("Attempting to fetch categories from Salla Navigation API...");
 
-      // Defensive check for the API path
-      if (
-        !this.salla.api ||
-        !this.salla.api.category ||
-        typeof this.salla.api.category.fetch !== "function"
-      ) {
-        log("Salla API path 'salla.api.category.fetch' is not available");
+      // In many Twilight versions, 'navigation' contains the store departments/categories
+      const navigationApi =
+        this.salla.api.navigation || this.salla.api.category;
+
+      if (!navigationApi || typeof navigationApi.fetch !== "function") {
+        log("Salla Navigation/Category API fetch is not available");
         return null;
       }
 
-      const response = await this.salla.api.category.fetch({});
+      const response = await navigationApi.fetch({ source: "web" });
 
       if (response && response.data) {
         log("Fetched categories successfully:", response.data);
+        // Salla Navigation API usually returns an array of menu items or categories
         return response.data.map((cat) => ({
           id: cat.id,
-          label: cat.name,
-          slug: cat.slug,
+          label: cat.name || cat.title,
+          slug: cat.slug || cat.url,
         }));
       }
       return null;
