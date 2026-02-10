@@ -72,7 +72,14 @@ const PageContent = () => {
             goToStore={handleGoToStore}
             onProductSelect={handleProductSelect}
           />
+          <ProductListing
+            goToStore={handleGoToStore}
+            onProductSelect={handleProductSelect}
+          />
           <OurStory theme={theme} />
+          <BestSellers onProductSelect={handleProductSelect} />
+          <Reviews theme={theme} />
+          <FAQ theme={theme} />
         </>
       );
   }
