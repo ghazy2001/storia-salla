@@ -191,93 +191,117 @@ class SallaService {
         log("Fetched products successfully:", response.data);
 
         if (import.meta.env.DEV || config.enableLogging) {
-          log("MAPPING_V5 - Keys available:", Object.keys(response.data[0]));
-          log(
-            "MAPPING_V5 - Raw Price of first product:",
-            response.data[0].price,
-          );
-          log(
-            "MAPPING_V5 - Raw Description of first product:",
-            response.data[0].description,
-          );
+          log("MAPPING_V6 - Starting detailed product processing");
         }
 
-        // Map Salla product format to app format
-        return response.data.map((p, index) => {
-          // Helper to handle localized strings from Salla API
-          const translate = (val) => {
-            if (!val) return "";
-            if (typeof val === "string") return val;
-            if (typeof val === "object") {
-              return (
-                val.ar || val.en || val.default || Object.values(val)[0] || ""
-              );
+        // Map Salla product format to app format using async detail fetching
+        const mappedResults = await Promise.all(
+          response.data.map(async (p, index) => {
+            // Helper to handle localized strings from Salla API
+            const translate = (val) => {
+              if (!val) return "";
+              if (typeof val === "string") return val;
+              if (typeof val === "object") {
+                return (
+                  val.ar || val.en || val.default || Object.values(val)[0] || ""
+                );
+              }
+              return String(val);
+            };
+
+            // IF DESCRIPTION IS NULL, TRY TO FETCH FULL PRODUCT DETAILS
+            let description = translate(
+              p.description || p.short_description || p.subtitle,
+            );
+            let targetProduct = p;
+
+            if (!description && p.id) {
+              try {
+                log(`Fetching full details for product ${p.id}...`);
+                // Get the product manager from the SDK instance
+                const productManager = this.salla.api.product;
+                const detailedRes = await productManager.get({ id: p.id });
+                if (detailedRes && detailedRes.data) {
+                  targetProduct = detailedRes.data;
+                  description = translate(
+                    targetProduct.description ||
+                      targetProduct.short_description ||
+                      targetProduct.subtitle,
+                  );
+                }
+              } catch (e) {
+                log(`Failed to fetch full details for ${p.id}`);
+              }
             }
-            return String(val);
-          };
 
-          // Improved price handling
-          let priceStr = "0 ر.س";
-          if (p.price !== undefined && p.price !== null) {
-            const amount =
-              p.price.amount !== undefined ? p.price.amount : p.price;
-            let currency = p.currency || p.price.currency || "SAR";
+            // Improved price handling
+            let priceStr = "0 ر.س";
+            if (
+              targetProduct.price !== undefined &&
+              targetProduct.price !== null
+            ) {
+              const amount =
+                targetProduct.price.amount !== undefined
+                  ? targetProduct.price.amount
+                  : targetProduct.price;
+              let currency =
+                targetProduct.currency || targetProduct.price.currency || "SAR";
 
-            // Map SAR to Arabic currency symbol
-            if (currency.toUpperCase().trim() === "SAR") currency = "ر.س";
+              // Map SAR to Arabic currency symbol
+              if (currency.toUpperCase().trim() === "SAR") currency = "ر.س";
 
-            // Explicitly putting currency SECOND as per your requested format
-            priceStr = `${amount} ${currency}`;
+              priceStr = `${amount} ${currency}`;
+            }
 
-            // Debug marker
-            if (index === 0) log(`MAPPED_PRICE_V5: [${priceStr}]`);
-          }
+            const mappedProduct = {
+              id: targetProduct.id,
+              name: translate(targetProduct.name),
+              price: priceStr,
+              category: targetProduct.category
+                ? translate(targetProduct.category.name)
+                : "general",
+              sizes: targetProduct.options
+                ? targetProduct.options
+                    .filter(
+                      (opt) =>
+                        opt &&
+                        opt.name &&
+                        translate(opt.name).toLowerCase().includes("size"),
+                    )
+                    .flatMap((opt) =>
+                      (opt.values || []).map((v) => translate(v.name)),
+                    )
+                : ["S", "M", "L", "XL"],
+              description: description || "قريباً",
+              image:
+                targetProduct.main_image ||
+                targetProduct.image?.url ||
+                targetProduct.image?.src ||
+                "/assets/logo.png",
+              // IMPORTANT: Components expect objects with { type, src }
+              media:
+                targetProduct.images && targetProduct.images.length > 0
+                  ? targetProduct.images.map((img) => ({
+                      type: "image",
+                      src: img.url || img.src || targetProduct.main_image,
+                    }))
+                  : [
+                      {
+                        type: "image",
+                        src: targetProduct.main_image || "/assets/logo.png",
+                      },
+                    ],
+              isNew: false,
+              rating: 5.0,
+              reviews: 0,
+            };
 
-          const mappedProduct = {
-            id: p.id,
-            name: translate(p.name),
-            price: priceStr,
-            category: p.category ? translate(p.category.name) : "general",
-            sizes: p.options
-              ? p.options
-                  .filter(
-                    (opt) =>
-                      opt &&
-                      opt.name &&
-                      translate(opt.name).toLowerCase().includes("size"),
-                  )
-                  .flatMap((opt) =>
-                    (opt.values || []).map((v) => translate(v.name)),
-                  )
-              : ["S", "M", "L", "XL"],
-            // Trying multiple common Salla description fields
-            description: translate(
-              p.description ||
-                p.short_description ||
-                p.summary ||
-                p.content ||
-                p.subtitle ||
-                "قريباً",
-            ),
-            image:
-              p.main_image ||
-              p.image?.url ||
-              p.image?.src ||
-              "/assets/logo.png",
-            media:
-              p.images && p.images.length > 0
-                ? p.images.map((img) => ({
-                    type: "image",
-                    src: img.url || img.src || p.main_image,
-                  }))
-                : [{ type: "image", src: p.main_image || "/assets/logo.png" }],
-            isNew: false,
-            rating: 5.0,
-            reviews: 0,
-          };
+            if (index === 0) log("Sample Mapped Product (V6):", mappedProduct);
+            return mappedProduct;
+          }),
+        );
 
-          return mappedProduct;
-        });
+        return mappedResults;
       }
 
       log("Product fetch returned no data, falling back to mock");
