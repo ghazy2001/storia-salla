@@ -56,7 +56,8 @@ class SallaService {
         return null;
       }
 
-      const response = await this.salla.api.product.fetch();
+      // Some SDK versions crash if called without params or if internal state is not ready
+      const response = await this.salla.api.product.fetch({});
 
       if (response && response.data) {
         log("Fetched products successfully:", response.data);
@@ -73,9 +74,10 @@ class SallaService {
           sizes: p.options
             ? p.options
                 .filter(
-                  (opt) => opt.name && opt.name.toLowerCase().includes("size"),
+                  (opt) =>
+                    opt && opt.name && opt.name.toLowerCase().includes("size"),
                 )
-                .flatMap((opt) => opt.values.map((v) => v.name))
+                .flatMap((opt) => (opt.values || []).map((v) => v.name))
             : ["S", "M", "L", "XL"],
           description: p.description || "",
           image: p.main_image || "/assets/logo.png",
@@ -91,7 +93,10 @@ class SallaService {
       log("Product fetch returned no data, falling back to mock");
       return null;
     } catch (error) {
-      console.warn("[Storia] Error fetching products from Salla:", error);
+      // Silence internal SDK crashes in production as we have a mock fallback
+      if (import.meta.env.DEV) {
+        console.warn("[Storia] Salla SDK product.fetch internal error:", error);
+      }
       return null;
     }
   }
@@ -296,15 +301,11 @@ class SallaService {
       log("Attempting to fetch customer profile...");
 
       // Defensive check for the API path
-      if (
-        !this.salla.api ||
-        !this.salla.api.customer ||
-        typeof this.salla.api.customer.fetch !== "function"
-      ) {
+      if (!this.salla.api || !this.salla.api.customer || typeof this.salla.api.customer.fetch !== 'function') {
         return null;
       }
 
-      const response = await this.salla.api.customer.fetch();
+      const response = await this.salla.api.customer.fetch({});
 
       if (response && response.data) {
         log("Fetched customer profile:", response.data);
@@ -312,9 +313,9 @@ class SallaService {
       }
       return null;
     } catch (error) {
-      // 401 is common for guest users, don't log as error in prod
+      // 401/403 is common for guest users, don't log as error in prod
       if (import.meta.env.DEV) {
-        console.warn("[Storia] Customer not logged in or fetch error:", error);
+        console.warn("[Storia] Salla SDK customer.fetch internal error:", error);
       }
       return null;
     }
