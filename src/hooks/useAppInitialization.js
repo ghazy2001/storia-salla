@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { selectCurrentPage, setCurrentPage } from "../store/slices/cartSlice";
 import { selectTheme, setSelectedProductId } from "../store/slices/uiSlice";
+import { fetchProductsFromSalla } from "../store/slices/productSlice";
 
 /**
  * Hook to handle application initialization logic
@@ -58,6 +59,9 @@ export const useAppInitialization = () => {
 
   // Handle Window Load / Preloader
   useEffect(() => {
+    // Fetch real products from Salla on app mount
+    dispatch(fetchProductsFromSalla());
+
     const handleLoad = () => {
       setTimeout(() => setIsReady(true), 100);
     };
@@ -69,7 +73,7 @@ export const useAppInitialization = () => {
     }
 
     return () => window.removeEventListener("load", handleLoad);
-  }, []);
+  }, [dispatch]);
 
   return { isReady, theme };
 };

@@ -34,6 +34,9 @@ class SallaService {
    *
    * Alternative: Use Salla REST API with merchant token (backend integration)
    */
+  /**
+   * Fetch products from Salla store
+   */
   async fetchProducts() {
     if (!this.isAvailable()) {
       log("Salla SDK not available, cannot fetch products");
@@ -41,11 +44,36 @@ class SallaService {
     }
 
     try {
-      // TODO: Implement actual product fetching when Salla provides the API
-      // For now, products should be managed in Salla dashboard and
-      // rendered through the Twig template system
+      // In Salla themes, salla.api.product.fetch is often available
+      // or we can use the search API with empty query to get products
+      log("Attempting to fetch products from Salla API...");
 
-      log("Product fetching from Salla not yet implemented");
+      const response = await this.salla.api.product.fetch();
+
+      if (response && response.data) {
+        log("Fetched products successfully:", response.data);
+
+        // Map Salla product format to app format
+        return response.data.map((p) => ({
+          id: p.id,
+          name: p.name,
+          price: `${p.price.amount} ${p.price.currency}`,
+          category: p.category ? p.category.name : "general",
+          sizes: p.options
+            ? p.options
+                .filter((opt) => opt.name.toLowerCase().includes("size"))
+                .flatMap((opt) => opt.values.map((v) => v.name))
+            : ["S", "M", "L", "XL"],
+          description: p.description || "",
+          image: p.main_image || "/assets/logo.png",
+          media: p.images ? p.images.map((img) => img.url) : [p.main_image],
+          isNew: false,
+          rating: 5.0,
+          reviews: 0,
+        }));
+      }
+
+      log("Product fetch returned no data, falling back to mock");
       return null;
     } catch (error) {
       console.error("[Storia] Error fetching products from Salla:", error);

@@ -13,6 +13,10 @@ import ShippingForm from "./ShippingForm";
 import PaymentForm from "./PaymentForm";
 import OrderSummary from "./OrderSummary";
 
+// Salla Integration
+import sallaService from "../../services/sallaService";
+import { config } from "../../config/config";
+
 /**
  * Checkout Component
  *
@@ -101,6 +105,13 @@ const Checkout = ({ theme }) => {
   const handleFinalSubmit = (e) => {
     e.preventDefault();
 
+    // If on Salla platform, redirect to Salla checkout
+    if (config.useSallaBackend && sallaService.isAvailable()) {
+      sallaService.goToCheckout();
+      return;
+    }
+
+    // Fallback to WhatsApp for local development or if SDK is unavailable
     const orderDetails = cartItems
       .map(
         (item, index) =>
