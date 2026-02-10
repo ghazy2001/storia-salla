@@ -102,12 +102,12 @@ const Checkout = ({ theme }) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleFinalSubmit = (e) => {
+  const handleFinalSubmit = async (e) => {
     e.preventDefault();
 
     // If on Salla platform, redirect to Salla checkout
     if (config.useSallaBackend && sallaService.isAvailable()) {
-      sallaService.goToCheckout();
+      await sallaService.goToCheckout();
       return;
     }
 

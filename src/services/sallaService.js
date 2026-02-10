@@ -195,7 +195,7 @@ class SallaService {
   /**
    * Navigate to checkout
    */
-  goToCheckout() {
+  async goToCheckout() {
     if (!this.isAvailable()) {
       console.warn(
         "[Storia] Salla SDK not available, cannot navigate to checkout",
@@ -204,10 +204,29 @@ class SallaService {
     }
 
     try {
-      // Redirect to Salla checkout page
-      window.location.href = "/checkout";
+      log("Initiating checkout redirect...");
+
+      // Check if cart is empty in Salla
+      const cart = await this.getCart();
+      if (!cart || !cart.data || cart.data.items_count === 0) {
+        log("Salla cart is empty, sync might have failed");
+        // Optional: show a message or redirect to cart instead
+        window.location.href = "/cart";
+        return;
+      }
+
+      // Try to use Salla's native checkout if possible
+      // Some versions of Twilight SDK use different methods
+      if (this.salla.cart && typeof this.salla.cart.submit === "function") {
+        await this.salla.cart.submit();
+      } else {
+        // Fallback to direct redirect
+        window.location.href = "/checkout";
+      }
     } catch (error) {
       console.error("[Storia] Error navigating to checkout:", error);
+      // Last resort fallback
+      window.location.href = "/checkout";
     }
   }
 
