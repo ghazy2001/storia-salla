@@ -17,22 +17,23 @@ export const resolveAsset = (path) => {
   )
     return path;
 
-  // Detect if we're running on Salla (embedded via integration script)
-  const isOnSalla =
-    window.location.hostname.includes("storiasa.com") ||
-    window.location.hostname.includes("salla.");
+  // ALWAYS use Vercel URL when NOT on Vercel's own domain
+  // This ensures Salla integration works correctly
+  const isOnVercel = window.location.hostname.includes("vercel.app");
+  const vercelBase = "https://storia-salla.vercel.app/";
 
-  // If on Salla, use absolute Vercel URL for all assets
-  if (isOnSalla) {
-    const vercelBase = "https://storia-salla.vercel.app/";
-    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    return `${vercelBase}${cleanPath}`;
-  }
-
-  // Otherwise, use relative path (for Vercel deployment and local dev)
-  const base = import.meta.env.BASE_URL || "/";
-  const cleanBase = base.endsWith("/") ? base : `${base}/`;
+  // Clean the path
   const cleanPath = path.startsWith("/") ? path.slice(1) : path;
 
+  // If not on Vercel's domain, always use absolute Vercel URLs
+  if (!isOnVercel) {
+    const resolvedUrl = `${vercelBase}${cleanPath}`;
+    console.log("[Storia Asset]", path, "->", resolvedUrl);
+    return resolvedUrl;
+  }
+
+  // On Vercel itself, use relative paths
+  const base = import.meta.env.BASE_URL || "/";
+  const cleanBase = base.endsWith("/") ? base : `${base}/`;
   return `${cleanBase}${cleanPath}`;
 };
