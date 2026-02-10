@@ -17,30 +17,46 @@ class SallaService {
       if (import.meta.env.DEV || config.enableLogging) {
         console.group("[Storia] Salla SDK Inspection");
         console.log("SDK Keys:", Object.keys(this.salla));
+        console.log(
+          "SDK Version:",
+          this.salla.versions ? this.salla.versions() : "unknown",
+        );
+
         if (this.salla.api) {
           console.log("API Keys:", Object.keys(this.salla.api));
-          if (this.salla.api.product)
+          if (this.salla.api.product) {
             console.log(
-              "Product API Keys:",
+              "API Product Keys:",
               Object.keys(this.salla.api.product),
             );
-          if (this.salla.api.navigation)
             console.log(
-              "Navigation API Keys:",
+              "API Product fetch exists:",
+              typeof this.salla.api.product.fetch === "function",
+            );
+          }
+          if (this.salla.api.navigation) {
+            console.log(
+              "API Navigation Keys:",
               Object.keys(this.salla.api.navigation),
             );
-
-          // Debug higher-level SDK objects
-          if (this.salla.product)
-            console.log("SDK Product Keys:", Object.keys(this.salla.product));
-          if (this.salla.profile)
-            console.log("SDK Profile Keys:", Object.keys(this.salla.profile));
-          if (this.salla.navigation)
             console.log(
-              "SDK Navigation Keys:",
-              Object.keys(this.salla.navigation),
+              "API Navigation fetch exists:",
+              typeof this.salla.api.navigation.fetch === "function",
             );
+          }
         }
+
+        // Debug higher-level SDK objects
+        ["product", "navigation", "profile", "cart"].forEach((key) => {
+          if (this.salla[key]) {
+            console.log(
+              `SDK ${key} exists. Keys:`,
+              Object.keys(this.salla[key]),
+            );
+            if (this.salla[key].fetch) console.log(`SDK ${key}.fetch exists`);
+          }
+        });
+
         console.groupEnd();
       }
     } else if (config.useSallaBackend) {
@@ -76,18 +92,44 @@ class SallaService {
     try {
       log("Attempting to fetch products from Salla API...");
 
-      // Defensive check for the API path
-      // The "Source value cannot be empty" error might be related to the API version or context.
-      // Let's try the higher-level SDK method first if it exists.
-      const productManager = this.salla.product || this.salla.api.product;
+      // The "Source value cannot be empty" error is very specific.
+      // We will try several variants in order.
+      // 1. Try passing 'web' as a string (common in some Salla SDK versions)
+      // 2. Try passing { source: 'store' } (another common variant)
+      // 3. Try passing { source: 'web' } again but with more defensive checks
+
+      const productManager =
+        this.salla.product || (this.salla.api ? this.salla.api.product : null);
 
       if (!productManager || typeof productManager.fetch !== "function") {
         log("Salla Product fetch is not available");
         return null;
       }
 
-      // Trying different parameter styles
-      const response = await productManager.fetch();
+      let response = null;
+      let lastError = null;
+
+      // Variant 1: String argument
+      try {
+        log("Product Fetch V1: product.fetch('web')");
+        response = await productManager.fetch("web");
+      } catch (e) {
+        lastError = e;
+        // Variant 2: Object with source: 'store'
+        try {
+          log("Product Fetch V2: product.fetch({ source: 'store' })");
+          response = await productManager.fetch({ source: "store" });
+        } catch (e2) {
+          // Variant 3: Just fetch()
+          try {
+            log("Product Fetch V3: product.fetch()");
+            response = await productManager.fetch();
+          } catch (e3) {
+            log("All product fetch variants failed. Last error:", lastError);
+            return null;
+          }
+        }
+      }
 
       if (response && response.data) {
         log("Fetched products successfully:", response.data);
@@ -295,16 +337,36 @@ class SallaService {
     try {
       log("Attempting to fetch categories from Salla Navigation API...");
 
-      // In many Twilight versions, 'navigation' contains the store departments/categories
-      const navigationApi =
-        this.salla.api.navigation || this.salla.api.category;
+      const nav =
+        this.salla.navigation ||
+        (this.salla.api ? this.salla.api.navigation : null);
 
-      if (!navigationApi || typeof navigationApi.fetch !== "function") {
-        log("Salla Navigation/Category API fetch is not available");
+      if (!nav) {
+        log("Salla Navigation object not found");
         return null;
       }
 
-      const response = await navigationApi.fetch({ source: "web" });
+      let response = null;
+
+      // Try multiple possible methods for categories
+      if (typeof nav.fetch === "function") {
+        try {
+          log("Navigation Fetch V1: nav.fetch('web')");
+          response = await nav.fetch("web");
+        } catch (e) {
+          log("Navigation Fetch V2: nav.fetch({ source: 'store' })");
+          response = await nav.fetch({ source: "store" });
+        }
+      } else if (typeof nav.get === "function") {
+        log("Using nav.get()...");
+        response = await nav.get();
+      } else {
+        log(
+          "No fetch/get method found on Navigation object. Available keys:",
+          Object.keys(nav),
+        );
+        return null;
+      }
 
       if (response && response.data) {
         log("Fetched categories successfully:", response.data);
