@@ -169,31 +169,52 @@ class SallaService {
         log("Fetched products successfully:", response.data);
 
         // Map Salla product format to app format
-        return response.data.map((p) => ({
-          id: p.id,
-          name: p.name,
-          price:
-            p.price && p.price.amount
-              ? `${p.price.amount} ${p.price.currency}`
-              : "0 ر.س",
-          category: p.category ? p.category.name : "general",
-          sizes: p.options
-            ? p.options
-                .filter(
-                  (opt) =>
-                    opt && opt.name && opt.name.toLowerCase().includes("size"),
-                )
-                .flatMap((opt) => (opt.values || []).map((v) => v.name))
-            : ["S", "M", "L", "XL"],
-          description: p.description || "",
-          image: p.main_image || "/assets/logo.png",
-          media: p.images
-            ? p.images.map((img) => img.url || img.src)
-            : [p.main_image],
-          isNew: false,
-          rating: 5.0,
-          reviews: 0,
-        }));
+        return response.data.map((p) => {
+          // Helper to handle localized strings from Salla API
+          const translate = (val) => {
+            if (!val) return "";
+            if (typeof val === "string") return val;
+            if (typeof val === "object") {
+              return val.ar || val.en || Object.values(val)[0] || "";
+            }
+            return String(val);
+          };
+
+          return {
+            id: p.id,
+            name: translate(p.name),
+            price:
+              p.price && p.price.amount
+                ? `${p.price.amount} ${p.price.currency}`
+                : "0 ر.س",
+            category: p.category ? translate(p.category.name) : "general",
+            sizes: p.options
+              ? p.options
+                  .filter(
+                    (opt) =>
+                      opt &&
+                      opt.name &&
+                      translate(opt.name).toLowerCase().includes("size"),
+                  )
+                  .flatMap((opt) =>
+                    (opt.values || []).map((v) => translate(v.name)),
+                  )
+              : ["S", "M", "L", "XL"],
+            description: translate(p.description || p.short_description),
+            image: p.main_image || "/assets/logo.png",
+            // IMPORTANT: Components expect objects with { type, src }
+            media:
+              p.images && p.images.length > 0
+                ? p.images.map((img) => ({
+                    type: "image",
+                    src: img.url || img.src || p.main_image,
+                  }))
+                : [{ type: "image", src: p.main_image || "/assets/logo.png" }],
+            isNew: false,
+            rating: 5.0,
+            reviews: 0,
+          };
+        });
       }
 
       log("Product fetch returned no data, falling back to mock");
@@ -369,67 +390,48 @@ class SallaService {
     }
 
     try {
-      log("Attempting to fetch categories from Salla Navigation API...");
+      log("Attempting to fetch categories/menu from Salla API...");
 
-      const nav =
-        this.salla.navigation ||
-        (this.salla.api ? this.salla.api.navigation : null);
-
-      if (!nav) {
-        log("Salla Navigation object not found");
-        return null;
-      }
-
+      // If navigation fetch is missing, try getMenus which usually contains departments
+      const componentApi = this.salla.api ? this.salla.api.component : null;
       let response = null;
 
-      // Try multiple possible methods for categories
-      if (typeof nav.fetch === "function") {
-        try {
-          log("Navigation Fetch V1: nav.fetch('web')");
-          response = await nav.fetch("web");
-        } catch (e) {
-          log("Navigation Fetch V2: nav.fetch({ source: 'store' })");
-          response = await nav.fetch({ source: "store" });
-        }
-      } else if (typeof nav.get === "function") {
-        log("Using nav.get()...");
-        response = await nav.get();
-      } else {
-        log(
-          "No fetch/get method found on Navigation object. Available keys:",
-          Object.keys(nav),
-        );
+      if (componentApi && typeof componentApi.getMenus === "function") {
+        log("Trying component.getMenus('header')...");
+        response = await componentApi.getMenus({ headOrFoot: "header" });
       }
 
-      // Fallback: Direct Axios call for navigation/menus
-      if (!response && this.salla.api && this.salla.api.axios) {
-        try {
-          log("Fetching navigation via direct Axios call to /menu...");
-          // Try common Salla menu endpoints
-          const axiosRes = await this.salla.api.axios.get("/menu");
-          if (axiosRes && axiosRes.data) {
-            response = axiosRes.data;
-          } else {
-            // Try /categories as backup
-            const catRes = await this.salla.api.axios.get(
-              "/categories/index.json",
-            );
-            if (catRes && catRes.data) {
-              response = catRes.data;
+      if (!response) {
+        // Fallback: Direct Axios call for navigation/menus
+        if (this.salla.api && this.salla.api.axios) {
+          try {
+            log("Fetching navigation via direct Axios call to /menu...");
+            const axiosRes = await this.salla.api.axios.get("/menu");
+            if (axiosRes && axiosRes.data) {
+              response = axiosRes.data;
             }
+          } catch (e) {
+            log("Direct navigation/category axios call failed");
           }
-        } catch (e) {
-          log("Direct navigation/category axios call failed");
         }
       }
 
       if (response && response.data) {
-        log("Fetched categories successfully:", response.data);
-        // Salla Navigation API usually returns an array of menu items or categories
-        return response.data.map((cat) => ({
-          id: cat.id,
-          label: cat.name || cat.title,
-          slug: cat.slug || cat.url,
+        log("Fetched categories/menu successfully:", response.data);
+
+        // Helper to translate
+        const translate = (val) => {
+          if (!val) return "";
+          if (typeof val === "string") return val;
+          return val.ar || val.en || Object.values(val)[0] || "";
+        };
+
+        // Navigation API or getMenus usually returns an array of items
+        // We look for items that look like categories or main departments
+        return response.data.map((item) => ({
+          id: item.id,
+          label: translate(item.name || item.title),
+          slug: item.slug || item.url || "#",
         }));
       }
       return null;
