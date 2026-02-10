@@ -42,9 +42,9 @@ body {
 }
 
 /* Hide default Salla theme content to prevent it from showing underneath React app */
-body > *:not(#root):not(script):not(style) {
+/* body > *:not(#root):not(script):not(style) {
   display: none !important;
-}
+} */
 
 /* Ensure React root takes full control */
 #root {
@@ -55,7 +55,7 @@ body > *:not(#root):not(script):not(style) {
 }
 
 /* Hide common Salla theme containers that might appear */
-.salla-container,
+/* .salla-container,
 .theme-container,
 #app-content,
 .main-content,
@@ -65,7 +65,7 @@ body > *:not(#root):not(script):not(style) {
 [class*="theme-"] {
   display: none !important;
   visibility: hidden !important;
-}
+} */
 
 /* Ensure only our React app is visible */
 body {
