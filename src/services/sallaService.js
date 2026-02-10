@@ -190,9 +190,16 @@ class SallaService {
         }
         log("Fetched products successfully:", response.data);
 
-        // Local mapping version log
         if (import.meta.env.DEV || config.enableLogging) {
-          log("MAPPING_V4 - Starting product mapping");
+          log("MAPPING_V5 - Keys available:", Object.keys(response.data[0]));
+          log(
+            "MAPPING_V5 - Raw Price of first product:",
+            response.data[0].price,
+          );
+          log(
+            "MAPPING_V5 - Raw Description of first product:",
+            response.data[0].description,
+          );
         }
 
         // Map Salla product format to app format
@@ -212,15 +219,18 @@ class SallaService {
           // Improved price handling
           let priceStr = "0 ر.س";
           if (p.price !== undefined && p.price !== null) {
-            // Price can be an object {amount, currency} or just a number
             const amount =
               p.price.amount !== undefined ? p.price.amount : p.price;
             let currency = p.currency || p.price.currency || "SAR";
 
             // Map SAR to Arabic currency symbol
-            if (currency === "SAR") currency = "ر.س";
+            if (currency.toUpperCase().trim() === "SAR") currency = "ر.س";
 
+            // Explicitly putting currency SECOND as per your requested format
             priceStr = `${amount} ${currency}`;
+
+            // Debug marker
+            if (index === 0) log(`MAPPED_PRICE_V5: [${priceStr}]`);
           }
 
           const mappedProduct = {
@@ -240,15 +250,20 @@ class SallaService {
                     (opt.values || []).map((v) => translate(v.name)),
                   )
               : ["S", "M", "L", "XL"],
+            // Trying multiple common Salla description fields
             description: translate(
-              p.description || p.short_description || p.subtitle || "قريباً",
+              p.description ||
+                p.short_description ||
+                p.summary ||
+                p.content ||
+                p.subtitle ||
+                "قريباً",
             ),
             image:
               p.main_image ||
               p.image?.url ||
               p.image?.src ||
               "/assets/logo.png",
-            // IMPORTANT: Components expect objects with { type, src }
             media:
               p.images && p.images.length > 0
                 ? p.images.map((img) => ({
@@ -261,7 +276,6 @@ class SallaService {
             reviews: 0,
           };
 
-          if (index === 0) log("Sample Mapped Product (V4):", mappedProduct);
           return mappedProduct;
         });
       }
