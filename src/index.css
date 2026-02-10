@@ -41,10 +41,10 @@ body {
   overflow-x: hidden;
 }
 
-/* Hide default Salla theme content to prevent it from showing underneath React app */
-body > *:not(#root):not(script):not(style) {
+/* Hide default Salla theme content - DISABLED to prevent white screen */
+/* body > *:not(#root):not(script):not(style) {
   display: none !important;
-}
+} */
 
 /* Ensure React root takes full control */
 #root {
