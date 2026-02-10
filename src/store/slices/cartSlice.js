@@ -32,6 +32,11 @@ const cartSlice = createSlice({
           selectedSize: size, // Keep selectedSize for compatibility if needed, or remove if fully migrated
         });
       }
+
+      // Sync with Salla cart (async operation, fire and forget)
+      // Note: This will be handled by middleware or thunk in production
+      // For now, we'll add a comment indicating where Salla sync should happen
+      // The actual syncing will be done via the component that dispatches this action
     },
     removeFromCart: (state, action) => {
       const { productId, size } = action.payload;

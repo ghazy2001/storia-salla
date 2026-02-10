@@ -4,7 +4,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector, useDispatch } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import ProductCarousel from "./ProductCarousel";
-import { addToCart, setCurrentPage } from "../../store/slices/cartSlice";
+import { setCurrentPage } from "../../store/slices/cartSlice";
+import { useAddToCart } from "../../hooks/useCart";
 import Toast from "../common/Toast";
 import { NAV_LINKS } from "../../utils/constants";
 
@@ -17,15 +18,17 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const [visibleProducts, setVisibleProducts] = useState([]); // Initialize with empty array
   const [showToast, setShowToast] = useState(false);
   const dispatch = useDispatch();
+  const { addToCart: addToCartWithSync } = useAddToCart();
 
   // Sync internal filter state when initialFilter prop changes (e.g. from Navbar)
   useEffect(() => {
     setFilter(initialFilter);
   }, [initialFilter]);
 
-  const handleAddToCart = (payload) => {
+  const handleAddToCart = async (payload) => {
     // payload is already { product, quantity, size } from CarouselInfo
-    dispatch(addToCart(payload));
+    const { product, quantity, size } = payload;
+    await addToCartWithSync(product, quantity, size);
     setShowToast(true);
   };
 

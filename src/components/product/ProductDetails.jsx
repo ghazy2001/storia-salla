@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addToCart, setCurrentPage } from "../../store/slices/cartSlice";
+import { setCurrentPage } from "../../store/slices/cartSlice";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
+import { useAddToCart } from "../../hooks/useCart";
 import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
@@ -18,17 +19,18 @@ const ProductDetails = ({ productId }) => {
     product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
   );
   const dispatch = useDispatch();
+  const { addToCart: addToCartWithSync } = useAddToCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedSize && product.sizes && product.sizes.length > 0) {
       alert("الرجاء اختيار المقاس");
       return;
     }
-    dispatch(addToCart({ product, quantity: 1, size: selectedSize }));
+    await addToCartWithSync(product, 1, selectedSize);
     setShowToast(true);
   };
 
