@@ -41,35 +41,33 @@ body {
   overflow-x: hidden;
 }
 
-/* Hide default Salla theme content - DISABLED to prevent white screen */
-/* body > *:not(#root):not(script):not(style) {
-  display: none !important;
-} */
-
 /* Ensure React root takes full control */
 #root {
-  position: relative;
-  z-index: 1;
-  min-height: 100vh;
-  width: 100%;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+  min-height: 100vh !important;
+  width: 100% !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  background-color: var(--bg-site);
 }
 
-/* Hide common Salla theme containers that might appear */
-.salla-container,
-.theme-container,
-#app-content,
-.main-content,
-.page-wrapper,
-.twilight-theme,
-[class*="salla-"],
-[class*="theme-"] {
+/* Hide Salla's default theme elements that appear behind our app */
+body > *:not(#root):not(script):not(style):not(link) {
   display: none !important;
   visibility: hidden !important;
 }
 
-/* Ensure only our React app is visible */
+/* Ensure body doesn't have competing styles */
 body {
   position: relative;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 body::before,
