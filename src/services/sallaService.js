@@ -17,10 +17,16 @@ class SallaService {
       if (import.meta.env.DEV || config.enableLogging) {
         console.group("[Storia] Salla SDK Inspection");
         console.log("SDK Keys:", Object.keys(this.salla));
-        console.log(
-          "SDK Version:",
-          this.salla.versions ? this.salla.versions() : "unknown",
-        );
+        // Safer check for versions
+        try {
+          if (typeof this.salla.versions === "function") {
+            console.log("SDK Version:", this.salla.versions());
+          } else {
+            console.log("SDK Versions property:", this.salla.versions);
+          }
+        } catch (e) {
+          console.log("Could not retrieve SDK version");
+        }
 
         if (this.salla.api) {
           console.log("API Keys:", Object.keys(this.salla.api));
