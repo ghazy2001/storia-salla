@@ -44,9 +44,17 @@ class SallaService {
     }
 
     try {
-      // In Salla themes, salla.api.product.fetch is often available
-      // or we can use the search API with empty query to get products
       log("Attempting to fetch products from Salla API...");
+
+      // Defensive check for the API path
+      if (
+        !this.salla.api ||
+        !this.salla.api.product ||
+        typeof this.salla.api.product.fetch !== "function"
+      ) {
+        log("Salla API path 'salla.api.product.fetch' is not available");
+        return null;
+      }
 
       const response = await this.salla.api.product.fetch();
 
@@ -57,16 +65,23 @@ class SallaService {
         return response.data.map((p) => ({
           id: p.id,
           name: p.name,
-          price: `${p.price.amount} ${p.price.currency}`,
+          price:
+            p.price && p.price.amount
+              ? `${p.price.amount} ${p.price.currency}`
+              : "0 ر.س",
           category: p.category ? p.category.name : "general",
           sizes: p.options
             ? p.options
-                .filter((opt) => opt.name.toLowerCase().includes("size"))
+                .filter(
+                  (opt) => opt.name && opt.name.toLowerCase().includes("size"),
+                )
                 .flatMap((opt) => opt.values.map((v) => v.name))
             : ["S", "M", "L", "XL"],
           description: p.description || "",
           image: p.main_image || "/assets/logo.png",
-          media: p.images ? p.images.map((img) => img.url) : [p.main_image],
+          media: p.images
+            ? p.images.map((img) => img.url || img.src)
+            : [p.main_image],
           isNew: false,
           rating: 5.0,
           reviews: 0,
@@ -76,7 +91,7 @@ class SallaService {
       log("Product fetch returned no data, falling back to mock");
       return null;
     } catch (error) {
-      console.error("[Storia] Error fetching products from Salla:", error);
+      console.warn("[Storia] Error fetching products from Salla:", error);
       return null;
     }
   }
@@ -241,6 +256,17 @@ class SallaService {
 
     try {
       log("Attempting to fetch categories from Salla API...");
+
+      // Defensive check for the API path
+      if (
+        !this.salla.api ||
+        !this.salla.api.category ||
+        typeof this.salla.api.category.fetch !== "function"
+      ) {
+        log("Salla API path 'salla.api.category.fetch' is not available");
+        return null;
+      }
+
       const response = await this.salla.api.category.fetch();
 
       if (response && response.data) {
@@ -253,7 +279,7 @@ class SallaService {
       }
       return null;
     } catch (error) {
-      console.error("[Storia] Error fetching categories:", error);
+      console.warn("[Storia] Error fetching categories:", error);
       return null;
     }
   }
@@ -268,6 +294,16 @@ class SallaService {
 
     try {
       log("Attempting to fetch customer profile...");
+
+      // Defensive check for the API path
+      if (
+        !this.salla.api ||
+        !this.salla.api.customer ||
+        typeof this.salla.api.customer.fetch !== "function"
+      ) {
+        return null;
+      }
+
       const response = await this.salla.api.customer.fetch();
 
       if (response && response.data) {
