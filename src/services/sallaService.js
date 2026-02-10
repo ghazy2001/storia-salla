@@ -206,10 +206,15 @@ class SallaService {
 
           // Improved price handling
           let priceStr = "0 ر.س";
-          if (p.price) {
+          if (p.price !== undefined && p.price !== null) {
+            // Price can be an object {amount, currency} or just a number
             const amount =
               p.price.amount !== undefined ? p.price.amount : p.price;
-            const currency = p.currency || p.price.currency || "ر.س";
+            let currency = p.currency || p.price.currency || "SAR";
+
+            // Map SAR to Arabic currency symbol
+            if (currency === "SAR") currency = "ر.س";
+
             priceStr = `${amount} ${currency}`;
           }
 
@@ -431,22 +436,46 @@ class SallaService {
       let response = null;
 
       if (componentApi && typeof componentApi.getMenus === "function") {
-        log("Trying component.getMenus('header')...");
-        response = await componentApi.getMenus({ headOrFoot: "header" });
+        try {
+          log("Trying component.getMenus('header')...");
+          // Adding a race with a timeout since SDK calls might hang
+          const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Timeout")), 3000),
+          );
+          response = await Promise.race([
+            componentApi.getMenus({ headOrFoot: "header" }),
+            timeout,
+          ]);
+        } catch (e) {
+          log("component.getMenus failed or timed out:", e.message);
+        }
       }
 
-      if (!response) {
-        // Fallback: Direct Axios call for navigation/menus
-        if (this.salla.api && this.salla.api.axios) {
-          try {
-            log("Fetching navigation via direct Axios call to /menu...");
-            const axiosRes = await this.salla.api.axios.get("/menu");
-            if (axiosRes && axiosRes.data) {
-              response = axiosRes.data;
-            }
-          } catch (e) {
-            log("Direct navigation/category axios call failed");
+      if (!response && this.salla.api && this.salla.api.axios) {
+        try {
+          log("Fetching navigation via direct Axios call to /menu...");
+          const axiosRes = await this.salla.api.axios.get("/menu");
+          if (axiosRes && axiosRes.data) {
+            response = axiosRes.data;
           }
+        } catch (e) {
+          log("Direct navigation/category axios call failed");
+        }
+      }
+
+      // Secondary fallback: Try to get categories from the products themselves if menu fails
+      if (!response) {
+        try {
+          log(
+            "Falling back: Generating categories from Global Config or Products...",
+          );
+          const sConfig =
+            typeof window !== "undefined" ? window.salla_config : null;
+          if (sConfig && sConfig.categories) {
+            response = { data: sConfig.categories };
+          }
+        } catch (e) {
+          /* ignore */
         }
       }
 
