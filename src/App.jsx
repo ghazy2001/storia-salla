@@ -19,11 +19,11 @@ function AppContent() {
   // currentPage is accessed by Navbar/PageContent via Redux now.
 
   return (
-    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal">
+    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10">
       <GlobalOverlays isReady={isReady} />
 
       <div
-        className={`transition-opacity duration-1000 ease-in-out ${
+        className={`flex flex-col min-h-screen transition-opacity duration-1000 ease-in-out ${
           isReady ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden={!isReady}
@@ -33,7 +33,7 @@ function AppContent() {
           toggleTheme={() => dispatch(toggleTheme())}
           // Navigation and other handlers are now internal to Navbar using Redux
         />
-        <main>
+        <main className="flex-grow">
           <PageContent />
         </main>
         <Footer theme={theme} />

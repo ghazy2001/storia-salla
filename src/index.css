@@ -38,6 +38,43 @@ body {
   transition:
     background-color 0.5s ease,
     color 0.5s ease;
+  overflow-x: hidden;
+}
+
+/* Hide default Salla theme content to prevent it from showing underneath React app */
+body > *:not(#root):not(script):not(style) {
+  display: none !important;
+}
+
+/* Ensure React root takes full control */
+#root {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Hide common Salla theme containers that might appear */
+.salla-container,
+.theme-container,
+#app-content,
+.main-content,
+.page-wrapper,
+.twilight-theme,
+[class*="salla-"],
+[class*="theme-"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Ensure only our React app is visible */
+body {
+  position: relative;
+}
+
+body::before,
+body::after {
+  display: none !important;
 }
 
 a,
