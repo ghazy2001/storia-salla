@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 
-console.log("[Storia] App version: 2.0.0 - Salla Integration");
+// Removed console.log for production build
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
