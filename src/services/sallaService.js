@@ -89,7 +89,10 @@ class SallaService {
         data: response,
       };
     } catch (error) {
-      console.error("[Storia] Error adding to Salla cart:", error);
+      // Don't log expected errors (like 410 for mock products) in production
+      if (import.meta.env.DEV) {
+        console.error("[Storia] Error adding to Salla cart:", error);
+      }
       return {
         success: false,
         error: error.message || "Failed to add to cart",

@@ -28,7 +28,8 @@ export const resolveAsset = (path) => {
   // If not on Vercel's domain, always use absolute Vercel URLs
   if (!isOnVercel) {
     const resolvedUrl = `${vercelBase}${cleanPath}`;
-    console.log("[Storia Asset]", path, "->", resolvedUrl);
+    // Logging disabled to keep console clean
+    // console.log("[Storia Asset]", path, "->", resolvedUrl);
     return resolvedUrl;
   }
 

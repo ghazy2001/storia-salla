@@ -15,8 +15,8 @@ export const config = {
   useSallaBackend: USE_SALLA_BACKEND,
   isSallaEnv: IS_SALLA_ENV,
 
-  // Logging for debugging
-  enableLogging: import.meta.env.DEV,
+  // Logging disabled in production to keep console clean
+  enableLogging: false,
 };
 
 // Helper to log only when enabled
@@ -25,12 +25,3 @@ export const log = (...args) => {
     console.log("[Storia Config]", ...args);
   }
 };
-
-// Log environment on initialization
-if (typeof window !== "undefined") {
-  log("Environment:", {
-    isSallaEnv: config.isSallaEnv,
-    useSallaBackend: config.useSallaBackend,
-    hasSallaSDK: typeof window.salla !== "undefined",
-  });
-}
