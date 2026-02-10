@@ -182,6 +182,12 @@ class SallaService {
       }
 
       if (response && response.data) {
+        if (response.data.length > 0) {
+          log(
+            "First raw product sample:",
+            JSON.stringify(response.data[0], null, 2),
+          );
+        }
         log("Fetched products successfully:", response.data);
 
         // Map Salla product format to app format
@@ -191,18 +197,26 @@ class SallaService {
             if (!val) return "";
             if (typeof val === "string") return val;
             if (typeof val === "object") {
-              return val.ar || val.en || Object.values(val)[0] || "";
+              return (
+                val.ar || val.en || val.default || Object.values(val)[0] || ""
+              );
             }
             return String(val);
           };
 
+          // Improved price handling
+          let priceStr = "0 ر.س";
+          if (p.price) {
+            const amount =
+              p.price.amount !== undefined ? p.price.amount : p.price;
+            const currency = p.currency || p.price.currency || "ر.س";
+            priceStr = `${amount} ${currency}`;
+          }
+
           return {
             id: p.id,
             name: translate(p.name),
-            price:
-              p.price && p.price.amount
-                ? `${p.price.amount} ${p.price.currency}`
-                : "0 ر.س",
+            price: priceStr,
             category: p.category ? translate(p.category.name) : "general",
             sizes: p.options
               ? p.options
@@ -216,8 +230,12 @@ class SallaService {
                     (opt.values || []).map((v) => translate(v.name)),
                   )
               : ["S", "M", "L", "XL"],
-            description: translate(p.description || p.short_description),
-            image: p.main_image || "/assets/logo.png",
+            description: translate(p.description || p.short_description || ""),
+            image:
+              p.main_image ||
+              p.image?.url ||
+              p.image?.src ||
+              "/assets/logo.png",
             // IMPORTANT: Components expect objects with { type, src }
             media:
               p.images && p.images.length > 0
