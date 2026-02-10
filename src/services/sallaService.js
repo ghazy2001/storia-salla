@@ -190,8 +190,13 @@ class SallaService {
         }
         log("Fetched products successfully:", response.data);
 
+        // Local mapping version log
+        if (import.meta.env.DEV || config.enableLogging) {
+          log("MAPPING_V4 - Starting product mapping");
+        }
+
         // Map Salla product format to app format
-        return response.data.map((p) => {
+        return response.data.map((p, index) => {
           // Helper to handle localized strings from Salla API
           const translate = (val) => {
             if (!val) return "";
@@ -218,7 +223,7 @@ class SallaService {
             priceStr = `${amount} ${currency}`;
           }
 
-          return {
+          const mappedProduct = {
             id: p.id,
             name: translate(p.name),
             price: priceStr,
@@ -235,7 +240,9 @@ class SallaService {
                     (opt.values || []).map((v) => translate(v.name)),
                   )
               : ["S", "M", "L", "XL"],
-            description: translate(p.description || p.short_description || ""),
+            description: translate(
+              p.description || p.short_description || p.subtitle || "قريباً",
+            ),
             image:
               p.main_image ||
               p.image?.url ||
@@ -253,6 +260,9 @@ class SallaService {
             rating: 5.0,
             reviews: 0,
           };
+
+          if (index === 0) log("Sample Mapped Product (V4):", mappedProduct);
+          return mappedProduct;
         });
       }
 
