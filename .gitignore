@@ -8,7 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist - Commenting out to deploy built files with images to Vercel
 dist-ssr
 *.local
 
