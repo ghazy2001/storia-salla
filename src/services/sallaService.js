@@ -30,26 +30,18 @@ class SallaService {
 
         if (this.salla.api) {
           console.log("API Keys:", Object.keys(this.salla.api));
-          if (this.salla.api.product) {
-            console.log(
-              "API Product Keys:",
-              Object.keys(this.salla.api.product),
-            );
-            console.log(
-              "API Product fetch exists:",
-              typeof this.salla.api.product.fetch === "function",
-            );
-          }
-          if (this.salla.api.navigation) {
-            console.log(
-              "API Navigation Keys:",
-              Object.keys(this.salla.api.navigation),
-            );
-            console.log(
-              "API Navigation fetch exists:",
-              typeof this.salla.api.navigation.fetch === "function",
-            );
-          }
+          ["product", "navigation", "category", "component"].forEach((key) => {
+            if (this.salla.api[key]) {
+              console.log(
+                `API ${key} Endpoints:`,
+                this.salla.api[key].endpoints,
+              );
+              console.log(
+                `API ${key} fetch function:`,
+                typeof this.salla.api[key].fetch === "function",
+              );
+            }
+          });
         }
 
         // Debug higher-level SDK objects
@@ -62,6 +54,13 @@ class SallaService {
             if (this.salla[key].fetch) console.log(`SDK ${key}.fetch exists`);
           }
         });
+
+        if (this.salla.config && typeof this.salla.config.get === "function") {
+          console.log(
+            "SDK Global Config Categories:",
+            this.salla.config.get("categories"),
+          );
+        }
 
         console.groupEnd();
       }
@@ -113,27 +112,56 @@ class SallaService {
       }
 
       let response = null;
-      let lastError = null;
 
-      // Variant 1: String argument
-      try {
-        log("Product Fetch V1: product.fetch('web')");
-        response = await productManager.fetch("web");
-      } catch (e) {
-        lastError = e;
-        // Variant 2: Object with source: 'store'
+      // Extensive variants to find the right 'Source'
+      const variants = [
+        { source: "latest" },
+        { source: "all" },
+        { source: "store" },
+        { source: "web" },
+        "web",
+        "store",
+      ];
+
+      for (const variant of variants) {
         try {
-          log("Product Fetch V2: product.fetch({ source: 'store' })");
-          response = await productManager.fetch({ source: "store" });
-        } catch (e2) {
-          // Variant 3: Just fetch()
-          try {
-            log("Product Fetch V3: product.fetch()");
-            response = await productManager.fetch();
-          } catch (e3) {
-            log("All product fetch variants failed. Last error:", lastError);
-            return null;
+          const label =
+            typeof variant === "string" ? variant : JSON.stringify(variant);
+          log(`Trying product.fetch(${label})...`);
+          response = await productManager.fetch(variant);
+          if (response && response.data) {
+            log(`Success with variant: ${label}`);
+            break;
           }
+        } catch (e) {
+          // Continue to next variant
+        }
+      }
+
+      // Final SDK Fallback: Try just fetch() again in case of intermittent failure
+      if (!response) {
+        try {
+          response = await productManager.fetch();
+        } catch (e) {
+          /* ignore */
+        }
+      }
+
+      // Final fallthrough: Direct Axios call if we can't get it via SDK
+      if (!response && this.salla.api && this.salla.api.axios) {
+        try {
+          log(
+            "Fetching products via direct Axios call to /products/index.json...",
+          );
+          const axiosRes = await this.salla.api.axios.get(
+            "/products/index.json",
+          );
+          if (axiosRes && axiosRes.data) {
+            log("Success via direct Axios call");
+            response = axiosRes.data;
+          }
+        } catch (e) {
+          log("Direct products axios call failed");
         }
       }
 
@@ -371,7 +399,28 @@ class SallaService {
           "No fetch/get method found on Navigation object. Available keys:",
           Object.keys(nav),
         );
-        return null;
+      }
+
+      // Fallback: Direct Axios call for navigation/menus
+      if (!response && this.salla.api && this.salla.api.axios) {
+        try {
+          log("Fetching navigation via direct Axios call to /menu...");
+          // Try common Salla menu endpoints
+          const axiosRes = await this.salla.api.axios.get("/menu");
+          if (axiosRes && axiosRes.data) {
+            response = axiosRes.data;
+          } else {
+            // Try /categories as backup
+            const catRes = await this.salla.api.axios.get(
+              "/categories/index.json",
+            );
+            if (catRes && catRes.data) {
+              response = catRes.data;
+            }
+          }
+        } catch (e) {
+          log("Direct navigation/category axios call failed");
+        }
       }
 
       if (response && response.data) {
