@@ -15,7 +15,7 @@ import {
 } from "../../utils/themeUtils";
 import NavigationArrows from "../common/NavigationArrows";
 import Lightbox from "../common/Lightbox";
-import { resolveAsset } from "../../utils/assetUtils";
+import { getImageSrc } from "../../utils/assetUtils";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -40,9 +40,9 @@ const BestSellers = ({ onProductSelect }) => {
   const carouselImages =
     featuredProduct?.media
       ?.filter((m) => m.type === "image")
-      .map((m) => ({ ...m, src: resolveAsset(m.src || m.url) })) ||
+      .map((m) => ({ ...m, src: getImageSrc(m.src || m.url) })) ||
     (featuredProduct
-      ? [{ src: resolveAsset(featuredProduct.image), type: "image" }]
+      ? [{ src: getImageSrc(featuredProduct.image), type: "image" }]
       : []);
 
   const lightbox = useLightbox(carouselImages);
@@ -80,7 +80,7 @@ const BestSellers = ({ onProductSelect }) => {
             {/* Banner Image */}
             <div className="absolute inset-0">
               <img
-                src={resolveAsset(
+                src={getImageSrc(
                   carouselImages[0]?.src || featuredProduct.image,
                 )}
                 alt={featuredProduct.name}
@@ -141,7 +141,7 @@ const BestSellers = ({ onProductSelect }) => {
                         className="aspect-[3/4] rounded-3xl overflow-hidden mb-4 relative cursor-pointer"
                       >
                         <img
-                          src={resolveAsset(mediaItem.src)}
+                          src={getImageSrc(mediaItem.src)}
                           alt={`${featuredProduct.name} - View ${index + 1}`}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />

@@ -288,7 +288,11 @@ class SallaService {
                   : [
                       {
                         type: "image",
-                        src: targetProduct.main_image || "/assets/logo.png",
+                        src:
+                          targetProduct.main_image ||
+                          targetProduct.image?.url ||
+                          targetProduct.image?.src ||
+                          "/assets/logo.png",
                       },
                     ],
               isNew: false,
@@ -296,7 +300,12 @@ class SallaService {
               reviews: 0,
             };
 
-            if (index === 0) log("Sample Mapped Product (V6):", mappedProduct);
+            if (index === 0) {
+              log("Sample Mapped Product (V6):", mappedProduct);
+              log("Product Image URL:", mappedProduct.image);
+              log("Product Media Array:", mappedProduct.media);
+              log("Original Salla Product Image:", targetProduct.image);
+            }
             return mappedProduct;
           }),
         );

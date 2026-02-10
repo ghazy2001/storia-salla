@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { resolveAsset } from "../../utils/assetUtils";
+import { getImageSrc } from "../../utils/assetUtils";
 import { products } from "../../data/products";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -120,7 +120,7 @@ const Hero = ({ goToStore, onProductSelect }) => {
                 }`}
               >
                 <img
-                  src={resolveAsset(product.image)}
+                  src={getImageSrc(product.image)}
                   alt={product.name}
                   className="w-full h-full object-cover object-[center_45%]"
                 />

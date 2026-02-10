@@ -38,3 +38,19 @@ export const resolveAsset = (path) => {
   const cleanBase = base.endsWith("/") ? base : `${base}/`;
   return `${cleanBase}${cleanPath}`;
 };
+
+/**
+ * Get image source - handles both external URLs (from Salla API) and local assets
+ * This prevents double-resolution of CDN URLs that are already full paths
+ * @param {string} src - The image source (URL or local path)
+ * @returns {string} - The resolved image source
+ */
+export const getImageSrc = (src) => {
+  if (!src) return "";
+  // If it's already a full URL (from Salla API or external), return as-is
+  if (src.startsWith("http") || src.startsWith("//")) {
+    return src;
+  }
+  // Otherwise, resolve as a local asset
+  return resolveAsset(src);
+};

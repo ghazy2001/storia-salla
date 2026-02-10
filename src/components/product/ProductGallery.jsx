@@ -1,5 +1,5 @@
 import React from "react";
-import { resolveAsset } from "../../utils/assetUtils";
+import { getImageSrc } from "../../utils/assetUtils";
 
 /**
  * ProductGallery Component
@@ -44,7 +44,7 @@ const ProductGallery = ({ product, activeMedia, setActiveMedia }) => {
       >
         {product.media[activeMedia].type === "video" ? (
           <video
-            src={resolveAsset(product.media[activeMedia].src)}
+            src={getImageSrc(product.media[activeMedia].src)}
             className="w-full h-full object-cover"
             autoPlay
             muted
@@ -53,7 +53,7 @@ const ProductGallery = ({ product, activeMedia, setActiveMedia }) => {
           />
         ) : (
           <img
-            src={resolveAsset(product.media[activeMedia].src)}
+            src={getImageSrc(product.media[activeMedia].src)}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
@@ -78,7 +78,7 @@ const ProductGallery = ({ product, activeMedia, setActiveMedia }) => {
               </div>
             ) : (
               <img
-                src={resolveAsset(item.src)}
+                src={getImageSrc(item.src)}
                 className="w-full h-full object-cover"
                 alt=""
               />
