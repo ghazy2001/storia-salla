@@ -15,4 +15,21 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Use stable filenames instead of hash-based names for Salla integration
+        entryFileNames: "assets/app.js",
+        chunkFileNames: "assets/[name].js",
+        assetFileNames: (assetInfo) => {
+          // CSS files get a stable name
+          if (assetInfo.name && assetInfo.name.endsWith(".css")) {
+            return "assets/app.css";
+          }
+          // Other assets keep their original names
+          return "assets/[name].[ext]";
+        },
+      },
+    },
+  },
 });
