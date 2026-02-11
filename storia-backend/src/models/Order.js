@@ -27,6 +27,10 @@ const orderSchema = new mongoose.Schema(
           type: Number,
           required: true,
         },
+        cost: {
+          type: Number,
+          default: 0,
+        },
         size: String,
       },
     ],

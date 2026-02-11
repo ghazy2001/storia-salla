@@ -11,6 +11,7 @@ const AnalyticsTab = ({ analytics }) => {
   const { kpis, dailySales, topProducts, growth } = analytics || {
     kpis: {
       totalSales: 0,
+      totalProfit: 0,
       ordersCount: 0,
       customersCount: 0,
       averageOrderValue: 0,
@@ -42,6 +43,18 @@ const AnalyticsTab = ({ analytics }) => {
           <p className="text-sm text-gray-500 mb-1">إجمالي المبيعات</p>
           <h3 className="text-2xl font-bold text-green-600">
             {kpis.totalSales.toLocaleString()} ر.س
+          </h3>
+        </div>
+
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-600">
+              <TrendingUp size={24} />
+            </div>
+          </div>
+          <p className="text-sm text-gray-500 mb-1">صافي الربح</p>
+          <h3 className="text-2xl font-bold text-amber-600">
+            {kpis.totalProfit?.toLocaleString()} ر.س
           </h3>
         </div>
 

@@ -29,7 +29,12 @@ router.post("/products", async (req, res) => {
       ],
       isActive: true,
       stock: parseInt(data.stock) || 0,
-      sizeVariants: data.sizeVariants || [],
+      sizeVariants:
+        data.sizeVariants?.map((v) => ({
+          ...v,
+          cost: parseFloat(v.cost) || 0,
+        })) || [],
+      cost: parseFloat(data.cost) || 0,
       sallaProductId: data.sallaProductId,
     };
 
@@ -66,7 +71,12 @@ router.put("/products/:id", async (req, res) => {
       ],
       isActive: data.isActive ?? true,
       stock: parseInt(data.stock) || 0,
-      sizeVariants: data.sizeVariants || [],
+      sizeVariants:
+        data.sizeVariants?.map((v) => ({
+          ...v,
+          cost: parseFloat(v.cost) || 0,
+        })) || [],
+      cost: parseFloat(data.cost) || 0,
       sallaProductId: data.sallaProductId,
     };
 

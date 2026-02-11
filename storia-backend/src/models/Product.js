@@ -15,6 +15,11 @@ const productSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    cost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     currency: {
       type: String,
       default: "SAR",
@@ -40,6 +45,11 @@ const productSchema = new mongoose.Schema(
         price: {
           type: Number,
           required: true,
+          min: 0,
+        },
+        cost: {
+          type: Number,
+          default: 0,
           min: 0,
         },
         stock: {

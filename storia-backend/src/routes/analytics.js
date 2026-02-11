@@ -16,6 +16,14 @@ router.get("/", async (req, res) => {
       0,
     );
 
+    // Calculate Total Profit
+    const totalProfit = activeOrders.reduce((sum, order) => {
+      const orderCost = order.items.reduce((itemSum, item) => {
+        return itemSum + (item.cost || 0) * item.quantity;
+      }, 0);
+      return sum + (order.total - orderCost);
+    }, 0);
+
     // 2. Orders Count (All non-cancelled)
     const ordersCount = await Order.countDocuments({
       status: { $ne: "cancelled" },
@@ -88,6 +96,7 @@ router.get("/", async (req, res) => {
     res.json({
       kpis: {
         totalSales,
+        totalProfit: Math.round(totalProfit),
         ordersCount,
         customersCount,
         averageOrderValue,

@@ -30,6 +30,7 @@ const InventoryTab = ({ products }) => {
         variantId: variant.size,
         variantPrice: variant.price,
         variantStock: variant.stock,
+        variantCost: variant.cost || 0,
         isVariant: true,
       }));
     }
@@ -39,6 +40,7 @@ const InventoryTab = ({ products }) => {
         variantId: "Default",
         variantPrice: product.price,
         variantStock: product.stock || 0,
+        variantCost: product.cost || 0,
         isVariant: false,
       },
     ];
@@ -98,7 +100,13 @@ const InventoryTab = ({ products }) => {
     let updatedProductData;
     if (item.isVariant) {
       const updatedVariants = product.sizeVariants.map((v) =>
-        v.size === item.variantId ? { ...v, stock: parseInt(editForm) } : v,
+        v.size === item.variantId
+          ? {
+              ...v,
+              stock: parseInt(editForm.stock),
+              cost: parseFloat(editForm.cost),
+            }
+          : v,
       );
       updatedProductData = {
         ...product,
@@ -108,7 +116,8 @@ const InventoryTab = ({ products }) => {
     } else {
       updatedProductData = {
         ...product,
-        stock: parseInt(editForm),
+        stock: parseInt(editForm.stock),
+        cost: parseFloat(editForm.cost),
         id: product._id || product.id,
       };
     }
@@ -211,7 +220,10 @@ const InventoryTab = ({ products }) => {
                   المقاس
                 </th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                  السعر
+                  سعر البيع
+                </th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                  التكلفة
                 </th>
                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">
                   المخزون
@@ -260,14 +272,29 @@ const InventoryTab = ({ products }) => {
                     <td className="px-6 py-4 text-sm font-medium text-gray-600">
                       {item.variantPrice} ر.س
                     </td>
+                    <td className="px-6 py-4 text-sm font-medium text-gray-400">
+                      {isEditing ? (
+                        <input
+                          type="number"
+                          value={editForm.cost}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, cost: e.target.value })
+                          }
+                          className="w-20 px-2 py-1 border border-brand-gold rounded outline-none focus:ring-2 focus:ring-brand-gold/50 text-right"
+                        />
+                      ) : (
+                        item.variantCost + " ر.س"
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       {isEditing ? (
                         <input
                           type="number"
-                          autoFocus
-                          value={editForm}
-                          onChange={(e) => setEditForm(e.target.value)}
-                          className="w-20 px-2 py-1 border border-brand-gold rounded outline-none focus:ring-2 focus:ring-brand-gold/50"
+                          value={editForm.stock}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, stock: e.target.value })
+                          }
+                          className="w-20 px-2 py-1 border border-brand-gold rounded outline-none focus:ring-2 focus:ring-brand-gold/50 text-right"
                         />
                       ) : (
                         <span className="font-bold text-gray-900">
@@ -307,7 +334,10 @@ const InventoryTab = ({ products }) => {
                         <button
                           onClick={() => {
                             setEditingId(uniqueKey);
-                            setEditForm(item.variantStock);
+                            setEditForm({
+                              stock: item.variantStock,
+                              cost: item.variantCost,
+                            });
                           }}
                           className="text-brand-burgundy hover:text-brand-gold text-xs font-bold border-b border-brand-burgundy hover:border-brand-gold transition-all"
                         >

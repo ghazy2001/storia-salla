@@ -10,10 +10,31 @@ router.post("/", async (req, res) => {
   try {
     const { customer, items, total, discountAmount, couponUsed } = req.body;
 
-    // 1. Create Order
+    // 1. Fetch costs for items and calculate total items cost
+    const itemsWithCosts = await Promise.all(
+      items.map(async (item) => {
+        const product = await mongoose
+          .model("Product")
+          .findById(item.productId);
+        let itemCost = 0;
+        if (product) {
+          if (item.size && product.sizeVariants.length > 0) {
+            const variant = product.sizeVariants.find(
+              (v) => v.size === item.size,
+            );
+            itemCost = variant ? variant.cost : product.cost;
+          } else {
+            itemCost = product.cost;
+          }
+        }
+        return { ...item, cost: itemCost };
+      }),
+    );
+
+    // 2. Create Order
     const order = new Order({
       customer,
-      items,
+      items: itemsWithCosts,
       total,
       discountAmount,
       couponUsed,
