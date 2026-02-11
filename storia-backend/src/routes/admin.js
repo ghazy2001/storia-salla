@@ -1,13 +1,33 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
+const { formatProduct } = require("../utils/productUtils");
 
 // POST /api/admin/products - Create new product
 router.post("/products", async (req, res) => {
   try {
-    const product = new Product(req.body);
+    const data = req.body;
+
+    // Map frontend structure to backend schema
+    const productData = {
+      name: { ar: data.name, en: data.name },
+      description: { ar: data.description, en: data.description },
+      price: parseFloat(data.price),
+      category: data.category || "official",
+      sizes: data.sizes || ["S", "M", "L", "XL"],
+      images: [
+        {
+          url: data.image || "/assets/logo.png",
+          alt: data.name,
+        },
+      ],
+      isActive: true,
+      stock: data.stock || 0,
+    };
+
+    const product = new Product(productData);
     await product.save();
-    res.status(201).json(product);
+    res.status(201).json(formatProduct(product));
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(500).json({ error: "Failed to create product" });
@@ -17,7 +37,24 @@ router.post("/products", async (req, res) => {
 // PUT /api/admin/products/:id - Update product
 router.put("/products/:id", async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+    const data = req.body;
+    const updateData = {
+      name: { ar: data.name, en: data.name },
+      description: { ar: data.description, en: data.description },
+      price: parseFloat(data.price),
+      category: data.category,
+      sizes: data.sizes,
+      images: [
+        {
+          url: data.image,
+          alt: data.name,
+        },
+      ],
+      isActive: data.isActive ?? true,
+      stock: data.stock,
+    };
+
+    const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true,
     });
@@ -26,7 +63,7 @@ router.put("/products/:id", async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    res.json(product);
+    res.json(formatProduct(product));
   } catch (error) {
     console.error("Error updating product:", error);
     res.status(500).json({ error: "Failed to update product" });
