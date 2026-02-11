@@ -6,7 +6,7 @@ const FAQsTab = ({ faqs, handleEdit, handleDelete }) => {
     <div className="space-y-4 mb-16">
       {faqs.map((faq) => (
         <div
-          key={faq.id}
+          key={faq._id || faq.id}
           className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex justify-between items-start gap-4"
         >
           <div className="flex-1">
@@ -21,7 +21,7 @@ const FAQsTab = ({ faqs, handleEdit, handleDelete }) => {
               <Edit2 size={18} />
             </button>
             <button
-              onClick={() => handleDelete(faq.id)}
+              onClick={() => handleDelete(faq)}
               className="text-red-500 hover:bg-red-50 p-2 rounded-full"
             >
               <Trash2 size={18} />

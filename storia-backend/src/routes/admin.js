@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const { formatProduct } = require("../utils/productUtils");
 
@@ -73,6 +74,9 @@ router.put("/products/:id", async (req, res) => {
 // DELETE /api/admin/products/:id - Delete product
 router.delete("/products/:id", async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
     const product = await Product.findByIdAndDelete(req.params.id);
 
     if (!product) {

@@ -6,11 +6,11 @@ const ReviewsTab = ({ reviews, handleDelete }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
       {reviews.map((review) => (
         <div
-          key={review.id}
+          key={review._id || review.id}
           className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative"
         >
           <button
-            onClick={() => handleDelete(review.id)}
+            onClick={() => handleDelete(review)}
             className="absolute top-4 left-4 text-red-400 hover:text-red-600 bg-red-50 p-2 rounded-full"
             title="Delete Review"
           >

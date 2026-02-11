@@ -145,12 +145,17 @@ const AdminDashboard = () => {
     dispatch(fetchCategoriesFromSalla());
   };
 
-  const handleDelete = (item) => {
+  const handleDelete = async (item) => {
     const id = item._id || item.id;
     if (window.confirm("هل أنت متأكد من الحذف؟")) {
-      if (activeTab === "products") dispatch(deleteProduct(id));
-      if (activeTab === "reviews") dispatch(deleteReview(id));
-      if (activeTab === "faqs") dispatch(deleteFAQ(id));
+      try {
+        if (activeTab === "products")
+          await dispatch(deleteProduct(id)).unwrap();
+        if (activeTab === "reviews") await dispatch(deleteReview(id)).unwrap();
+        if (activeTab === "faqs") await dispatch(deleteFAQ(id)).unwrap();
+      } catch (error) {
+        alert(`خطأ في الحذف: ${error}`);
+      }
     }
   };
 

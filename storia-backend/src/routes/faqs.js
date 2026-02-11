@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const FAQ = require("../models/FAQ");
 
 // GET /api/faqs - Get all active FAQs
@@ -40,6 +41,9 @@ router.put("/admin/:id", async (req, res) => {
 // DELETE /api/admin/faqs/:id - Delete FAQ (Admin)
 router.delete("/admin/:id", async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: "Invalid ID format" });
+    }
     const faq = await FAQ.findByIdAndDelete(req.params.id);
     if (!faq) return res.status(404).json({ error: "FAQ not found" });
     res.json({ message: "FAQ deleted successfully" });
