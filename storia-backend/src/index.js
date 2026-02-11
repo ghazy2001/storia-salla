@@ -12,6 +12,7 @@ const faqsRoutes = require("./routes/faqs");
 const reviewsRoutes = require("./routes/reviews");
 const ordersRoutes = require("./routes/orders");
 const analyticsRoutes = require("./routes/analytics");
+const bestSellersRoutes = require("./routes/bestsellers");
 
 // Initialize Express app
 const app = express();
@@ -76,6 +77,7 @@ app.use("/api/faqs", faqsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/bestsellers", bestSellersRoutes);
 
 // Error handling middleware
 app.use((err, req, res) => {

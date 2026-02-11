@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector, useDispatch } from "react-redux";
@@ -26,26 +26,48 @@ const BestSellers = ({ onProductSelect }) => {
   const dispatch = useDispatch();
   const { containerRef, scrollLeft, scrollRight } = useScrollContainer(320);
 
-  // Featured product for the banner - نواعم (classic category)
-  const featuredProduct =
-    products.find((p) => p.category === "classic") || products[0];
+  // State for BestSellers configuration from database
+  const [featuredConfig, setFeaturedConfig] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Carousel images: Get media from the featured product
-  const carouselImages =
-    featuredProduct?.media?.filter((m) => m.type === "image") ||
-    (featuredProduct ? [{ src: featuredProduct.image, type: "image" }] : []);
+  // Fetch BestSellers configuration from backend
+  useEffect(() => {
+    const loadBestSellers = async () => {
+      try {
+        const apiBaseUrl =
+          import.meta.env.MODE === "development"
+            ? "http://localhost:3000/api"
+            : "https://storia-salla.fly.dev/api";
 
-  // DEBUG: Log carousel data to help diagnose production issues
-  if (import.meta.env.DEV || typeof window !== "undefined") {
-    console.log("[BestSellers Debug]", {
-      featuredProductId: featuredProduct?.id,
-      featuredProductName: featuredProduct?.name,
-      hasMedia: !!featuredProduct?.media,
-      mediaCount: featuredProduct?.media?.length || 0,
-      carouselImageCount: carouselImages.length,
-      firstImage: carouselImages[0],
-    });
-  }
+        const response = await fetch(`${apiBaseUrl}/bestsellers`);
+
+        if (response.ok) {
+          const config = await response.json();
+          console.log("[BestSellers] Loaded from database:", config);
+          setFeaturedConfig(config);
+        } else {
+          console.warn("[BestSellers] API failed, using fallback product");
+          // Fallback to first classic product if API fails
+          const fallback =
+            products.find((p) => p.category === "classic") || products[0];
+          setFeaturedConfig(fallback);
+        }
+      } catch (error) {
+        console.error("[BestSellers] Error fetching config:", error);
+        // Fallback to first classic product
+        const fallback =
+          products.find((p) => p.category === "classic") || products[0];
+        setFeaturedConfig(fallback);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadBestSellers();
+  }, [products]);
+
+  // Carousel images from configuration
+  const carouselImages = featuredConfig?.media || [];
 
   const lightbox = useLightbox(carouselImages);
 
@@ -65,7 +87,7 @@ const BestSellers = ({ onProductSelect }) => {
     return () => ctx.revert();
   }, []);
 
-  if (!featuredProduct) return null;
+  if (loading || !featuredConfig) return null;
 
   const sectionBgClass = getThemeValue(theme, "bg-white", "bg-brand-burgundy");
   const textColorClass = getTextClass(theme);
@@ -83,9 +105,9 @@ const BestSellers = ({ onProductSelect }) => {
             <div className="absolute inset-0">
               <img
                 src={resolveAsset(
-                  carouselImages[0]?.src || featuredProduct.image,
+                  carouselImages[0]?.src || featuredConfig.image,
                 )}
-                alt={featuredProduct.name}
+                alt={featuredConfig.name}
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -94,17 +116,18 @@ const BestSellers = ({ onProductSelect }) => {
             {/* Banner Content */}
             <div className="absolute bottom-0 left-0 right-0 p-10 flex flex-col items-center text-center">
               <h2 className="text-4xl md:text-5xl font-sans text-white mb-2">
-                الأكثر مبيعاً
+                {featuredConfig.bannerText?.ar || "الأكثر مبيعاً"}
               </h2>
               <p className="text-white/80 text-lg mb-8 font-light">
-                تسوق افضل المنتجات المختارة لك خصيصا
+                {featuredConfig.bannerSubtext?.ar ||
+                  "تسوق افضل المنتجات المختارة لك خصيصا"}
               </p>
 
               <button
                 onClick={() => dispatch(setCurrentPage("store"))}
                 className="px-10 py-3 border border-white text-white uppercase tracking-widest text-sm hover:bg-white hover:text-black transition-all duration-300"
               >
-                تسوق الآن
+                {featuredConfig.ctaText?.ar || "تسوق الآن"}
               </button>
             </div>
           </div>
@@ -144,7 +167,7 @@ const BestSellers = ({ onProductSelect }) => {
                       >
                         <img
                           src={resolveAsset(mediaItem.src)}
-                          alt={`${featuredProduct.name} - View ${index + 1}`}
+                          alt={`${featuredConfig.name} - View ${index + 1}`}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
 
@@ -152,7 +175,7 @@ const BestSellers = ({ onProductSelect }) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onProductSelect(featuredProduct.id);
+                            onProductSelect(featuredConfig.id);
                           }}
                           className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden transition-all duration-300 hover:w-32 w-10 shadow-lg z-10"
                           title="View Details"
@@ -178,14 +201,14 @@ const BestSellers = ({ onProductSelect }) => {
               <div className="w-full text-right">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-brand-gold text-3xl font-bold">
-                    {featuredProduct.price}
+                    {featuredConfig.price}
                   </div>
                 </div>
                 <p
                   className={`${textColorClass} opacity-80 text-lg font-light leading-relaxed`}
                 >
-                  {featuredProduct.bestSellerDescription ||
-                    featuredProduct.description}
+                  {featuredConfig.bestSellerDescription ||
+                    featuredConfig.description}
                 </p>
               </div>
 
@@ -211,7 +234,7 @@ const BestSellers = ({ onProductSelect }) => {
         onNext={lightbox.next}
         currentIndex={lightbox.currentIndex}
         totalImages={carouselImages.length}
-        altText={`${featuredProduct.name} - ${lightbox.currentIndex + 1}`}
+        altText={`${featuredConfig.name} - ${lightbox.currentIndex + 1}`}
       />
     </>
   );
