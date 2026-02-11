@@ -8,23 +8,25 @@ const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
   const touchStart = useRef(null);
   const touchEnd = useRef(null);
 
-  const currentMedia = product.media[currentIndex];
-
   useEffect(() => {
-    gsap.fromTo(
-      mediaRef.current,
-      { opacity: 0.5 },
-      { opacity: 1, duration: 0.5 },
-    );
+    if (mediaRef.current) {
+      gsap.fromTo(
+        mediaRef.current,
+        { opacity: 0.5 },
+        { opacity: 1, duration: 0.5 },
+      );
+    }
   }, [currentIndex]);
 
   const nextSlide = (e) => {
     e?.stopPropagation();
+    if (!product?.media?.length) return;
     setCurrentIndex((prev) => (prev + 1) % product.media.length);
   };
 
   const prevSlide = (e) => {
     e?.stopPropagation();
+    if (!product?.media?.length) return;
     setCurrentIndex((prev) =>
       prev === 0 ? product.media.length - 1 : prev - 1,
     );
@@ -50,6 +52,24 @@ const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
     touchEnd.current = null;
   };
 
+  if (!product || !product.media || product.media.length === 0) {
+    return (
+      <div className="relative w-full lg:w-1/2 aspect-[3/4] max-h-[80vh] overflow-hidden rounded-sm bg-brand-charcoal/5 flex items-center justify-center">
+        <span className="text-gray-400">لا يوجد وسائط للمنتج</span>
+      </div>
+    );
+  }
+
+  const currentMedia = product.media[currentIndex];
+
+  if (!currentMedia) {
+    return (
+      <div className="relative w-full lg:w-1/2 aspect-[3/4] max-h-[80vh] overflow-hidden rounded-sm bg-brand-charcoal/5 flex items-center justify-center">
+        <span className="text-gray-400">فشل في تحميل الوسائط</span>
+      </div>
+    );
+  }
+
   return (
     <div
       className="relative w-full lg:w-1/2 aspect-[3/4] max-h-[80vh] overflow-hidden rounded-sm group"
@@ -60,7 +80,7 @@ const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
       <div ref={mediaRef} className="w-full h-full bg-brand-charcoal/5">
         {currentMedia.type === "video" ? (
           <video
-            src={getImageSrc(currentMedia.src)}
+            src={getImageSrc(currentMedia.url || currentMedia.src)}
             className="w-full h-full object-cover"
             autoPlay
             loop
@@ -69,7 +89,7 @@ const CarouselMedia = ({ product, currentIndex, setCurrentIndex }) => {
           />
         ) : (
           <img
-            src={getImageSrc(currentMedia.src)}
+            src={getImageSrc(currentMedia.url || currentMedia.src)}
             alt={`${product.name} view ${currentIndex + 1}`}
             className="w-full h-full object-cover transition-transform duration-700 hover:scale-110"
           />

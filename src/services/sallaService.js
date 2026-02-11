@@ -503,6 +503,7 @@ class SallaService {
    * Fetch categories/departments from Salla store
    */
   async fetchCategories() {
+    if (!this.salla) return null;
     if (!this.isAvailable()) {
       log("Salla SDK not available, cannot fetch categories");
       return null;
@@ -512,7 +513,7 @@ class SallaService {
       log("Attempting to fetch categories/menu from Salla API...");
 
       // If navigation fetch is missing, try getMenus which usually contains departments
-      const componentApi = this.salla.api ? this.salla.api.component : null;
+      const componentApi = this.salla?.api ? this.salla.api.component : null;
       let response = null;
 
       if (componentApi && typeof componentApi.getMenus === "function") {
@@ -593,6 +594,7 @@ class SallaService {
    * Fetch current customer profile from Salla
    */
   async fetchCustomer() {
+    if (!this.salla) return null;
     if (!this.isAvailable()) {
       return null;
     }
@@ -602,7 +604,7 @@ class SallaService {
 
       // Defensive check for the API path
       if (
-        !this.salla.api ||
+        !this.salla?.api ||
         !this.salla.api.customer ||
         typeof this.salla.api.customer.fetch !== "function"
       ) {
