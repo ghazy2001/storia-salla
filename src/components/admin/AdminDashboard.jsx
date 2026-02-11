@@ -25,13 +25,16 @@ import { setCurrentPage } from "../../store/slices/cartSlice";
 import {
   BarChart3,
   ShoppingBag,
-  RefreshCw,
   ExternalLink,
   Package,
   MessageSquare,
   HelpCircle,
   Plus,
 } from "lucide-react";
+import {
+  setAdminActiveTab,
+  selectAdminActiveTab,
+} from "../../store/slices/uiSlice";
 import sallaService from "../../services/sallaService";
 
 // Components
@@ -48,9 +51,9 @@ const AdminDashboard = () => {
   const faqs = useSelector(selectFAQs);
   const orders = useSelector(selectOrders);
   const analytics = useSelector(selectAnalytics);
+  const activeTab = useSelector(selectAdminActiveTab);
   const dispatch = useDispatch();
 
-  const [activeTab, setActiveTab] = useState("analytics");
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -107,13 +110,6 @@ const AdminDashboard = () => {
     setIsModalOpen(true);
   };
 
-  const handleSyncSalla = async () => {
-    const { fetchProductsFromSalla, fetchCategoriesFromSalla } =
-      await import("../../store/slices/productSlice");
-    dispatch(fetchProductsFromSalla());
-    dispatch(fetchCategoriesFromSalla());
-  };
-
   const handleDelete = async (item) => {
     const id = item._id || item.id;
     if (window.confirm("هل أنت متأكد من الحذف؟")) {
@@ -160,7 +156,7 @@ const AdminDashboard = () => {
   const renderTabs = () => (
     <div className="flex gap-4 mb-8 border-b pb-4 overflow-x-auto">
       <button
-        onClick={() => setActiveTab("analytics")}
+        onClick={() => dispatch(setAdminActiveTab("analytics"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "analytics"
             ? "bg-brand-burgundy text-white shadow-lg"
@@ -171,7 +167,7 @@ const AdminDashboard = () => {
         <span>التحليلات</span>
       </button>
       <button
-        onClick={() => setActiveTab("orders")}
+        onClick={() => dispatch(setAdminActiveTab("orders"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "orders"
             ? "bg-brand-burgundy text-white shadow-lg"
@@ -182,7 +178,7 @@ const AdminDashboard = () => {
         <span>الطلبات</span>
       </button>
       <button
-        onClick={() => setActiveTab("products")}
+        onClick={() => dispatch(setAdminActiveTab("products"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "products"
             ? "bg-brand-burgundy text-white shadow-lg"
@@ -193,7 +189,7 @@ const AdminDashboard = () => {
         <span>المنتجات</span>
       </button>
       <button
-        onClick={() => setActiveTab("reviews")}
+        onClick={() => dispatch(setAdminActiveTab("reviews"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "reviews"
             ? "bg-brand-burgundy text-white shadow-lg"
@@ -204,7 +200,7 @@ const AdminDashboard = () => {
         <span>التقييمات</span>
       </button>
       <button
-        onClick={() => setActiveTab("faqs")}
+        onClick={() => dispatch(setAdminActiveTab("faqs"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "faqs"
             ? "bg-brand-burgundy text-white shadow-lg"
@@ -252,14 +248,6 @@ const AdminDashboard = () => {
 
             {activeTab === "products" && (
               <div className="flex gap-3">
-                <button
-                  onClick={handleSyncSalla}
-                  className="bg-white text-gray-700 border border-gray-200 px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-gray-50 transition-colors"
-                  title="تحديث البيانات من سلة"
-                >
-                  <RefreshCw size={18} />
-                  <span>تحديث البيانات</span>
-                </button>
                 <a
                   href={sallaService.getDashboardUrl()}
                   target="_blank"

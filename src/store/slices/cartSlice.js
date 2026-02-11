@@ -1,8 +1,13 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const getInitialPage = () => {
+  if (typeof window === "undefined") return "home";
+  return localStorage.getItem("storia_current_page") || "home";
+};
+
 const initialState = {
   cartItems: [],
-  currentPage: "home",
+  currentPage: getInitialPage(),
 };
 
 const cartSlice = createSlice({
@@ -89,6 +94,9 @@ const cartSlice = createSlice({
     },
     setCurrentPage: (state, action) => {
       state.currentPage = action.payload;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("storia_current_page", action.payload);
+      }
     },
   },
 });

@@ -15,7 +15,7 @@ import {
 } from "../../utils/themeUtils";
 import NavigationArrows from "../common/NavigationArrows";
 import Lightbox from "../common/Lightbox";
-import { getImageSrc } from "../../utils/assetUtils";
+import { resolveAsset } from "../../utils/assetUtils";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -26,24 +26,14 @@ const BestSellers = ({ onProductSelect }) => {
   const dispatch = useDispatch();
   const { containerRef, scrollLeft, scrollRight } = useScrollContainer(320);
 
-  // Featured product for the banner
-  // Prefer products with 'featured' in category/name or just the first product
+  // Featured product for the banner - نواعم (classic category)
   const featuredProduct =
-    products.find(
-      (p) =>
-        p.isFeatured ||
-        p.category?.toLowerCase() === "featured" ||
-        p.category?.toLowerCase() === "classic",
-    ) || products[0];
+    products.find((p) => p.category === "classic") || products[0];
 
   // Carousel images: Get media from the featured product
   const carouselImages =
-    featuredProduct?.media
-      ?.filter((m) => m.type === "image")
-      .map((m) => ({ ...m, src: getImageSrc(m.src || m.url) })) ||
-    (featuredProduct
-      ? [{ src: getImageSrc(featuredProduct.image), type: "image" }]
-      : []);
+    featuredProduct?.media?.filter((m) => m.type === "image") ||
+    (featuredProduct ? [{ src: featuredProduct.image, type: "image" }] : []);
 
   const lightbox = useLightbox(carouselImages);
 
@@ -80,7 +70,7 @@ const BestSellers = ({ onProductSelect }) => {
             {/* Banner Image */}
             <div className="absolute inset-0">
               <img
-                src={getImageSrc(
+                src={resolveAsset(
                   carouselImages[0]?.src || featuredProduct.image,
                 )}
                 alt={featuredProduct.name}
@@ -141,7 +131,7 @@ const BestSellers = ({ onProductSelect }) => {
                         className="aspect-[3/4] rounded-3xl overflow-hidden mb-4 relative cursor-pointer"
                       >
                         <img
-                          src={getImageSrc(mediaItem.src)}
+                          src={resolveAsset(mediaItem.src)}
                           alt={`${featuredProduct.name} - View ${index + 1}`}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />

@@ -31,7 +31,7 @@ export const useAddToCart = () => {
             result.error,
           );
         }
-      } catch (error) {
+      } catch {
         // Silently fail - don't spam console in production
         if (import.meta.env.DEV) {
           console.warn(

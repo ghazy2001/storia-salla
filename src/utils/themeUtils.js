@@ -57,7 +57,7 @@ export const getHoverBgClass = (theme) =>
  * Get hover text color for buttons
  */
 export const getHoverTextClass = (theme) =>
-  getThemeValue(theme, "hover:text-white", "hover:text-custom-burgundy");
+  getThemeValue(theme, "hover:text-white", "hover:text-brand-burgundy");
 
 /**
  * Get opacity-adjusted text class
