@@ -31,28 +31,38 @@ const bestSellersConfig = {
   media: [
     {
       type: "image",
-      src: "/assets/products/p03/p03_1.jpg",
+      src: "/assets/products/p01/p01_1.jpg",
       order: 1,
     },
     {
       type: "image",
-      src: "/assets/products/p03/p03_2.jpg",
+      src: "/assets/products/p01/p01_2.jpg",
       order: 2,
     },
     {
       type: "image",
-      src: "/assets/products/p03/p03_3.jpg",
+      src: "/assets/products/p01/p01_3.jpg",
       order: 3,
     },
     {
       type: "image",
-      src: "/assets/products/p03/p03_4.jpg",
+      src: "/assets/products/p01/p01_4.jpg",
       order: 4,
     },
     {
       type: "image",
-      src: "/assets/products/p03/p03_5.jpg",
+      src: "/assets/products/p01/p01_5.jpg",
       order: 5,
+    },
+    {
+      type: "image",
+      src: "/assets/products/p01/p01_6.jpg",
+      order: 6,
+    },
+    {
+      type: "image",
+      src: "/assets/products/p01/p01_7.jpg",
+      order: 7,
     },
   ],
   bannerText: {

@@ -844,6 +844,77 @@ class SallaService {
       console.error("[Storia] Error registering cart listener:", error);
     }
   }
+
+  async fetchBestSellers() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/bestsellers`);
+      if (!response.ok) throw new Error("Failed to fetch BestSellers");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching BestSellers:", error);
+      return null;
+    }
+  }
+
+  async fetchAdminBestSellers() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/bestsellers`);
+      if (!response.ok) throw new Error("Failed to fetch admin BestSellers");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching admin BestSellers:", error);
+      return null;
+    }
+  }
+
+  async createBestSellers(data) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/bestsellers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to create BestSellers");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error creating BestSellers:", error);
+      throw error;
+    }
+  }
+
+  async updateBestSellers(id, data) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/admin/bestsellers/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        },
+      );
+      if (!response.ok) throw new Error("Failed to update BestSellers");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error updating BestSellers:", error);
+      throw error;
+    }
+  }
+
+  async deleteBestSellers(id) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/admin/bestsellers/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
+      if (!response.ok) throw new Error("Failed to delete BestSellers");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error deleting BestSellers:", error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

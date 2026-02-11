@@ -14,6 +14,11 @@ import {
   addFAQ,
   updateFAQ,
   deleteFAQ,
+  selectBestSellers,
+  fetchBestSellers,
+  addBestSellers,
+  updateBestSellersAction,
+  deleteBestSellers as deleteBestSellersAction,
 } from "../../store/slices/contentSlice";
 import {
   fetchOrders,
@@ -30,6 +35,7 @@ import {
   MessageSquare,
   HelpCircle,
   Plus,
+  Star,
 } from "lucide-react";
 import {
   setAdminActiveTab,
@@ -43,6 +49,7 @@ import OrdersTab from "./dashboard/OrdersTab";
 import ProductsTab from "./dashboard/ProductsTab";
 import ReviewsTab from "./dashboard/ReviewsTab";
 import FAQsTab from "./dashboard/FAQsTab";
+import BestSellersTab from "./dashboard/BestSellersTab";
 import ProductModal from "./dashboard/ProductModal";
 
 const AdminDashboard = () => {
@@ -51,6 +58,7 @@ const AdminDashboard = () => {
   const faqs = useSelector(selectFAQs);
   const orders = useSelector(selectOrders);
   const analytics = useSelector(selectAnalytics);
+  const bestSellers = useSelector(selectBestSellers);
   const activeTab = useSelector(selectAdminActiveTab);
   const dispatch = useDispatch();
 
@@ -61,6 +69,7 @@ const AdminDashboard = () => {
   React.useEffect(() => {
     dispatch(fetchOrders());
     dispatch(fetchAnalytics());
+    dispatch(fetchBestSellers());
   }, [dispatch]);
 
   const initialProductState = {
@@ -76,12 +85,27 @@ const AdminDashboard = () => {
   };
 
   const initialFAQState = {
-    question: "",
     answer: "",
+  };
+
+  const initialBestSellersState = {
+    title: { ar: "", en: "" },
+    description: { ar: "", en: "" },
+    price: "",
+    currency: "SAR",
+    category: "classic",
+    media: [{ type: "image", src: "assets/products/p03/p03_1.jpg", order: 1 }],
+    bannerText: { ar: "الأكثر مبيعاً", en: "Best Sellers" },
+    bannerSubtext: { ar: "تسوق افضل المنتجات المختارة لك خصيصا", en: "" },
+    ctaText: { ar: "تسوق الآن", en: "Shop Now" },
+    isActive: true,
   };
 
   const [productForm, setProductForm] = useState(initialProductState);
   const [faqForm, setFaqForm] = useState(initialFAQState);
+  const [bestSellersForm, setBestSellersForm] = useState(
+    initialBestSellersState,
+  );
 
   const handleLogout = () => {
     dispatch(setCurrentPage("home"));
@@ -95,6 +119,8 @@ const AdminDashboard = () => {
       setProductForm(item);
     } else if (activeTab === "faqs") {
       setFaqForm(item);
+    } else if (activeTab === "bestsellers") {
+      setBestSellersForm(item);
     }
     setIsModalOpen(true);
   };
@@ -106,6 +132,8 @@ const AdminDashboard = () => {
       setProductForm(initialProductState);
     } else if (activeTab === "faqs") {
       setFaqForm(initialFAQState);
+    } else if (activeTab === "bestsellers") {
+      setBestSellersForm(initialBestSellersState);
     }
     setIsModalOpen(true);
   };
@@ -118,6 +146,8 @@ const AdminDashboard = () => {
           await dispatch(deleteProduct(id)).unwrap();
         if (activeTab === "reviews") await dispatch(deleteReview(id)).unwrap();
         if (activeTab === "faqs") await dispatch(deleteFAQ(id)).unwrap();
+        if (activeTab === "bestsellers")
+          await dispatch(deleteBestSellersAction(id)).unwrap();
       } catch (error) {
         alert(`خطأ في الحذف: ${error}`);
       }
@@ -145,6 +175,18 @@ const AdminDashboard = () => {
           if (result) setIsModalOpen(false);
         } else {
           const result = await dispatch(addFAQ(faqForm)).unwrap();
+          if (result) setIsModalOpen(false);
+        }
+      } else if (activeTab === "bestsellers") {
+        if (isEditing) {
+          const result = await dispatch(
+            updateBestSellersAction({ ...bestSellersForm, id: currentId }),
+          ).unwrap();
+          if (result) setIsModalOpen(false);
+        } else {
+          const result = await dispatch(
+            addBestSellers(bestSellersForm),
+          ).unwrap();
           if (result) setIsModalOpen(false);
         }
       }
@@ -210,6 +252,17 @@ const AdminDashboard = () => {
         <HelpCircle size={18} />
         <span>الأسئلة الشائعة</span>
       </button>
+      <button
+        onClick={() => dispatch(setAdminActiveTab("bestsellers"))}
+        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
+          activeTab === "bestsellers"
+            ? "bg-brand-burgundy text-white shadow-lg"
+            : "bg-white text-gray-500 hover:bg-gray-100"
+        }`}
+      >
+        <Star size={18} />
+        <span>الأكثر مبيعاً</span>
+      </button>
     </div>
   );
 
@@ -232,7 +285,9 @@ const AdminDashboard = () => {
         {renderTabs()}
 
         {/* Action Bar */}
-        {(activeTab === "products" || activeTab === "faqs") && (
+        {(activeTab === "products" ||
+          activeTab === "faqs" ||
+          activeTab === "bestsellers") && (
           <div className="flex justify-between items-center mb-8">
             <button
               onClick={handleAdd}
@@ -242,7 +297,9 @@ const AdminDashboard = () => {
               <span>
                 {activeTab === "products"
                   ? "إضافة منتج جديد"
-                  : "إضافة سؤال جديد"}
+                  : activeTab === "faqs"
+                    ? "إضافة سؤال جديد"
+                    : "إضافة تصميم جديد"}
               </span>
             </button>
 
@@ -282,6 +339,13 @@ const AdminDashboard = () => {
             handleDelete={handleDelete}
           />
         )}
+        {activeTab === "bestsellers" && (
+          <BestSellersTab
+            bestSellers={bestSellers}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+          />
+        )}
 
         {/* Modal */}
         <ProductModal
@@ -294,6 +358,8 @@ const AdminDashboard = () => {
           activeTab={activeTab}
           faqForm={faqForm}
           setFaqForm={setFaqForm}
+          bestSellersForm={bestSellersForm}
+          setBestSellersForm={setBestSellersForm}
         />
       </div>
     </section>

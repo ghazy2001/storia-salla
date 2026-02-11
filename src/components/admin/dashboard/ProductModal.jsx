@@ -11,6 +11,8 @@ const ProductModal = ({
   activeTab,
   faqForm,
   setFaqForm,
+  bestSellersForm,
+  setBestSellersForm,
 }) => {
   if (!isOpen) return null;
 
@@ -318,7 +320,193 @@ const ProductModal = ({
             </>
           )}
 
-          {/* FAQ Form */}
+          {/* BestSellers Form */}
+          {activeTab === "bestsellers" && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                  المعلومات الأساسية (عربي)
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      العنوان (AR)
+                    </label>
+                    <input
+                      type="text"
+                      value={bestSellersForm.title?.ar || ""}
+                      onChange={(e) =>
+                        setBestSellersForm({
+                          ...bestSellersForm,
+                          title: {
+                            ...bestSellersForm.title,
+                            ar: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
+                      placeholder="العنوان بالعربي"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      السعر
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={bestSellersForm.price || ""}
+                        onChange={(e) =>
+                          setBestSellersForm({
+                            ...bestSellersForm,
+                            price: e.target.value,
+                          })
+                        }
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all text-left"
+                        placeholder="320"
+                        dir="ltr"
+                        required
+                      />
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
+                        {bestSellersForm.currency || "ر.س"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    الوصف (AR)
+                  </label>
+                  <textarea
+                    value={bestSellersForm.description?.ar || ""}
+                    onChange={(e) =>
+                      setBestSellersForm({
+                        ...bestSellersForm,
+                        description: {
+                          ...bestSellersForm.description,
+                          ar: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all min-h-[100px]"
+                    placeholder="الوصف بالعربي"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                  Banner Settings
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Banner Text (AR)
+                    </label>
+                    <input
+                      type="text"
+                      value={bestSellersForm.bannerText?.ar || ""}
+                      onChange={(e) =>
+                        setBestSellersForm({
+                          ...bestSellersForm,
+                          bannerText: {
+                            ...bestSellersForm.bannerText,
+                            ar: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      CTA Text (AR)
+                    </label>
+                    <input
+                      type="text"
+                      value={bestSellersForm.ctaText?.ar || ""}
+                      onChange={(e) =>
+                        setBestSellersForm({
+                          ...bestSellersForm,
+                          ctaText: {
+                            ...bestSellersForm.ctaText,
+                            ar: e.target.value,
+                          },
+                        })
+                      }
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Media Section */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                  الصور والوسائط
+                </h3>
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+                  {bestSellersForm.media?.map((media, idx) => (
+                    <div
+                      key={idx}
+                      className="relative aspect-square rounded-lg overflow-hidden group border border-gray-200"
+                    >
+                      <img
+                        src={resolveAsset(media.src)}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newMedia = [...bestSellersForm.media];
+                          newMedia.splice(idx, 1);
+                          setBestSellersForm({
+                            ...bestSellersForm,
+                            media: newMedia,
+                          });
+                        }}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="aspect-square bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-brand-gold hover:bg-brand-gold/5 transition-all text-gray-400 hover:text-brand-gold">
+                    <Upload size={20} className="mb-1" />
+                    <span className="text-xs">إضافة</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.length) {
+                          const newMedia = Array.from(e.target.files).map(
+                            (file) => ({
+                              type: "image",
+                              src: URL.createObjectURL(file), // Note: In a real app, you'd upload these
+                              order: (bestSellersForm.media?.length || 0) + 1,
+                            }),
+                          );
+                          setBestSellersForm({
+                            ...bestSellersForm,
+                            media: [
+                              ...(bestSellersForm.media || []),
+                              ...newMedia,
+                            ],
+                          });
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
           {activeTab === "faqs" && (
             <div className="space-y-4">
               <div>

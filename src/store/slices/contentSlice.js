@@ -83,6 +83,53 @@ export const deleteReview = createAsyncThunk(
   },
 );
 
+// Async thunks for BestSellers
+export const fetchBestSellers = createAsyncThunk(
+  "content/fetchBestSellers",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await sallaService.fetchAdminBestSellers();
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const addBestSellers = createAsyncThunk(
+  "content/addBestSellers",
+  async (data, { rejectWithValue }) => {
+    try {
+      return await sallaService.createBestSellers(data);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const updateBestSellersAction = createAsyncThunk(
+  "content/updateBestSellers",
+  async (bestSellersData, { rejectWithValue }) => {
+    try {
+      const { id, ...data } = bestSellersData;
+      return await sallaService.updateBestSellers(id, data);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const deleteBestSellers = createAsyncThunk(
+  "content/deleteBestSellers",
+  async (id, { rejectWithValue }) => {
+    try {
+      await sallaService.deleteBestSellers(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
 const initialState = {
   reviews: [
     {
@@ -137,6 +184,7 @@ const initialState = {
         "نوصي بغسل العباية يدوياً بماء بارد وشامبو عبايات خاص، وتجفيفها بالظل للحفاظ على جودة القماش واللون الأسود.",
     },
   ],
+  bestSellers: [],
   loading: false,
   error: null,
 };
@@ -178,12 +226,33 @@ const contentSlice = createSlice({
         state.reviews = state.reviews.filter(
           (r) => (r._id || r.id) !== action.payload,
         );
+      })
+      // BestSellers
+      .addCase(fetchBestSellers.fulfilled, (state, action) => {
+        if (action.payload) state.bestSellers = action.payload;
+      })
+      .addCase(addBestSellers.fulfilled, (state, action) => {
+        state.bestSellers.unshift(action.payload);
+      })
+      .addCase(updateBestSellersAction.fulfilled, (state, action) => {
+        const index = state.bestSellers.findIndex(
+          (b) => (b._id || b.id) === (action.payload._id || action.payload.id),
+        );
+        if (index !== -1) {
+          state.bestSellers[index] = action.payload;
+        }
+      })
+      .addCase(deleteBestSellers.fulfilled, (state, action) => {
+        state.bestSellers = state.bestSellers.filter(
+          (b) => (b._id || b.id) !== action.payload,
+        );
       });
   },
 });
 
 export const selectReviews = (state) => state.content.reviews;
 export const selectFAQs = (state) => state.content.faqs;
+export const selectBestSellers = (state) => state.content.bestSellers;
 export const selectContentLoading = (state) => state.content.loading;
 export const selectContentError = (state) => state.content.error;
 
