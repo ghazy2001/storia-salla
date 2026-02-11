@@ -166,7 +166,13 @@ const Navbar = ({ theme, toggleTheme }) => {
           <User
             size={20}
             className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
-            onClick={toggleLoginModal}
+            onClick={() => {
+              if (isAdmin) {
+                dispatch(setCurrentPage("admin-dashboard"));
+              } else {
+                dispatch(toggleLoginModal());
+              }
+            }}
           />
           <div className="hidden lg:flex items-center gap-10">
             {navLinks
@@ -389,6 +395,23 @@ const Navbar = ({ theme, toggleTheme }) => {
               className="text-3xl font-sans text-white hover:text-brand-gold transition-all duration-300 cursor-pointer text-right"
             >
               المتجر
+            </button>
+
+            <button
+              onClick={() => {
+                if (isAdmin) {
+                  dispatch(setCurrentPage("admin-dashboard"));
+                } else {
+                  dispatch(toggleLoginModal());
+                }
+                setIsMobileMenuOpen(false);
+              }}
+              className="text-3xl font-sans text-brand-gold hover:text-white transition-all duration-300 cursor-pointer text-right flex items-center justify-end gap-3"
+            >
+              <span>
+                {isAdmin ? "لوحة التحكم" : customer ? "حسابي" : "تسجيل دخول"}
+              </span>
+              <User size={28} />
             </button>
           </div>
           <div className="mt-auto flex flex-col gap-4 text-sm font-light tracking-widest text-white/80">
