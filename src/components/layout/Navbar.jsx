@@ -7,6 +7,7 @@ import {
   Moon,
   User,
   ArrowRight,
+  ChevronDown,
 } from "lucide-react";
 import gsap from "gsap";
 import { useSelector, useDispatch } from "react-redux";
@@ -38,6 +39,9 @@ const Navbar = ({ theme, toggleTheme }) => {
   const isHomePage = currentPage === "home";
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [isMobileMoreOpen, setIsMobileMoreOpen] = useState(false);
+  const moreRef = useRef(null);
 
   const handleNavigate = (category) => {
     dispatch(setSelectedCategory(category));
@@ -102,7 +106,18 @@ const Navbar = ({ theme, toggleTheme }) => {
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    const handleClickOutside = (event) => {
+      if (moreRef.current && !moreRef.current.contains(event.target)) {
+        setIsMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   // Dynamic appearance logic
@@ -153,17 +168,65 @@ const Navbar = ({ theme, toggleTheme }) => {
             className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
             onClick={toggleLoginModal}
           />
-          <div className="hidden lg:flex items-center gap-10 overflow-hidden">
-            {navLinks.map((cat) => (
-              <span
-                key={cat.id}
-                onClick={() => handleNavigate(cat.id)}
-                className={`uppercase tracking-[0.1em] text-xs font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
-              >
-                {cat.label}
-                <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
-              </span>
-            ))}
+          <div className="hidden lg:flex items-center gap-10">
+            {navLinks
+              .filter((cat) => cat.isActive !== false)
+              .slice(0, 4)
+              .map((cat) => (
+                <span
+                  key={cat.id || cat._id}
+                  onClick={() => handleNavigate(cat.id || cat.slug || cat._id)}
+                  className={`uppercase tracking-[0.1em] text-xs font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
+                >
+                  {cat.name?.ar || cat.label || cat.name || "قسم"}
+                  <span className="absolute bottom-[-4px] right-0 w-0 h-[1.5px] bg-brand-gold transition-all duration-300 group-hover:w-full"></span>
+                </span>
+              ))}
+
+            {navLinks.filter((cat) => cat.isActive !== false).length > 4 && (
+              <div className="relative" ref={moreRef}>
+                <button
+                  onClick={() => setIsMoreOpen(!isMoreOpen)}
+                  className={`uppercase tracking-[0.1em] text-xs font-bold cursor-pointer hover:text-brand-gold transition-all duration-300 flex items-center gap-1 group ${effectiveTextColor}`}
+                >
+                  المزيد
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-300 ${isMoreOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {isMoreOpen && (
+                  <div
+                    className={`absolute top-full right-0 mt-4 w-48 backdrop-blur-md rounded-xl shadow-xl border py-3 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300 ${getThemeValue(
+                      theme,
+                      "bg-white/95 border-gray-100",
+                      "bg-brand-burgundy/95 border-white/10",
+                    )}`}
+                  >
+                    {navLinks
+                      .filter((cat) => cat.isActive !== false)
+                      .slice(4)
+                      .map((cat) => (
+                        <div
+                          key={cat.id || cat._id}
+                          onClick={() => {
+                            handleNavigate(cat.id || cat.slug || cat._id);
+                            setIsMoreOpen(false);
+                          }}
+                          className={`px-6 py-3 transition-all cursor-pointer text-right text-xs font-bold border-b last:border-0 ${getThemeValue(
+                            theme,
+                            "text-brand-charcoal hover:bg-brand-burgundy/5 border-gray-50",
+                            "text-white hover:bg-white/10 border-white/5",
+                          )}`}
+                        >
+                          {cat.name?.ar || cat.label || cat.name || "قسم"}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
             <button
               onClick={() => handleNavigate("all")}
               className={`uppercase tracking-[0.1em] text-xs font-bold hover:text-brand-gold transition-all duration-300 relative group ${effectiveTextColor}`}
@@ -265,9 +328,9 @@ const Navbar = ({ theme, toggleTheme }) => {
 
       {/* Mobile Menu Overlay */}
       <div
-        className={`fixed inset-0 z-[60] bg-brand-charcoal transition-all duration-500 ${
+        className={`fixed inset-0 z-[60] transition-all duration-500 ${
           isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-        }`}
+        } ${getThemeValue(theme, "bg-brand-charcoal", "bg-brand-burgundy")}`}
       >
         <div className="flex flex-col h-full text-brand-offwhite p-12">
           <div className="flex justify-between items-center mb-20">
@@ -282,21 +345,35 @@ const Navbar = ({ theme, toggleTheme }) => {
               onClick={() => setIsMobileMenuOpen(false)}
             />
           </div>
-          <div className="flex flex-col gap-8">
-            {navLinks.map((cat) => (
-              <span
-                key={cat.id}
-                className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer"
-                onClick={() => {
-                  handleNavigate(cat.id);
-                  setIsMobileMenuOpen(false);
-                }}
+          <div className="flex flex-col gap-8 overflow-y-auto flex-grow py-4">
+            {navLinks
+              .filter((cat) => cat.isActive !== false)
+              .slice(0, isMobileMoreOpen ? undefined : 4)
+              .map((cat) => (
+                <span
+                  key={cat.id || cat._id}
+                  className="text-3xl font-sans text-white hover:text-brand-gold transition-all duration-300 cursor-pointer text-right"
+                  onClick={() => {
+                    handleNavigate(cat.id || cat.slug || cat._id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  {cat.name?.ar || cat.label || cat.name || "قسم"}
+                </span>
+              ))}
+
+            {navLinks.filter((cat) => cat.isActive !== false).length > 4 && (
+              <button
+                onClick={() => setIsMobileMoreOpen(!isMobileMoreOpen)}
+                className="text-brand-gold text-xl font-bold transition-all cursor-pointer flex items-center justify-start w-full gap-2"
               >
-                {cat.label}
-              </span>
-            ))}
+                <span className="order-2">
+                  {isMobileMoreOpen ? "عرض أقل ▲" : "المزيد ▼"}
+                </span>
+              </button>
+            )}
             <span
-              className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer"
+              className="text-3xl font-sans text-white hover:text-brand-gold transition-all duration-300 cursor-pointer text-right"
               onClick={() => {
                 setIsMobileMenuOpen(false);
               }}
@@ -309,18 +386,18 @@ const Navbar = ({ theme, toggleTheme }) => {
                 handleNavigate("all");
                 setIsMobileMenuOpen(false);
               }}
-              className="text-3xl font-sans hover:text-brand-gold transition-all duration-300 cursor-pointer text-right"
+              className="text-3xl font-sans text-white hover:text-brand-gold transition-all duration-300 cursor-pointer text-right"
             >
               المتجر
             </button>
           </div>
-          <div className="mt-auto flex flex-col gap-4 text-sm font-light tracking-widest opacity-60">
+          <div className="mt-auto flex flex-col gap-4 text-sm font-light tracking-widest text-white/80">
             <span
               onClick={() => {
                 handleContactClick();
                 setIsMobileMenuOpen(false);
               }}
-              className="cursor-pointer hover:text-brand-gold transition-colors"
+              className="cursor-pointer hover:text-brand-gold transition-colors text-right"
             >
               اتصل بنا
             </span>
@@ -329,7 +406,7 @@ const Navbar = ({ theme, toggleTheme }) => {
                 handleFAQClick();
                 setIsMobileMenuOpen(false);
               }}
-              className="cursor-pointer hover:text-brand-gold transition-colors"
+              className="cursor-pointer hover:text-brand-gold transition-colors text-right"
             >
               الأسئلة الشائعة
             </span>

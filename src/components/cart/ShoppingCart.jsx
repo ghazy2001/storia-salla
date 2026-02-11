@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   selectCartItems,
@@ -30,9 +30,15 @@ const ShoppingCart = ({ onContinueShopping }) => {
 
     return () => ctx.revert();
   }, []);
-  const shipping = cartItems.length > 0 ? 30 : 0;
-  const tax = subtotal * 0.15;
-  const total = subtotal + shipping + tax;
+  const { shipping, tax, total } = useMemo(() => {
+    const s = cartItems.length > 0 ? 30 : 0;
+    const t = subtotal * 0.15;
+    return {
+      shipping: s,
+      tax: t,
+      total: subtotal + s + t,
+    };
+  }, [subtotal, cartItems.length]);
 
   if (cartItems.length === 0) {
     return (
@@ -212,11 +218,19 @@ const ShoppingCart = ({ onContinueShopping }) => {
                         theme === "green" ? "text-brand-charcoal" : "text-white"
                       }`}
                     >
-                      {(
-                        (item.price && typeof item.price === "string"
-                          ? parseFloat(item.price.replace(/[^\d.-]/g, ""))
-                          : 0) * item.quantity
-                      ).toFixed(2)}{" "}
+                      {(() => {
+                        let priceValue = 0;
+                        if (typeof item.price === "number") {
+                          priceValue = item.price;
+                        } else if (typeof item.price === "string") {
+                          priceValue = parseFloat(
+                            item.price.replace(/[^\d.-]/g, ""),
+                          );
+                        }
+                        return (
+                          (isNaN(priceValue) ? 0 : priceValue) * item.quantity
+                        ).toFixed(2);
+                      })()}{" "}
                       ر.س
                     </p>
                   </div>

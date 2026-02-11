@@ -175,7 +175,7 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                       {product.name}
                     </h4>
                     <p className="text-lg font-bold text-brand-gold mb-2">
-                      {product.price}
+                      {product.price} ر.س
                     </p>
                     <p className="text-sm font-light text-brand-charcoal/60 leading-relaxed line-clamp-2 pl-4">
                       {product.description}

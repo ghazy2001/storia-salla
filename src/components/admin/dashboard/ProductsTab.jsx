@@ -1,7 +1,6 @@
 import React from "react";
-import { Edit2, Trash2, ExternalLink } from "lucide-react";
+import { Edit2, Trash2 } from "lucide-react";
 import { resolveAsset } from "../../../utils/assetUtils";
-import sallaService from "../../../services/sallaService";
 
 const ProductsTab = ({ products, handleEdit, handleDelete }) => {
   return (
@@ -31,24 +30,13 @@ const ProductsTab = ({ products, handleEdit, handleDelete }) => {
               >
                 <Trash2 size={16} />
               </button>
-              <a
-                href={sallaService.getProductDashboardUrl(
-                  product._id || product.id,
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white p-2 rounded-full text-brand-gold hover:bg-gold/5 shadow-sm"
-                title="تعديل في سلة"
-              >
-                <ExternalLink size={16} />
-              </a>
             </div>
           </div>
           <div className="p-4">
             <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
               {product.name}
             </h3>
-            <p className="text-brand-gold font-bold">{product.price}</p>
+            <p className="text-brand-gold font-bold">{product.price} ر.س</p>
             <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
               {(() => {
                 const categoryLabels = {

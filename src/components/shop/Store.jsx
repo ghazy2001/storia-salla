@@ -7,13 +7,14 @@ import ProductCarousel from "./ProductCarousel";
 import { setCurrentPage } from "../../store/slices/cartSlice";
 import { useAddToCart } from "../../hooks/useCart";
 import Toast from "../common/Toast";
-import { NAV_LINKS } from "../../utils/constants";
+import { selectCategories } from "../../store/slices/productSlice";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const Store = ({ initialFilter = "all", onProductSelect }) => {
   const containerRef = useRef(null);
   const products = useSelector(selectProducts);
+  const categories = useSelector(selectCategories);
   const [filter, setFilter] = useState(initialFilter);
   const [visibleProducts, setVisibleProducts] = useState([]); // Initialize with empty array
   const [showToast, setShowToast] = useState(false);
@@ -84,17 +85,17 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-16 justify-start">
-        {[{ id: "all", label: "جميع العبايات" }, ...NAV_LINKS].map((cat) => (
+        {[{ id: "all", label: "جميع العبايات" }, ...categories].map((cat) => (
           <button
-            key={cat.id}
-            onClick={() => setFilter(cat.id)}
+            key={cat.id || cat._id}
+            onClick={() => setFilter(cat.id || cat.slug)}
             className={`px-6 py-2 border transition-all duration-300 text-sm md:text-base font-medium ${
-              filter === cat.id
+              filter === (cat.id || cat.slug)
                 ? "bg-brand-gold text-white border-brand-gold shadow-md"
                 : "bg-transparent text-brand-charcoal border-brand-charcoal/20 hover:border-brand-gold hover:text-brand-gold"
             }`}
           >
-            {cat.label}
+            {typeof cat.name === "object" ? cat.name.ar : cat.label || cat.name}
           </button>
         ))}
       </div>

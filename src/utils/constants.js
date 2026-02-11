@@ -9,11 +9,12 @@ export const CONTACT_INFO = {
 };
 
 export const NAV_LINKS = [
-  { label: "رسمية", id: "official" },
-  { label: "عملية", id: "practical" },
-  { label: "فاخرة", id: "luxury" },
-  { label: "كلوش", id: "cloche" },
-  { label: "بشت", id: "bisht" },
+  { label: "رسمي", id: "official", isActive: true },
+  { label: "عملي", id: "practical", isActive: true },
+  { label: "فاخر", id: "luxury", isActive: true },
+  { label: "كلوش", id: "cloche", isActive: true },
+  { label: "بشت", id: "bisht", isActive: true },
+  { label: "كلاسيك", id: "classic", isActive: true },
 ];
 
 export const SOCIAL_URLS = {

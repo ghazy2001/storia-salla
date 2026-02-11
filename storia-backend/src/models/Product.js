@@ -30,10 +30,30 @@ const productSchema = new mongoose.Schema(
         enum: ["S", "M", "L", "XL", "XXL"],
       },
     ],
+    sizeVariants: [
+      {
+        size: {
+          type: String,
+          enum: ["S", "M", "L", "XL", "XXL"],
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        stock: {
+          type: Number,
+          default: 0,
+          min: 0,
+        },
+      },
+    ],
     images: [
       {
         url: { type: String, required: true },
         alt: { type: String },
+        type: { type: String, default: "image" },
         order: { type: Number, default: 0 },
       },
     ],

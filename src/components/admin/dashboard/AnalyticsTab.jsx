@@ -135,7 +135,7 @@ const AnalyticsTab = ({ analytics }) => {
                     <h4 className="text-sm font-bold text-gray-800 line-clamp-1">
                       {item.name}
                     </h4>
-                    <p className="text-xs text-brand-gold">{item.price}</p>
+                    <p className="text-xs text-brand-gold">{item.price} ر.س</p>
                   </div>
                   <span className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded">
                     {item.sales} مبيعة

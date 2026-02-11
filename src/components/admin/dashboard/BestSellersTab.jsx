@@ -5,7 +5,7 @@ import {
   selectBestSellers,
   updateBestSellersAction,
 } from "../../../store/slices/contentSlice";
-import { Edit2, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Edit2, Trash2, CheckCircle2 } from "lucide-react";
 import { resolveAsset } from "../../../utils/assetUtils";
 
 const BestSellersTab = ({ handleEdit, handleDelete }) => {
@@ -64,9 +64,7 @@ const BestSellersTab = ({ handleEdit, handleDelete }) => {
                 <h3 className="font-bold text-gray-900 line-clamp-1">
                   {item.title?.ar || "بدون عنوان"}
                 </h3>
-                <span className="text-brand-gold font-bold">
-                  {item.price} {item.currency}
-                </span>
+                <span className="text-brand-gold font-bold">{item.price}</span>
               </div>
 
               <p className="text-gray-500 text-sm line-clamp-2 mb-4 h-10">

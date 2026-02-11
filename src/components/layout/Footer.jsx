@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { resolveAsset } from "../../utils/assetUtils";
 import { Instagram, Facebook, Mail } from "lucide-react";
 import { getThemeValue } from "../../utils/themeUtils";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { setCurrentPage } from "../../store/slices/cartSlice";
 import {
   setSelectedCategory,
@@ -10,10 +10,14 @@ import {
   setTrackOrderOpen,
   showToast,
 } from "../../store/slices/uiSlice";
-import { SOCIAL_URLS, NAV_LINKS, CONTACT_INFO } from "../../utils/constants";
+import { selectCategories } from "../../store/slices/productSlice";
+import { SOCIAL_URLS, CONTACT_INFO } from "../../utils/constants";
 
 const Footer = ({ theme }) => {
   const dispatch = useDispatch();
+  const categories = useSelector(selectCategories);
+  const [showAll, setShowAll] = useState(false);
+  const activeCategories = categories.filter((cat) => cat.isActive);
 
   const handleNavigate = (category) => {
     dispatch(setSelectedCategory(category));
@@ -100,15 +104,30 @@ const Footer = ({ theme }) => {
             تصنيفات المتجر
           </h4>
           <ul className="flex flex-col gap-4 text-sm font-light tracking-widest text-brand-light/70">
-            {NAV_LINKS.map((link) => (
+            {activeCategories
+              .slice(0, showAll ? activeCategories.length : 4)
+              .map((category) => (
+                <li
+                  key={category._id || category.id}
+                  onClick={() =>
+                    handleNavigate(category.slug || category._id || category.id)
+                  }
+                  className="hover:text-brand-gold transition-colors cursor-pointer text-right"
+                >
+                  {category.name?.ar ||
+                    category.label ||
+                    category.name ||
+                    "قسم"}
+                </li>
+              ))}
+            {activeCategories.length > 4 && (
               <li
-                key={link.id}
-                onClick={() => handleNavigate(link.id)}
-                className="hover:text-brand-gold transition-colors cursor-pointer text-right"
+                onClick={() => setShowAll(!showAll)}
+                className="text-brand-gold hover:underline transition-all cursor-pointer text-right text-xs font-bold mt-2"
               >
-                {link.label}
+                {showAll ? "عرض أقل ▲" : "المزيد ▼"}
               </li>
-            ))}
+            )}
           </ul>
         </div>
         <div className="order-4 md:order-3">

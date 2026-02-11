@@ -13,6 +13,9 @@ const ProductModal = ({
   setFaqForm,
   bestSellersForm,
   setBestSellersForm,
+  categoryForm,
+  setCategoryForm,
+  categories = [],
 }) => {
   if (!isOpen) return null;
 
@@ -55,31 +58,6 @@ const ProductModal = ({
                     placeholder="مثال: عباية نجد الرسمية"
                     required
                   />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    السعر
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={productForm.price}
-                      onChange={(e) =>
-                        setProductForm({
-                          ...productForm,
-                          price: e.target.value,
-                        })
-                      }
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all text-left"
-                      placeholder="350"
-                      dir="ltr"
-                      required
-                    />
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">
-                      ر.س
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -124,55 +102,136 @@ const ProductModal = ({
                     }
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all bg-white"
                   >
-                    <option value="official">رسمي</option>
-                    <option value="cloche">كلوش</option>
-                    <option value="bisht">بشت</option>
-                    <option value="classic">كلاسك (نواعم)</option>
-                    <option value="practical">عملي</option>
-                    <option value="luxury">فاخر</option>
+                    <option value="">اختر التصنيف</option>
+                    {categories.map((cat) => (
+                      <option
+                        key={cat.id || cat._id}
+                        value={cat.id || cat.slug}
+                      >
+                        {typeof cat.name === "object"
+                          ? cat.name.ar
+                          : cat.label || cat.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
-                {/* Sizes */}
-                <div>
+                {/* Sizes and Variants */}
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    المقاسات
+                    المقاسات والتسعير
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {["S", "M", "L", "XL", "XXL"].map((size) => {
-                      const isSelected = productForm.sizes?.includes(size);
-                      return (
-                        <label
-                          key={size}
-                          className={`cursor-pointer px-4 py-2 rounded-lg border transition-all duration-200 flex items-center justify-center min-w-[50px] text-sm ${
-                            isSelected
-                              ? "bg-brand-burgundy text-white border-brand-burgundy shadow-md transform scale-105"
-                              : "bg-white text-gray-600 border-gray-200 hover:border-brand-burgundy/30 hover:bg-gray-50"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => {
-                              const currentSizes = productForm.sizes || [];
-                              if (e.target.checked) {
-                                setProductForm({
-                                  ...productForm,
-                                  sizes: [...currentSizes, size],
-                                });
-                              } else {
-                                setProductForm({
-                                  ...productForm,
-                                  sizes: currentSizes.filter((s) => s !== size),
-                                });
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <span className="font-bold">{size}</span>
-                        </label>
-                      );
-                    })}
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {["S", "M", "L", "XL", "XXL"].map((size) => {
+                        const isSelected = productForm.sizes?.includes(size);
+                        return (
+                          <label
+                            key={size}
+                            className={`cursor-pointer px-4 py-2 rounded-lg border transition-all duration-200 flex items-center justify-center min-w-[50px] text-sm ${
+                              isSelected
+                                ? "bg-brand-burgundy text-white border-brand-burgundy shadow-md transform scale-105"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-brand-burgundy/30 hover:bg-gray-50"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={(e) => {
+                                const currentSizes = productForm.sizes || [];
+                                const currentVariants =
+                                  productForm.sizeVariants || [];
+                                if (e.target.checked) {
+                                  setProductForm({
+                                    ...productForm,
+                                    sizes: [...currentSizes, size],
+                                    sizeVariants: [
+                                      ...currentVariants,
+                                      {
+                                        size,
+                                        price: productForm.price || 0,
+                                        stock: productForm.stock || 0,
+                                      },
+                                    ],
+                                  });
+                                } else {
+                                  setProductForm({
+                                    ...productForm,
+                                    sizes: currentSizes.filter(
+                                      (s) => s !== size,
+                                    ),
+                                    sizeVariants: currentVariants.filter(
+                                      (v) => v.size !== size,
+                                    ),
+                                  });
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <span className="font-bold">{size}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+
+                    {/* Variant Details Table */}
+                    {productForm.sizeVariants?.length > 0 && (
+                      <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
+                        <div className="grid grid-cols-4 gap-4 text-xs font-bold text-gray-500 pb-2 border-b border-gray-200">
+                          <div>المقاس</div>
+                          <div className="col-span-2">السعر (ر.س)</div>
+                          <div>المخزون</div>
+                        </div>
+                        {productForm.sizeVariants.map((variant, idx) => (
+                          <div
+                            key={variant.size}
+                            className="grid grid-cols-4 gap-4 items-center"
+                          >
+                            <div className="font-bold text-brand-burgundy">
+                              {variant.size}
+                            </div>
+                            <div className="col-span-2">
+                              <input
+                                type="number"
+                                value={variant.price}
+                                onChange={(e) => {
+                                  const newVariants = [
+                                    ...productForm.sizeVariants,
+                                  ];
+                                  newVariants[idx].price =
+                                    parseFloat(e.target.value) || 0;
+                                  setProductForm({
+                                    ...productForm,
+                                    sizeVariants: newVariants,
+                                  });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-gold/50 outline-none"
+                                placeholder="السعر"
+                              />
+                            </div>
+                            <div>
+                              <input
+                                type="number"
+                                value={variant.stock}
+                                onChange={(e) => {
+                                  const newVariants = [
+                                    ...productForm.sizeVariants,
+                                  ];
+                                  newVariants[idx].stock =
+                                    parseInt(e.target.value) || 0;
+                                  setProductForm({
+                                    ...productForm,
+                                    sizeVariants: newVariants,
+                                  });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-gold/50 outline-none"
+                                placeholder="0"
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -441,6 +500,27 @@ const ProductModal = ({
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Banner Subtext (AR)
+                  </label>
+                  <input
+                    type="text"
+                    value={bestSellersForm.bannerSubtext?.ar || ""}
+                    onChange={(e) =>
+                      setBestSellersForm({
+                        ...bestSellersForm,
+                        bannerSubtext: {
+                          ...bestSellersForm.bannerSubtext,
+                          ar: e.target.value,
+                        },
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
+                    placeholder="وصف إضافي تحت العنوان..."
+                  />
+                </div>
               </div>
 
               {/* Media Section */}
@@ -507,6 +587,7 @@ const ProductModal = ({
               </div>
             </div>
           )}
+
           {activeTab === "faqs" && (
             <div className="space-y-4">
               <div>
@@ -515,7 +596,7 @@ const ProductModal = ({
                 </label>
                 <input
                   type="text"
-                  value={faqForm.question}
+                  value={faqForm.question || ""}
                   onChange={(e) =>
                     setFaqForm({
                       ...faqForm,
@@ -533,7 +614,7 @@ const ProductModal = ({
                   الإجابة
                 </label>
                 <textarea
-                  value={faqForm.answer}
+                  value={faqForm.answer || ""}
                   onChange={(e) =>
                     setFaqForm({
                       ...faqForm,
@@ -544,6 +625,59 @@ const ProductModal = ({
                   placeholder="اكتب الإجابة هنا..."
                   required
                 />
+              </div>
+            </div>
+          )}
+
+          {activeTab === "categories" && (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
+                  الاسم والمعلومات الأساسية
+                </h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    الاسم
+                  </label>
+                  <input
+                    type="text"
+                    value={categoryForm.name?.ar || ""}
+                    onChange={(e) =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        name: { ...categoryForm.name, ar: e.target.value },
+                        slug: e.target.value.trim().replace(/\s+/g, "-"),
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all text-gray-900"
+                    placeholder="مثال: عبايات كلاسيك"
+                    required
+                  />
+                </div>
+                <div className="flex items-center gap-2 pt-4 mt-4 border-t border-gray-100">
+                  <input
+                    type="checkbox"
+                    id="catIsActive"
+                    checked={categoryForm.isActive !== false}
+                    onChange={(e) =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        isActive: e.target.checked,
+                      })
+                    }
+                    className="w-5 h-5 accent-brand-gold rounded border-gray-300"
+                  />
+                  <label
+                    htmlFor="catIsActive"
+                    className="text-sm font-bold text-gray-700 cursor-pointer"
+                  >
+                    قسم نشط في المتجر
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 mt-2 bg-gray-50 p-2 rounded-lg border border-gray-100 leading-relaxed">
+                  💡 الأقسام النشطة تظهر تلقائياً في القائمة العلوية (Navbar)
+                  وتذييل الصفحة (Footer).
+                </p>
               </div>
             </div>
           )}

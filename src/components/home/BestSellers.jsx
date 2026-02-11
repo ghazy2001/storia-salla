@@ -68,6 +68,9 @@ const BestSellers = ({ onProductSelect }) => {
 
   // Carousel images from configuration
   const carouselImages = featuredConfig?.media || [];
+  const bannerImage =
+    carouselImages.find((m) => m.type === "image")?.src ||
+    featuredConfig?.image;
 
   const lightbox = useLightbox(carouselImages);
 
@@ -104,9 +107,7 @@ const BestSellers = ({ onProductSelect }) => {
             {/* Banner Image */}
             <div className="absolute inset-0">
               <img
-                src={resolveAsset(
-                  carouselImages[0]?.src || featuredConfig.image,
-                )}
+                src={resolveAsset(bannerImage)}
                 alt={featuredConfig.name}
                 className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
@@ -201,7 +202,7 @@ const BestSellers = ({ onProductSelect }) => {
               <div className="w-full text-right">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-brand-gold text-3xl font-bold">
-                    {featuredConfig.price}
+                    {featuredConfig.price || 0} ر.س
                   </div>
                 </div>
                 <p

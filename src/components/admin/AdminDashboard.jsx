@@ -5,6 +5,11 @@ import {
   addProduct,
   updateProduct,
   deleteProduct,
+  selectCategories,
+  fetchCategoriesFromSalla,
+  addCategory,
+  updateCategory,
+  deleteCategory,
 } from "../../store/slices/productSlice";
 import { logout } from "../../store/slices/adminSlice";
 import {
@@ -50,6 +55,7 @@ import ProductsTab from "./dashboard/ProductsTab";
 import ReviewsTab from "./dashboard/ReviewsTab";
 import FAQsTab from "./dashboard/FAQsTab";
 import BestSellersTab from "./dashboard/BestSellersTab";
+import CategoriesTab from "./dashboard/CategoriesTab";
 import ProductModal from "./dashboard/ProductModal";
 
 const AdminDashboard = () => {
@@ -60,6 +66,7 @@ const AdminDashboard = () => {
   const analytics = useSelector(selectAnalytics);
   const bestSellers = useSelector(selectBestSellers);
   const activeTab = useSelector(selectAdminActiveTab);
+  const categories = useSelector(selectCategories);
   const dispatch = useDispatch();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -70,6 +77,7 @@ const AdminDashboard = () => {
     dispatch(fetchOrders());
     dispatch(fetchAnalytics());
     dispatch(fetchBestSellers());
+    dispatch(fetchCategoriesFromSalla());
   }, [dispatch]);
 
   const initialProductState = {
@@ -78,7 +86,8 @@ const AdminDashboard = () => {
     description: "",
     image: "assets/products/p01/p01_1.jpg",
     category: "official",
-    sizes: ["S", "M", "L", "XL"],
+    sizes: [],
+    sizeVariants: [],
     media: [],
     originalPrice: "",
     bestSellerDescription: "",
@@ -101,11 +110,20 @@ const AdminDashboard = () => {
     isActive: true,
   };
 
+  const initialCategoryState = {
+    name: { ar: "", en: "" },
+    slug: "",
+    description: { ar: "", en: "" },
+    order: 0,
+    isActive: true,
+  };
+
   const [productForm, setProductForm] = useState(initialProductState);
   const [faqForm, setFaqForm] = useState(initialFAQState);
   const [bestSellersForm, setBestSellersForm] = useState(
     initialBestSellersState,
   );
+  const [categoryForm, setCategoryForm] = useState(initialCategoryState);
 
   const handleLogout = () => {
     dispatch(setCurrentPage("home"));
@@ -121,6 +139,8 @@ const AdminDashboard = () => {
       setFaqForm(item);
     } else if (activeTab === "bestsellers") {
       setBestSellersForm(item);
+    } else if (activeTab === "categories") {
+      setCategoryForm(item);
     }
     setIsModalOpen(true);
   };
@@ -134,6 +154,8 @@ const AdminDashboard = () => {
       setFaqForm(initialFAQState);
     } else if (activeTab === "bestsellers") {
       setBestSellersForm(initialBestSellersState);
+    } else if (activeTab === "categories") {
+      setCategoryForm(initialCategoryState);
     }
     setIsModalOpen(true);
   };
@@ -148,6 +170,8 @@ const AdminDashboard = () => {
         if (activeTab === "faqs") await dispatch(deleteFAQ(id)).unwrap();
         if (activeTab === "bestsellers")
           await dispatch(deleteBestSellersAction(id)).unwrap();
+        if (activeTab === "categories")
+          await dispatch(deleteCategory(id)).unwrap();
       } catch (error) {
         alert(`خطأ في الحذف: ${error}`);
       }
@@ -187,6 +211,16 @@ const AdminDashboard = () => {
           const result = await dispatch(
             addBestSellers(bestSellersForm),
           ).unwrap();
+          if (result) setIsModalOpen(false);
+        }
+      } else if (activeTab === "categories") {
+        if (isEditing) {
+          const result = await dispatch(
+            updateCategory({ ...categoryForm, id: currentId }),
+          ).unwrap();
+          if (result) setIsModalOpen(false);
+        } else {
+          const result = await dispatch(addCategory(categoryForm)).unwrap();
           if (result) setIsModalOpen(false);
         }
       }
@@ -263,6 +297,17 @@ const AdminDashboard = () => {
         <Star size={18} />
         <span>الأكثر مبيعاً</span>
       </button>
+      <button
+        onClick={() => dispatch(setAdminActiveTab("categories"))}
+        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
+          activeTab === "categories"
+            ? "bg-brand-burgundy text-white shadow-lg"
+            : "bg-white text-gray-500 hover:bg-gray-100"
+        }`}
+      >
+        <Package size={18} />
+        <span>الأقسام</span>
+      </button>
     </div>
   );
 
@@ -287,11 +332,12 @@ const AdminDashboard = () => {
         {/* Action Bar */}
         {(activeTab === "products" ||
           activeTab === "faqs" ||
+          activeTab === "categories" ||
           activeTab === "bestsellers") && (
           <div className="flex justify-between items-center mb-8">
             <button
               onClick={handleAdd}
-              className="bg-brand-burgundy text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-brand-charcoal transition-colors shadow-lg"
+              className="bg-brand-burgundy text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-brand-gold hover:scale-105 transition-all duration-300 shadow-lg"
             >
               <Plus size={20} />
               <span>
@@ -299,7 +345,9 @@ const AdminDashboard = () => {
                   ? "إضافة منتج جديد"
                   : activeTab === "faqs"
                     ? "إضافة سؤال جديد"
-                    : "إضافة تصميم جديد"}
+                    : activeTab === "categories"
+                      ? "إضافة قسم جديد"
+                      : "إضافة تصميم جديد"}
               </span>
             </button>
 
@@ -346,6 +394,13 @@ const AdminDashboard = () => {
             handleDelete={handleDelete}
           />
         )}
+        {activeTab === "categories" && (
+          <CategoriesTab
+            categories={categories}
+            handleEdit={handleEdit}
+            handleDelete={handleDelete}
+          />
+        )}
 
         {/* Modal */}
         <ProductModal
@@ -360,6 +415,9 @@ const AdminDashboard = () => {
           setFaqForm={setFaqForm}
           bestSellersForm={bestSellersForm}
           setBestSellersForm={setBestSellersForm}
+          categoryForm={categoryForm}
+          setCategoryForm={setCategoryForm}
+          categories={categories}
         />
       </div>
     </section>

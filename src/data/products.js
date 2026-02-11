@@ -9,7 +9,6 @@ export const products = [
       "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
     image: "/assets/products/p01/p01_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p01/p01_10.mov" },
       { type: "image", src: "/assets/products/p01/p01_1.jpg" },
       { type: "image", src: "/assets/products/p01/p01_2.jpg" },
       { type: "image", src: "/assets/products/p01/p01_3.jpg" },
@@ -29,7 +28,6 @@ export const products = [
       "عباية بقصة كلوش واسعة تمنحك حرية الحركة وأناقة استثنائية. مصممة من قماش الإنترنت الناعم الذي يتميز ببرودة ونعومة فائقة، مثالية للاستخدام اليومي.",
     image: "/assets/products/p02/p02_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p02/p02_7.mov" },
       { type: "image", src: "/assets/products/p02/p02_1.jpg" },
       { type: "image", src: "/assets/products/p02/p02_2.jpg" },
       { type: "image", src: "/assets/products/p02/p02_3.jpg" },
@@ -48,7 +46,6 @@ export const products = [
       "تحفة فنية بتصميم البشت التقليدي مع لمسات عصرية، مزينة بشك يدوي دقيق يضيف بريقاً هادئاً وفخامة لا تضاهى. الخيار الأمثل للمناسبات الخاصة.",
     image: "/assets/products/p03/p03_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p03/p03_10.mov" },
       { type: "image", src: "/assets/products/p03/p03_1.jpg" },
       { type: "image", src: "/assets/products/p03/p03_2.jpg" },
       { type: "image", src: "/assets/products/p03/p03_3.jpg" },
@@ -56,6 +53,8 @@ export const products = [
       { type: "image", src: "/assets/products/p03/p03_5.jpg" },
       { type: "image", src: "/assets/products/p03/p03_6.jpg" },
       { type: "image", src: "/assets/products/p03/p03_7.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_8.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_9.jpg" },
     ],
   },
   {
@@ -71,13 +70,14 @@ export const products = [
       "تجسيد للأناقة الخالدة مع عباية نواعم الكلاسيكية. تصميم يجمع بين الفخامة والعملية، منسوجة من أجود الخامات لتمنحك إطلالة راقية وراحة تدوم طوال اليوم.",
     image: "/assets/products/p04/p04_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p04/p04_10.mov" },
       { type: "image", src: "/assets/products/p04/p04_1.jpg" },
       { type: "image", src: "/assets/products/p04/p04_2.jpg" },
       { type: "image", src: "/assets/products/p04/p04_3.jpg" },
       { type: "image", src: "/assets/products/p04/p04_4.jpg" },
       { type: "image", src: "/assets/products/p04/p04_5.jpg" },
       { type: "image", src: "/assets/products/p04/p04_6.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_7.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_8.jpg" },
     ],
   },
   {
@@ -90,7 +90,6 @@ export const products = [
       "توازن مثالي بين الرسمية والأنوثة. تتميز بتطريزات ناعمة على الأكمام والياقة، تضفي لمسة جمالية دون مبالغة.",
     image: "/assets/products/p05/p05_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p05/p05_7.mov" },
       { type: "image", src: "/assets/products/p05/p05_1.jpg" },
       { type: "image", src: "/assets/products/p05/p05_2.jpg" },
       { type: "image", src: "/assets/products/p05/p05_3.jpg" },
@@ -109,7 +108,6 @@ export const products = [
       "الرفيق المثالي لروتينك اليومي. مصممة لتكون عملية ومريحة، مع جيوب مخفية وقماش يتحمل الاستخدام المتكرر دون فقدان رونقه.",
     image: "/assets/products/p06/p06_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p06/p06_7.mov" },
       { type: "image", src: "/assets/products/p06/p06_1.jpg" },
       { type: "image", src: "/assets/products/p06/p06_2.jpg" },
       { type: "image", src: "/assets/products/p06/p06_3.jpg" },
@@ -125,10 +123,9 @@ export const products = [
     category: "luxury",
     sizes: ["S", "M", "L", "XL"],
     description:
-      "قمة الفخامة والنعومة. عباية منسوجة من مزيج الحرير الطبيعي، تمنحك ملمساً لا يضاهى ومظهراً يفيض بالرقي والجاذبية.",
+      "قمة الفخامة والنعومة. عباية منسوجة من مزيج الحرير طبيعي، تمنحك ملمساً لا يضاهى ومظهراً يفيض بالرقي والجاذبية.",
     image: "/assets/products/p07/p07_1.jpg",
     media: [
-      { type: "video", src: "/assets/products/p07/p07_7.mov" },
       { type: "image", src: "/assets/products/p07/p07_1.jpg" },
       { type: "image", src: "/assets/products/p07/p07_2.jpg" },
       { type: "image", src: "/assets/products/p07/p07_3.jpg" },

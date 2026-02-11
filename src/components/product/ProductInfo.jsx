@@ -25,7 +25,16 @@ const ProductInfo = ({
         {product.name}
       </h1>
       <p className="text-2xl font-bold tracking-widest text-brand-gold mb-8 font-sans w-full">
-        {product.price}
+        {(() => {
+          if (selectedSize && product.sizeVariants?.length > 0) {
+            const variant = product.sizeVariants.find(
+              (v) => v.size === selectedSize,
+            );
+            if (variant) return variant.price;
+          }
+          return product.price;
+        })()}{" "}
+        ر.س
       </p>
 
       <div className="w-20 h-[1px] bg-brand-charcoal/20 mb-8 ml-auto lg:ml-auto"></div>

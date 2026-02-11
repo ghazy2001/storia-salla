@@ -29,6 +29,41 @@ export const fetchCategoriesFromSalla = createAsyncThunk(
   },
 );
 
+export const addCategoryAsync = createAsyncThunk(
+  "product/addCategory",
+  async (categoryData, { rejectWithValue }) => {
+    try {
+      return await sallaService.createCategory(categoryData);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const updateCategoryAsync = createAsyncThunk(
+  "product/updateCategory",
+  async (categoryData, { rejectWithValue }) => {
+    try {
+      const { id, ...data } = categoryData;
+      return await sallaService.updateCategory(id, data);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const deleteCategoryAsync = createAsyncThunk(
+  "product/deleteCategory",
+  async (id, { rejectWithValue }) => {
+    try {
+      await sallaService.deleteCategory(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
 // Async thunks for persistence
 export const addProductAsync = createAsyncThunk(
   "product/add",
@@ -126,6 +161,25 @@ const productSlice = createSlice({
           state.categories = action.payload;
         }
       })
+      .addCase(addCategoryAsync.fulfilled, (state, action) => {
+        state.categories.push(action.payload);
+      })
+      .addCase(updateCategoryAsync.fulfilled, (state, action) => {
+        const updatedCategory = action.payload;
+        const index = state.categories.findIndex(
+          (c) =>
+            (c._id || c.id) === (updatedCategory._id || updatedCategory.id),
+        );
+        if (index !== -1) {
+          state.categories[index] = updatedCategory;
+        }
+      })
+      .addCase(deleteCategoryAsync.fulfilled, (state, action) => {
+        const id = action.payload;
+        state.categories = state.categories.filter(
+          (c) => (c._id || c.id) !== id,
+        );
+      })
       .addCase(addProductAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
@@ -148,6 +202,9 @@ export {
   addProductAsync as addProduct,
   updateProductAsync as updateProduct,
   deleteProductAsync as deleteProduct,
+  addCategoryAsync as addCategory,
+  updateCategoryAsync as updateCategory,
+  deleteCategoryAsync as deleteCategory,
 };
 
 export const selectProducts = (state) => state.product.products;

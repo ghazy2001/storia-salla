@@ -1,12 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const getInitialCart = () => {
+  if (typeof window === "undefined") return [];
+  const savedCart = localStorage.getItem("storia_cart");
+  return savedCart ? JSON.parse(savedCart) : [];
+};
+
 const getInitialPage = () => {
   if (typeof window === "undefined") return "home";
   return localStorage.getItem("storia_current_page") || "home";
 };
 
 const initialState = {
-  cartItems: [],
+  cartItems: getInitialCart(),
   currentPage: getInitialPage(),
 };
 
@@ -38,16 +44,20 @@ const cartSlice = createSlice({
         });
       }
 
-      // Sync with Salla cart (async operation, fire and forget)
-      // Note: This will be handled by middleware or thunk in production
-      // For now, we'll add a comment indicating where Salla sync should happen
-      // The actual syncing will be done via the component that dispatches this action
+      // Sync with localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("storia_cart", JSON.stringify(state.cartItems));
+      }
     },
     removeFromCart: (state, action) => {
       const { productId, size } = action.payload;
       state.cartItems = state.cartItems.filter(
         (item) => !(item.id === productId && item.size === size),
       );
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("storia_cart", JSON.stringify(state.cartItems));
+      }
     },
     updateItemSize: (state, action) => {
       const { productId, oldSize, newSize } = action.payload;
@@ -72,6 +82,10 @@ const cartSlice = createSlice({
         itemToUpdate.size = newSize;
         itemToUpdate.selectedSize = newSize;
       }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("storia_cart", JSON.stringify(state.cartItems));
+      }
     },
     updateQuantity: (state, action) => {
       const { productId, quantity, size } = action.payload;
@@ -88,9 +102,16 @@ const cartSlice = createSlice({
       if (item) {
         item.quantity = quantity;
       }
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("storia_cart", JSON.stringify(state.cartItems));
+      }
     },
     clearCart: (state) => {
       state.cartItems = [];
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("storia_cart");
+      }
     },
     setCurrentPage: (state, action) => {
       state.currentPage = action.payload;
@@ -115,9 +136,15 @@ export const selectCartItems = (state) => state.cart.cartItems;
 export const selectCurrentPage = (state) => state.cart.currentPage;
 export const selectCartTotal = (state) =>
   state.cart.cartItems.reduce((total, item) => {
-    if (!item.price || typeof item.price !== "string") return total;
-    const price = parseFloat(item.price.replace(/[^\d.-]/g, ""));
-    return total + (isNaN(price) ? 0 : price) * item.quantity;
+    // Robust price parsing handles both numeric and string formats from various sources
+    let priceValue = 0;
+    if (typeof item.price === "number") {
+      priceValue = item.price;
+    } else if (typeof item.price === "string") {
+      priceValue = parseFloat(item.price.replace(/[^\d.-]/g, ""));
+    }
+
+    return total + (isNaN(priceValue) ? 0 : priceValue) * item.quantity;
   }, 0);
 export const selectCartCount = (state) =>
   state.cart.cartItems.reduce((count, item) => count + item.quantity, 0);

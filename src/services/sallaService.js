@@ -505,7 +505,7 @@ class SallaService {
   /**
    * Fetch categories/departments from Salla store
    */
-  async fetchCategories() {
+  async fetchSdkCategories() {
     if (!this.salla) return null;
     if (!this.isAvailable()) {
       log("Salla SDK not available, cannot fetch categories");
@@ -912,6 +912,67 @@ class SallaService {
       return await response.json();
     } catch (error) {
       console.error("[Storia] Error deleting BestSellers:", error);
+      throw error;
+    }
+  }
+
+  // Categories
+  async fetchCategories() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/categories`);
+      if (!response.ok) throw new Error("Failed to fetch categories");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching categories:", error);
+      return [];
+    }
+  }
+
+  async createCategory(categoryData) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/categories`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(categoryData),
+      });
+      if (!response.ok) throw new Error("Failed to create category");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error creating category:", error);
+      throw error;
+    }
+  }
+
+  async updateCategory(id, categoryData) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/admin/categories/${id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(categoryData),
+        },
+      );
+      if (!response.ok) throw new Error("Failed to update category");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error updating category:", error);
+      throw error;
+    }
+  }
+
+  async deleteCategory(id) {
+    try {
+      const response = await fetch(
+        `${this.apiBaseUrl}/admin/categories/${id}`,
+        {
+          method: "DELETE",
+        },
+      );
+      if (!response.ok) throw new Error("Failed to delete category");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error deleting category:", error);
       throw error;
     }
   }

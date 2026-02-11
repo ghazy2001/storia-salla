@@ -14,7 +14,16 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
         {product.name}
       </h2>
       <p className="text-brand-gold text-2xl font-sans mb-6 font-medium">
-        {product.price}
+        {(() => {
+          if (selectedSize && product.sizeVariants?.length > 0) {
+            const variant = product.sizeVariants.find(
+              (v) => v.size === selectedSize,
+            );
+            if (variant) return variant.price;
+          }
+          return product.price;
+        })()}{" "}
+        ر.س
       </p>
       <p className="text-brand-charcoal/70 text-lg leading-relaxed max-w-xl mb-8">
         {product.description}
@@ -54,10 +63,18 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
 
         <button
           onClick={() => {
-            // Standardized payload format
+            // Get price for selected size if available
+            let price = product.price;
+            if (selectedSize && product.sizeVariants?.length > 0) {
+              const variant = product.sizeVariants.find(
+                (v) => v.size === selectedSize,
+              );
+              if (variant) price = variant.price;
+            }
+
             onAddToCart &&
               onAddToCart({
-                product,
+                product: { ...product, price },
                 quantity: 1,
                 size: selectedSize,
               });

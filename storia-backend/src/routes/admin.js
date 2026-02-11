@@ -8,12 +8,17 @@ const { formatProduct } = require("../utils/productUtils");
 router.post("/products", async (req, res) => {
   try {
     const data = req.body;
+    const sizeVariants = data.sizeVariants || [];
+    let calculatedPrice = parseFloat(data.price) || 0;
+    if (sizeVariants.length > 0) {
+      calculatedPrice = Math.min(...sizeVariants.map((v) => v.price));
+    }
 
     // Map frontend structure to backend schema
     const productData = {
       name: { ar: data.name, en: data.name },
       description: { ar: data.description, en: data.description },
-      price: parseFloat(data.price) || 0,
+      price: calculatedPrice,
       category: data.category || "official",
       sizes: data.sizes || ["S", "M", "L", "XL"],
       images: [
@@ -24,6 +29,7 @@ router.post("/products", async (req, res) => {
       ],
       isActive: true,
       stock: parseInt(data.stock) || 0,
+      sizeVariants: data.sizeVariants || [],
     };
 
     const product = new Product(productData);
@@ -39,10 +45,16 @@ router.post("/products", async (req, res) => {
 router.put("/products/:id", async (req, res) => {
   try {
     const data = req.body;
+    const sizeVariants = data.sizeVariants || [];
+    let calculatedPrice = parseFloat(data.price) || 0;
+    if (sizeVariants.length > 0) {
+      calculatedPrice = Math.min(...sizeVariants.map((v) => v.price));
+    }
+
     const updateData = {
       name: { ar: data.name, en: data.name },
       description: { ar: data.description, en: data.description },
-      price: parseFloat(data.price) || 0,
+      price: calculatedPrice,
       category: data.category,
       sizes: data.sizes,
       images: [
@@ -53,6 +65,7 @@ router.put("/products/:id", async (req, res) => {
       ],
       isActive: data.isActive ?? true,
       stock: parseInt(data.stock) || 0,
+      sizeVariants: data.sizeVariants || [],
     };
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {

@@ -60,8 +60,7 @@ const bestSellersSchema = new mongoose.Schema(
 
     // Optional reference to a product
     productRef: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Product",
+      type: String,
     },
 
     // Control

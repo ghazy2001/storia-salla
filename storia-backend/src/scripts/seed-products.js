@@ -11,6 +11,15 @@ const originalProducts = [
     description:
       "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
     image: "/assets/products/p01/p01_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p01/p01_1.jpg" },
+      { type: "image", src: "/assets/products/p01/p01_2.jpg" },
+      { type: "image", src: "/assets/products/p01/p01_3.jpg" },
+      { type: "image", src: "/assets/products/p01/p01_4.jpg" },
+      { type: "image", src: "/assets/products/p01/p01_5.jpg" },
+      { type: "image", src: "/assets/products/p01/p01_6.jpg" },
+      { type: "image", src: "/assets/products/p01/p01_7.jpg" },
+    ],
   },
   {
     name: "عباية كلوش - قماش إنترنت ناعم",
@@ -20,6 +29,14 @@ const originalProducts = [
     description:
       "عباية بقصة كلوش واسعة تمنحك حرية الحركة وأناقة استثنائية. مصممة من قماش الإنترنت الناعم الذي يتميز ببرودة ونعومة فائقة، مثالية للاستخدام اليومي.",
     image: "/assets/products/p02/p02_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p02/p02_1.jpg" },
+      { type: "image", src: "/assets/products/p02/p02_2.jpg" },
+      { type: "image", src: "/assets/products/p02/p02_3.jpg" },
+      { type: "image", src: "/assets/products/p02/p02_4.jpg" },
+      { type: "image", src: "/assets/products/p02/p02_5.jpg" },
+      { type: "image", src: "/assets/products/p02/p02_6.jpg" },
+    ],
   },
   {
     name: "عباية بشت مطرزة - شك يدوي",
@@ -29,6 +46,17 @@ const originalProducts = [
     description:
       "تحفة فنية بتصميم البشت التقليدي مع لمسات عصرية، مزينة بشك يدوي دقيق يضيف بريقاً هادئاً وفخامة لا تضاهى. الخيار الأمثل للمناسبات الخاصة.",
     image: "/assets/products/p03/p03_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p03/p03_1.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_2.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_3.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_4.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_5.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_6.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_7.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_8.jpg" },
+      { type: "image", src: "/assets/products/p03/p03_9.jpg" },
+    ],
   },
   {
     name: "عباية نواعم - تصميم كلاسيكي",
@@ -38,6 +66,16 @@ const originalProducts = [
     description:
       "البساطة هي عنوان الأناقة.، تصميم نواعم الكلاسيكي يبرز جمالك الطبيعي بتفاصيل هادئة وخامة عملية مريحة تدوم طويلاً.",
     image: "/assets/products/p04/p04_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p04/p04_1.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_2.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_3.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_4.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_5.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_6.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_7.jpg" },
+      { type: "image", src: "/assets/products/p04/p04_8.jpg" },
+    ],
   },
   {
     name: "عباية رسمية بتطريز هادئ",
@@ -47,6 +85,14 @@ const originalProducts = [
     description:
       "توازن مثالي بين الرسمية والأنوثة. تتميز بتطريزات ناعمة على الأكمام والياقة، تضفي لمسة جمالية دون مبالغة.",
     image: "/assets/products/p05/p05_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p05/p05_1.jpg" },
+      { type: "image", src: "/assets/products/p05/p05_2.jpg" },
+      { type: "image", src: "/assets/products/p05/p05_3.jpg" },
+      { type: "image", src: "/assets/products/p05/p05_4.jpg" },
+      { type: "image", src: "/assets/products/p05/p05_5.jpg" },
+      { type: "image", src: "/assets/products/p05/p05_6.jpg" },
+    ],
   },
   {
     name: "عباية عملية يومية بجيوب",
@@ -56,6 +102,14 @@ const originalProducts = [
     description:
       "الرفيق المثالي لروتينك اليومي. مصممة لتكون عملية ومريحة، مع جيوب مخفية وقماش يتحمل الاستخدام المتكرر دون فقدان رونقه.",
     image: "/assets/products/p06/p06_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p06/p06_1.jpg" },
+      { type: "image", src: "/assets/products/p06/p06_2.jpg" },
+      { type: "image", src: "/assets/products/p06/p06_3.jpg" },
+      { type: "image", src: "/assets/products/p06/p06_4.jpg" },
+      { type: "image", src: "/assets/products/p06/p06_5.jpg" },
+      { type: "image", src: "/assets/products/p06/p06_6.jpg" },
+    ],
   },
   {
     name: "عباية حرير طبيعي - فاخرة",
@@ -65,6 +119,14 @@ const originalProducts = [
     description:
       "قمة الفخامة والنعومة. عباية منسوجة من مزيج الحرير الطبيعي، تمنحك ملمساً لا يضاهى ومظهراً يفيض بالرقي والجاذبية.",
     image: "/assets/products/p07/p07_1.jpg",
+    media: [
+      { type: "image", src: "/assets/products/p07/p07_1.jpg" },
+      { type: "image", src: "/assets/products/p07/p07_2.jpg" },
+      { type: "image", src: "/assets/products/p07/p07_3.jpg" },
+      { type: "image", src: "/assets/products/p07/p07_4.jpg" },
+      { type: "image", src: "/assets/products/p07/p07_5.jpg" },
+      { type: "image", src: "/assets/products/p07/p07_6.jpg" },
+    ],
   },
 ];
 
@@ -72,6 +134,10 @@ async function seed() {
   try {
     await mongoose.connect(process.env.MONGODB_URI);
     console.log("Connected to MongoDB");
+
+    // Clear existing products to ensure clean media albums
+    console.log("Clearing existing products...");
+    await Product.deleteMany({});
 
     for (const p of originalProducts) {
       // Clean price string
@@ -83,19 +149,22 @@ async function seed() {
         price: priceNum,
         category: p.category,
         sizes: p.sizes,
-        images: [{ url: p.image, alt: p.name }],
+        images: p.media.map((m) => ({
+          url: m.src,
+          alt: p.name,
+          type: m.type,
+        })),
         isActive: true,
         stock: 10,
+        sizeVariants: p.sizes.map((size) => ({
+          size,
+          price: priceNum,
+          stock: 10,
+        })),
       };
 
-      // Check if product exists to avoid duplicates
-      const exists = await Product.findOne({ "name.ar": p.name });
-      if (!exists) {
-        await new Product(productData).save();
-        console.log(`Seeded: ${p.name}`);
-      } else {
-        console.log(`Skipped (already exists): ${p.name}`);
-      }
+      await new Product(productData).save();
+      console.log(`Seeded: ${p.name}`);
     }
 
     console.log("Seeding complete!");
