@@ -13,6 +13,7 @@ import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import sallaService from "../../services/sallaService";
 import { config } from "../../config/config";
+import { resolveAsset } from "../../utils/assetUtils";
 
 const ShoppingCart = ({ onContinueShopping }) => {
   const cartItems = useSelector(selectCartItems);
@@ -124,7 +125,7 @@ const ShoppingCart = ({ onContinueShopping }) => {
                 {/* Product Image */}
                 <div className="w-20 h-20 md:w-32 md:h-32 flex-shrink-0">
                   <img
-                    src={item.image}
+                    src={resolveAsset(item.image)}
                     alt={item.name}
                     className="w-full h-full object-cover"
                   />
