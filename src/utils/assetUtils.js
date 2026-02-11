@@ -17,19 +17,19 @@ export const resolveAsset = (path) => {
   )
     return path;
 
-  // ALWAYS use Vercel URL when NOT on Vercel's own domain
-  // This ensures Salla integration works correctly
-  const isOnVercel = window.location.hostname.includes("vercel.app");
+  // ALWAYS use Vercel URL when NOT on Vercel's own domain AND NOT on localhost
+  // This ensures Salla integration works correctly while local development stays local
+  const hostname = window.location.hostname;
+  const isOnVercel = hostname.includes("vercel.app");
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
   const vercelBase = "https://storia-salla.vercel.app/";
 
   // Clean the path
   const cleanPath = path.startsWith("/") ? path.slice(1) : path;
 
-  // If not on Vercel's domain, always use absolute Vercel URLs
-  if (!isOnVercel) {
+  // If not on Vercel's domain AND not local, use absolute Vercel URLs
+  if (!isOnVercel && !isLocal) {
     const resolvedUrl = `${vercelBase}${cleanPath}`;
-    // Logging disabled to keep console clean
-    // console.log("[Storia Asset]", path, "->", resolvedUrl);
     return resolvedUrl;
   }
 

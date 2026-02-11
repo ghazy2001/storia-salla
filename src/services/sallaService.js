@@ -9,7 +9,9 @@ import { config, log } from "../config/config.js";
 
 class SallaService {
   constructor() {
-    this.salla = typeof window !== "undefined" ? window.salla : null;
+    this.salla =
+      typeof window !== "undefined" && window.salla ? window.salla : null;
+    this.apiBaseUrl = "https://storia-salla.fly.dev/api";
 
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK initialized successfully");
@@ -73,7 +75,7 @@ class SallaService {
    * Check if Salla SDK is available
    */
   isAvailable() {
-    return this.salla !== null;
+    return !!this.salla;
   }
 
   /**
@@ -101,10 +103,27 @@ class SallaService {
    *
    * Alternative: Use Salla REST API with merchant token (backend integration)
    */
-  /**
-   * Fetch products from Salla store
-   */
   async fetchProducts() {
+    log("Attempting to fetch products from custom backend...");
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/products`);
+      if (response.ok) {
+        const products = await response.json();
+        if (products && products.length > 0) {
+          log(
+            `Successfully fetched ${products.length} products from custom backend`,
+          );
+          return products;
+        }
+      }
+      log("Custom backend returned no products, falling back to Salla SDK...");
+    } catch (error) {
+      log(
+        "Error fetching from custom backend, falling back to Salla SDK:",
+        error,
+      );
+    }
+
     if (!this.isAvailable()) {
       log("Salla SDK not available, cannot fetch products");
       return null;

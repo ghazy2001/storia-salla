@@ -16,7 +16,16 @@ import {
   deleteFAQ,
 } from "../../store/slices/contentSlice";
 import { setCurrentPage } from "../../store/slices/cartSlice";
-import { BarChart3, ShoppingBag, RefreshCw, ExternalLink } from "lucide-react";
+import {
+  BarChart3,
+  ShoppingBag,
+  RefreshCw,
+  ExternalLink,
+  Package,
+  MessageSquare,
+  HelpCircle,
+  Plus,
+} from "lucide-react";
 import sallaService from "../../services/sallaService";
 
 // Components

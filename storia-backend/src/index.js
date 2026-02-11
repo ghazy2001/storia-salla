@@ -22,7 +22,15 @@ app.use(morgan("dev"));
 // CORS configuration
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",")
-  : ["http://localhost:3000"];
+  : ["http://localhost:3000", "http://localhost:5173"];
+
+// Always allow localhost in development
+if (
+  process.env.NODE_ENV === "development" &&
+  !allowedOrigins.includes("http://localhost:5173")
+) {
+  allowedOrigins.push("http://localhost:5173");
+}
 
 app.use(
   cors({
