@@ -25,7 +25,7 @@ const CustomersTab = () => {
   const fetchCustomers = async () => {
     try {
       const response = await axios.get(`${config.apiUrl}/api/customers`);
-      setCustomers(response.data);
+      setCustomers(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching customers:", error);
     } finally {
@@ -33,15 +33,20 @@ const CustomersTab = () => {
     }
   };
 
-  const filteredCustomers = customers.filter(
+  const customersList = Array.isArray(customers) ? customers : [];
+
+  const filteredCustomers = customersList.filter(
     (customer) =>
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.phone.includes(searchTerm),
+      customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone?.includes(searchTerm),
   );
 
-  const totalRevenue = customers.reduce((acc, c) => acc + c.totalSpent, 0);
-  const topCustomer = customers.length > 0 ? customers[0] : null;
+  const totalRevenue = customersList.reduce(
+    (acc, c) => acc + (c.totalSpent || 0),
+    0,
+  );
+  const topCustomer = customersList.length > 0 ? customersList[0] : null;
 
   if (loading) return <div className="text-center py-12">جاري التحميل...</div>;
 

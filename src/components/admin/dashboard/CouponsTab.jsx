@@ -34,7 +34,7 @@ const CouponsTab = () => {
   const fetchCoupons = async () => {
     try {
       const response = await axios.get(`${config.apiUrl}/api/coupons`);
-      setCoupons(response.data);
+      setCoupons(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error("Error fetching coupons:", error);
     } finally {
@@ -198,7 +198,7 @@ const CouponsTab = () => {
 
       {/* Coupons List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {coupons.map((coupon) => {
+        {(Array.isArray(coupons) ? coupons : []).map((coupon) => {
           const isExpired = new Date(coupon.expiryDate) < new Date();
           return (
             <div
