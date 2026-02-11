@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const BestSellers = require("../models/BestSellers");
 const Category = require("../models/Category");
 
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/storia";
+const MONGO_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/storia";
 
 // Default categories
 const categories = [
