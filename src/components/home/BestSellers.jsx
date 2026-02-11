@@ -35,6 +35,18 @@ const BestSellers = ({ onProductSelect }) => {
     featuredProduct?.media?.filter((m) => m.type === "image") ||
     (featuredProduct ? [{ src: featuredProduct.image, type: "image" }] : []);
 
+  // DEBUG: Log carousel data to help diagnose production issues
+  if (import.meta.env.DEV || typeof window !== "undefined") {
+    console.log("[BestSellers Debug]", {
+      featuredProductId: featuredProduct?.id,
+      featuredProductName: featuredProduct?.name,
+      hasMedia: !!featuredProduct?.media,
+      mediaCount: featuredProduct?.media?.length || 0,
+      carouselImageCount: carouselImages.length,
+      firstImage: carouselImages[0],
+    });
+  }
+
   const lightbox = useLightbox(carouselImages);
 
   useEffect(() => {
