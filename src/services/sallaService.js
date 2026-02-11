@@ -26,7 +26,7 @@ class SallaService {
           } else {
             console.log("SDK Versions property:", this.salla.versions);
           }
-        } catch (e) {
+        } catch {
           console.log("Could not retrieve SDK version");
         }
 
@@ -168,7 +168,7 @@ class SallaService {
             log(`Success with variant: ${label}`);
             break;
           }
-        } catch (e) {
+        } catch {
           // Continue to next variant
         }
       }
@@ -177,7 +177,7 @@ class SallaService {
       if (!response) {
         try {
           response = await productManager.fetch();
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }
@@ -195,7 +195,7 @@ class SallaService {
             log("Success via direct Axios call");
             response = axiosRes.data;
           }
-        } catch (e) {
+        } catch {
           log("Direct products axios call failed");
         }
       }
@@ -248,7 +248,7 @@ class SallaService {
                       targetProduct.subtitle,
                   );
                 }
-              } catch (e) {
+              } catch {
                 log(`Failed to fetch full details for ${p.id}`);
               }
             }
@@ -539,7 +539,7 @@ class SallaService {
           if (axiosRes && axiosRes.data) {
             response = axiosRes.data;
           }
-        } catch (e) {
+        } catch {
           log("Direct navigation/category axios call failed");
         }
       }
@@ -555,7 +555,7 @@ class SallaService {
           if (sConfig && sConfig.categories) {
             response = { data: sConfig.categories };
           }
-        } catch (e) {
+        } catch {
           /* ignore */
         }
       }

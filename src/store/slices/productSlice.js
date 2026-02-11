@@ -92,7 +92,8 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductsFromSalla.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload && action.payload.length > 0) {
+        // Always replace with payload if it's an array, even if empty
+        if (Array.isArray(action.payload)) {
           state.products = action.payload;
         }
       })
