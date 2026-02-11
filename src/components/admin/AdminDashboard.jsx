@@ -169,11 +169,13 @@ const AdminDashboard = () => {
         }
       } else if (activeTab === "faqs") {
         if (isEditing) {
-          dispatch(updateFAQ({ ...faqForm, id: currentId }));
-          setIsModalOpen(false);
+          const result = await dispatch(
+            updateFAQ({ ...faqForm, id: currentId }),
+          ).unwrap();
+          if (result) setIsModalOpen(false);
         } else {
-          dispatch(addFAQ(faqForm));
-          setIsModalOpen(false);
+          const result = await dispatch(addFAQ(faqForm)).unwrap();
+          if (result) setIsModalOpen(false);
         }
       }
     } catch (error) {

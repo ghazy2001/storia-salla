@@ -693,6 +693,105 @@ class SallaService {
   }
 
   /**
+   * FAQ Operations
+   */
+  async fetchFAQs() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/faqs`);
+      if (!response.ok) throw new Error("Failed to fetch FAQs");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching FAQs:", error);
+      return null;
+    }
+  }
+
+  async createFAQ(faqData) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/faqs/admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(faqData),
+      });
+      if (!response.ok) throw new Error("Failed to create FAQ");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error creating FAQ:", error);
+      throw error;
+    }
+  }
+
+  async updateFAQ(id, faqData) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/faqs/admin/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(faqData),
+      });
+      if (!response.ok) throw new Error("Failed to update FAQ");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error updating FAQ:", error);
+      throw error;
+    }
+  }
+
+  async deleteFAQ(id) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/faqs/admin/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete FAQ");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error deleting FAQ:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Review Operations
+   */
+  async fetchReviews() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/reviews`);
+      if (!response.ok) throw new Error("Failed to fetch reviews");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching reviews:", error);
+      return null;
+    }
+  }
+
+  async createReview(reviewData) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/reviews/admin`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reviewData),
+      });
+      if (!response.ok) throw new Error("Failed to create review");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error creating review:", error);
+      throw error;
+    }
+  }
+
+  async deleteReview(id) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/reviews/admin/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete review");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error deleting review:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Listen to cart events
    */
   onCartUpdate(callback) {

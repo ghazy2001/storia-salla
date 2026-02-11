@@ -8,6 +8,8 @@ const connectDB = require("./config/db");
 // Import routes
 const productsRoutes = require("./routes/products");
 const adminRoutes = require("./routes/admin");
+const faqsRoutes = require("./routes/faqs");
+const reviewsRoutes = require("./routes/reviews");
 
 // Initialize Express app
 const app = express();
@@ -68,9 +70,11 @@ app.get("/health", (req, res) => {
 // API Routes
 app.use("/api/products", productsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/faqs", faqsRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   console.error(err.stack);
   res.status(500).json({
     error: "Something went wrong!",

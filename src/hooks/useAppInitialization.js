@@ -7,6 +7,7 @@ import {
   fetchCategoriesFromSalla,
 } from "../store/slices/productSlice";
 import { fetchCustomerFromSalla } from "../store/slices/userSlice";
+import { fetchFAQs, fetchReviews } from "../store/slices/contentSlice";
 
 /**
  * Hook to handle application initialization logic
@@ -67,6 +68,8 @@ export const useAppInitialization = () => {
     dispatch(fetchProductsFromSalla());
     dispatch(fetchCategoriesFromSalla());
     dispatch(fetchCustomerFromSalla());
+    dispatch(fetchFAQs());
+    dispatch(fetchReviews());
 
     const handleLoad = () => {
       setTimeout(() => setIsReady(true), 100);
