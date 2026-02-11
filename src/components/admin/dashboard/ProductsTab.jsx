@@ -8,7 +8,7 @@ const ProductsTab = ({ products, handleEdit, handleDelete }) => {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-16">
       {products.map((product) => (
         <div
-          key={product.id}
+          key={product._id || product.id}
           className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 group hover:shadow-md transition-shadow"
         >
           <div className="aspect-[3/4] relative">
@@ -26,13 +26,15 @@ const ProductsTab = ({ products, handleEdit, handleDelete }) => {
                 <Edit2 size={16} />
               </button>
               <button
-                onClick={() => handleDelete(product.id)}
+                onClick={() => handleDelete(product)}
                 className="bg-white p-2 rounded-full text-red-600 hover:bg-red-50 shadow-sm"
               >
                 <Trash2 size={16} />
               </button>
               <a
-                href={sallaService.getProductDashboardUrl(product.id)}
+                href={sallaService.getProductDashboardUrl(
+                  product._id || product.id,
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="bg-white p-2 rounded-full text-brand-gold hover:bg-gold/5 shadow-sm"

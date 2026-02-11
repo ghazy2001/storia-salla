@@ -29,6 +29,44 @@ export const fetchCategoriesFromSalla = createAsyncThunk(
   },
 );
 
+// Async thunks for persistence
+export const addProductAsync = createAsyncThunk(
+  "product/add",
+  async (productData, { rejectWithValue }) => {
+    try {
+      return await sallaService.createProduct(productData);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const updateProductAsync = createAsyncThunk(
+  "product/update",
+  async (productData, { rejectWithValue }) => {
+    try {
+      const { ...data } = productData;
+      // Handle both numeric IDs from mock and MongoDB ObjectIDs
+      const productId = productData._id || productData.id;
+      return await sallaService.updateProduct(productId, data);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const deleteProductAsync = createAsyncThunk(
+  "product/delete",
+  async (id, { rejectWithValue }) => {
+    try {
+      await sallaService.deleteProduct(id);
+      return id;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
 const initialState = {
   products: initialProducts,
   categories: initialCategories,
@@ -40,27 +78,10 @@ const productSlice = createSlice({
   name: "product",
   initialState,
   reducers: {
-    addProduct: (state, action) => {
-      const newProduct = action.payload;
-      const maxId =
-        state.products.length > 0
-          ? Math.max(...state.products.map((p) => p.id))
-          : 0;
-      state.products.unshift({
-        ...newProduct,
-        id: maxId + 1,
-      });
-    },
-    updateProduct: (state, action) => {
-      const updatedProduct = action.payload;
-      const index = state.products.findIndex((p) => p.id === updatedProduct.id);
-      if (index !== -1) {
-        state.products[index] = updatedProduct;
-      }
-    },
-    deleteProduct: (state, action) => {
-      const id = action.payload;
-      state.products = state.products.filter((p) => p.id !== id);
+    // These remain as local-only fallbacks or for optimistic updates if needed
+    // But we'll primarily use extraReducers now
+    setProducts: (state, action) => {
+      state.products = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -71,7 +92,6 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductsFromSalla.fulfilled, (state, action) => {
         state.loading = false;
-        // If we got real products from Salla, replace initial mock products
         if (action.payload && action.payload.length > 0) {
           state.products = action.payload;
         }
@@ -79,6 +99,25 @@ const productSlice = createSlice({
       .addCase(fetchProductsFromSalla.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Add Product
+      .addCase(addProductAsync.fulfilled, (state, action) => {
+        state.products.unshift(action.payload);
+      })
+      // Update Product
+      .addCase(updateProductAsync.fulfilled, (state, action) => {
+        const updatedProduct = action.payload;
+        const index = state.products.findIndex(
+          (p) => (p._id || p.id) === (updatedProduct._id || updatedProduct.id),
+        );
+        if (index !== -1) {
+          state.products[index] = updatedProduct;
+        }
+      })
+      // Delete Product
+      .addCase(deleteProductAsync.fulfilled, (state, action) => {
+        const id = action.payload;
+        state.products = state.products.filter((p) => (p._id || p.id) !== id);
       })
       // Categories handle
       .addCase(fetchCategoriesFromSalla.fulfilled, (state, action) => {
@@ -89,8 +128,14 @@ const productSlice = createSlice({
   },
 });
 
-export const { addProduct, updateProduct, deleteProduct } =
-  productSlice.actions;
+export const { setProducts } = productSlice.actions;
+
+// Re-export thunks for easier usage
+export {
+  addProductAsync as addProduct,
+  updateProductAsync as updateProduct,
+  deleteProductAsync as deleteProduct,
+};
 
 export const selectProducts = (state) => state.product.products;
 export const selectCategories = (state) => state.product.categories;

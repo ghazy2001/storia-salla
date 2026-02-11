@@ -631,6 +631,65 @@ class SallaService {
   }
 
   /**
+   * Create a new product in custom backend
+   */
+  async createProduct(productData) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) throw new Error("Failed to create product");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error creating product:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update an existing product in custom backend
+   */
+  async updateProduct(id, productData) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/products/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(productData),
+      });
+
+      if (!response.ok) throw new Error("Failed to update product");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error updating product:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a product from custom backend
+   */
+  async deleteProduct(id) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/admin/products/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) throw new Error("Failed to delete product");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error deleting product:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Listen to cart events
    */
   onCartUpdate(callback) {

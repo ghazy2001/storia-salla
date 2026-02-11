@@ -118,7 +118,7 @@ const AdminDashboard = () => {
 
   const handleEdit = (item) => {
     setIsEditing(true);
-    setCurrentId(item.id);
+    setCurrentId(item._id || item.id);
     if (activeTab === "products") {
       setProductForm(item);
     } else if (activeTab === "faqs") {
@@ -145,7 +145,8 @@ const AdminDashboard = () => {
     dispatch(fetchCategoriesFromSalla());
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = (item) => {
+    const id = item._id || item.id;
     if (window.confirm("هل أنت متأكد من الحذف؟")) {
       if (activeTab === "products") dispatch(deleteProduct(id));
       if (activeTab === "reviews") dispatch(deleteReview(id));
