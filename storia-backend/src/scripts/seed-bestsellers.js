@@ -31,23 +31,28 @@ const bestSellersConfig = {
   media: [
     {
       type: "image",
-      src: "/assets/products/classic/nawaem-1.jpg",
+      src: "/assets/products/p03/p03_1.jpg",
       order: 1,
     },
     {
       type: "image",
-      src: "/assets/products/classic/nawaem-2.jpg",
+      src: "/assets/products/p03/p03_2.jpg",
       order: 2,
     },
     {
       type: "image",
-      src: "/assets/products/classic/nawaem-3.jpg",
+      src: "/assets/products/p03/p03_3.jpg",
       order: 3,
     },
     {
       type: "image",
-      src: "/assets/products/classic/nawaem-4.jpg",
+      src: "/assets/products/p03/p03_4.jpg",
       order: 4,
+    },
+    {
+      type: "image",
+      src: "/assets/products/p03/p03_5.jpg",
+      order: 5,
     },
   ],
   bannerText: {
