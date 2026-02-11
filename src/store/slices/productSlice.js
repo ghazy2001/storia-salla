@@ -125,6 +125,18 @@ const productSlice = createSlice({
         if (action.payload && action.payload.length > 0) {
           state.categories = action.payload;
         }
+      })
+      .addCase(addProductAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateProductAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteProductAsync.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
