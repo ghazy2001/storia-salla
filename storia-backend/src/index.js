@@ -87,8 +87,11 @@ app.use("/api/coupons", couponsRoutes);
 app.use((err, req, res) => {
   console.error(err.stack);
   res.status(500).json({
-    error: "Something went wrong!",
-    message: process.env.NODE_ENV === "development" ? err.message : undefined,
+    error: "خطأ في النظام!",
+    message:
+      process.env.NODE_ENV === "development"
+        ? err.message
+        : "حدث خطأ غير متوقع، يرجى المحاولة لاحقاً",
   });
 });
 

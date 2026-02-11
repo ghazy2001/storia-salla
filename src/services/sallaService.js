@@ -11,10 +11,7 @@ class SallaService {
   constructor() {
     this.salla =
       typeof window !== "undefined" && window.salla ? window.salla : null;
-    this.apiBaseUrl =
-      import.meta.env.MODE === "development"
-        ? "http://localhost:3000/api"
-        : "https://storia-salla.fly.dev/api";
+    this.apiBaseUrl = `${config.apiUrl}/api`;
 
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK initialized successfully");

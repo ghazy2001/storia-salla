@@ -109,8 +109,7 @@ router.get("/", async (req, res) => {
       })),
       growth: Math.round(growth),
     });
-  } catch (error) {
-    console.error("Error fetching analytics:", error);
+  } catch {
     res.status(500).json({ error: "Failed to fetch analytics" });
   }
 });

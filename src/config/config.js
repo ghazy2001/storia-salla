@@ -12,11 +12,16 @@ export const USE_SALLA_BACKEND =
 
 // API Configuration
 export const config = {
+  apiUrl: import.meta.env.VITE_API_URL || "http://localhost:3000",
   useSallaBackend: USE_SALLA_BACKEND,
   isSallaEnv: IS_SALLA_ENV,
 
-  // Logging enabled temporarily for debugging integration
-  enableLogging: true,
+  // Business Configuration
+  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "966500000000",
+  shippingFee: 30,
+
+  // Logging disabled temporarily for debugging integration
+  enableLogging: false,
 };
 
 // Helper to log only when enabled

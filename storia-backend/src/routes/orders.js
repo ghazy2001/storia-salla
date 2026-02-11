@@ -53,11 +53,8 @@ router.post("/", async (req, res) => {
         email: customer.email.toLowerCase(),
         phone: customer.phone,
       });
+      await dbCustomer.save();
     }
-    dbCustomer.totalSpent += total;
-    dbCustomer.orderCount += 1;
-    dbCustomer.lastOrderDate = new Date();
-    await dbCustomer.save();
 
     // 3. Update Coupon Usage if applicable
     if (couponUsed) {
@@ -108,12 +105,32 @@ router.put("/admin/:id", async (req, res) => {
       return res.status(400).json({ error: "Invalid ID format" });
     }
     const { status, trackingNumber, paymentStatus } = req.body;
+    const oldOrder = await Order.findById(req.params.id);
     const order = await Order.findByIdAndUpdate(
       req.params.id,
       { status, trackingNumber, paymentStatus },
       { new: true },
     );
     if (!order) return res.status(404).json({ error: "Order not found" });
+
+    // If order is newly mark as paid/completed, update customer stats
+    const isNowPaid =
+      (status === "completed" || paymentStatus === "completed") &&
+      oldOrder.status !== "completed" &&
+      oldOrder.paymentStatus !== "completed";
+
+    if (isNowPaid) {
+      const customer = await Customer.findOne({
+        email: order.customer.email.toLowerCase(),
+      });
+      if (customer) {
+        customer.totalSpent += order.total;
+        customer.orderCount += 1;
+        customer.lastOrderDate = new Date();
+        await customer.save();
+      }
+    }
+
     res.json(order);
   } catch {
     res.status(500).json({ error: "Failed to update order" });

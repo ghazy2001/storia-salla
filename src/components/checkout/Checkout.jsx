@@ -61,7 +61,7 @@ const Checkout = ({ theme }) => {
   }, [step]);
 
   // Calculations
-  const shipping = cartItems.length > 0 ? 30 : 0;
+  const shipping = cartItems.length > 0 ? config.shippingFee : 0;
   const tax = (subtotal - discountAmount) * 0.15;
   const total = subtotal - discountAmount + shipping + tax;
 
@@ -155,10 +155,12 @@ ${discountAmount > 0 ? `الخصم: -${discountAmount.toFixed(2)} ر.س\n` : ""}
 الإجمالي: ${total.toFixed(2)} ر.س
       `.trim();
 
-      const phoneNumber = "966500000000";
+      const phoneNumber = config.whatsappNumber;
       const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
 
+      // Set order data for summary if needed (though we clear cart immediately)
+      // For now, clear cart as it was.
       dispatch(clearCart());
       dispatch(removeCoupon());
       dispatch(setCurrentPage("home"));
