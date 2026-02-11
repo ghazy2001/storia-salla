@@ -11,6 +11,8 @@ import {
 import { selectTheme } from "../../store/slices/uiSlice";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import gsap from "gsap";
+import sallaService from "../../services/sallaService";
+import { config } from "../../config/config";
 
 const ShoppingCart = ({ onContinueShopping }) => {
   const cartItems = useSelector(selectCartItems);
@@ -300,7 +302,13 @@ const ShoppingCart = ({ onContinueShopping }) => {
             </div>
 
             <button
-              onClick={() => dispatch(setCurrentPage("checkout"))}
+              onClick={async () => {
+                if (config.useSallaBackend && sallaService.isAvailable()) {
+                  await sallaService.goToCheckout();
+                } else {
+                  dispatch(setCurrentPage("checkout"));
+                }
+              }}
               className="w-full bg-brand-gold text-brand-charcoal py-4 uppercase tracking-widest font-bold hover:shadow-lg transition-all duration-300 active:scale-95 mb-4"
             >
               متابعة الشراء
