@@ -15,6 +15,12 @@ import {
   updateFAQ,
   deleteFAQ,
 } from "../../store/slices/contentSlice";
+import {
+  fetchOrders,
+  fetchAnalytics,
+  selectOrders,
+  selectAnalytics,
+} from "../../store/slices/dashboardSlice";
 import { setCurrentPage } from "../../store/slices/cartSlice";
 import {
   BarChart3,
@@ -40,6 +46,8 @@ const AdminDashboard = () => {
   const products = useSelector(selectProducts);
   const reviews = useSelector(selectReviews);
   const faqs = useSelector(selectFAQs);
+  const orders = useSelector(selectOrders);
+  const analytics = useSelector(selectAnalytics);
   const dispatch = useDispatch();
 
   const [activeTab, setActiveTab] = useState("analytics");
@@ -47,49 +55,10 @@ const AdminDashboard = () => {
   const [currentId, setCurrentId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Mock Orders Data
-  const [orders] = useState([
-    {
-      id: "#ORD-7829",
-      customer: "سارة أحمد",
-      date: "2024-01-28",
-      total: "1,250 ر.س",
-      status: "processing",
-      items: 3,
-    },
-    {
-      id: "#ORD-7828",
-      customer: "نورة المالكي",
-      date: "2024-01-28",
-      total: "850 ر.س",
-      status: "completed",
-      items: 2,
-    },
-    {
-      id: "#ORD-7827",
-      customer: "عبدالله محمد",
-      date: "2024-01-27",
-      total: "2,100 ر.س",
-      status: "completed",
-      items: 5,
-    },
-    {
-      id: "#ORD-7826",
-      customer: "ريم القحطاني",
-      date: "2024-01-27",
-      total: "450 ر.س",
-      status: "cancelled",
-      items: 1,
-    },
-    {
-      id: "#ORD-7825",
-      customer: "هدى العتيبي",
-      date: "2024-01-26",
-      total: "1,600 ر.س",
-      status: "processing",
-      items: 4,
-    },
-  ]);
+  React.useEffect(() => {
+    dispatch(fetchOrders());
+    dispatch(fetchAnalytics());
+  }, [dispatch]);
 
   const initialProductState = {
     name: "",
@@ -306,7 +275,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Content */}
-        {activeTab === "analytics" && <AnalyticsTab />}
+        {activeTab === "analytics" && <AnalyticsTab analytics={analytics} />}
         {activeTab === "orders" && <OrdersTab orders={orders} />}
         {activeTab === "products" && (
           <ProductsTab

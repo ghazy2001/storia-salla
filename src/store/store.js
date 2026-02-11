@@ -5,6 +5,7 @@ import productReducer from "./slices/productSlice";
 import contentReducer from "./slices/contentSlice";
 import uiReducer from "./slices/uiSlice";
 import userReducer from "./slices/userSlice";
+import dashboardReducer from "./slices/dashboardSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +15,6 @@ export const store = configureStore({
     content: contentReducer,
     ui: uiReducer,
     user: userReducer,
+    dashboard: dashboardReducer,
   },
 });

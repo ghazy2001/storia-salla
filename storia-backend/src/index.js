@@ -10,6 +10,8 @@ const productsRoutes = require("./routes/products");
 const adminRoutes = require("./routes/admin");
 const faqsRoutes = require("./routes/faqs");
 const reviewsRoutes = require("./routes/reviews");
+const ordersRoutes = require("./routes/orders");
+const analyticsRoutes = require("./routes/analytics");
 
 // Initialize Express app
 const app = express();
@@ -72,6 +74,8 @@ app.use("/api/products", productsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/faqs", faqsRoutes);
 app.use("/api/reviews", reviewsRoutes);
+app.use("/api/orders", ordersRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
 // Error handling middleware
 app.use((err, req, res) => {

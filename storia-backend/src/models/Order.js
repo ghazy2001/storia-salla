@@ -4,7 +4,6 @@ const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
       type: String,
-      required: true,
       unique: true,
     },
     customer: {
@@ -44,6 +43,7 @@ const orderSchema = new mongoose.Schema(
         "processing",
         "shipped",
         "delivered",
+        "completed",
         "cancelled",
       ],
       default: "pending",
@@ -61,12 +61,11 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Auto-generate order number
-orderSchema.pre("save", async function (next) {
+orderSchema.pre("save", async function () {
   if (!this.orderNumber) {
     const count = await mongoose.model("Order").countDocuments();
     this.orderNumber = `STORIA-${String(count + 1).padStart(6, "0")}`;
   }
-  next();
 });
 
 module.exports = mongoose.model("Order", orderSchema);

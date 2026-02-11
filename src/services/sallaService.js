@@ -784,10 +784,47 @@ class SallaService {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete review");
-      return await response.json();
+      return true;
     } catch (error) {
       console.error("[Storia] Error deleting review:", error);
       throw error;
+    }
+  }
+
+  // Orders
+  async fetchOrders() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/orders`);
+      if (!response.ok) throw new Error("Failed to fetch orders");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching orders:", error);
+      return null;
+    }
+  }
+
+  async deleteOrder(id) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/orders/admin/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete order");
+      return true;
+    } catch (error) {
+      console.error("[Storia] Error deleting order:", error);
+      throw error;
+    }
+  }
+
+  // Analytics
+  async fetchAnalytics() {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/analytics`);
+      if (!response.ok) throw new Error("Failed to fetch analytics");
+      return await response.json();
+    } catch (error) {
+      console.error("[Storia] Error fetching analytics:", error);
+      return null;
     }
   }
 

@@ -59,19 +59,25 @@ const OrdersTab = ({ orders }) => {
           <tbody className="divide-y divide-gray-100">
             {orders.map((order) => (
               <tr
-                key={order.id}
+                key={order._id || order.id}
                 className="hover:bg-gray-50/50 transition-colors"
               >
                 <td className="py-4 px-6 font-medium text-gray-900" dir="ltr">
-                  {order.id}
+                  {order.orderNumber || order.id}
                 </td>
-                <td className="py-4 px-6 text-gray-700">{order.customer}</td>
+                <td className="py-4 px-6 text-gray-700">
+                  {order.customer?.name || order.customer}
+                </td>
                 <td className="py-4 px-6 text-gray-500 text-sm" dir="ltr">
-                  {order.date}
+                  {order.createdAt
+                    ? new Date(order.createdAt).toLocaleDateString("en-US")
+                    : order.date}
                 </td>
-                <td className="py-4 px-6 text-gray-700">{order.items}</td>
+                <td className="py-4 px-6 text-gray-700">
+                  {order.items?.length || order.items}
+                </td>
                 <td className="py-4 px-6 font-bold text-brand-gold">
-                  {order.total}
+                  {order.total} ر.س
                 </td>
                 <td className="py-4 px-6">
                   <span
