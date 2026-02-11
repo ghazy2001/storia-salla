@@ -5,8 +5,12 @@ import {
   selectCartTotal,
   setCurrentPage,
   clearCart,
+  selectAppliedCoupon,
+  selectCartDiscount,
+  removeCoupon,
 } from "../../store/slices/cartSlice";
 import gsap from "gsap";
+import axios from "axios";
 
 // Sub-components
 import ShippingForm from "./ShippingForm";
@@ -17,25 +21,17 @@ import OrderSummary from "./OrderSummary";
 import sallaService from "../../services/sallaService";
 import { config } from "../../config/config";
 
-/**
- * Checkout Component
- *
- * Main container for the checkout process. Manages the state between
- * shipping, payment, and final submission.
- */
 const Checkout = ({ theme }) => {
   const cartItems = useSelector(selectCartItems);
   const subtotal = useSelector(selectCartTotal);
+  const appliedCoupon = useSelector(selectAppliedCoupon);
+  const discountAmount = useSelector(selectCartDiscount);
   const dispatch = useDispatch();
   const containerRef = useRef(null);
 
-  const [step, setStep] = useState("shipping"); // "shipping" or "payment"
+  const [step, setStep] = useState("shipping");
   const [paymentMethod, setPaymentMethod] = useState("mada");
-
-  // Generate random order ID for demo purposes
-  const [orderId] = useState(
-    () => `ST-${Math.floor(Math.random() * 900000 + 100000)}`,
-  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -53,7 +49,6 @@ const Checkout = ({ theme }) => {
     cardHolder: "",
   });
 
-  // Animation effect on step change
   useEffect(() => {
     const ctx = gsap.context(() => {
       gsap.fromTo(
@@ -62,25 +57,20 @@ const Checkout = ({ theme }) => {
         { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" },
       );
     }, containerRef);
-
     return () => ctx.revert();
   }, [step]);
 
   // Calculations
   const shipping = cartItems.length > 0 ? 30 : 0;
-  const tax = subtotal * 0.15;
-  const total = subtotal + shipping + tax;
+  const tax = (subtotal - discountAmount) * 0.15;
+  const total = subtotal - discountAmount + shipping + tax;
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handlePaymentInputChange = (e) => {
     const { name, value } = e.target;
-    // Basic formatting for card number and expiry
     let formattedValue = value;
     if (name === "cardNumber") {
       formattedValue = value
@@ -104,26 +94,49 @@ const Checkout = ({ theme }) => {
 
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-    // If on Salla platform, redirect to Salla checkout
-    if (config.useSallaBackend && sallaService.isAvailable()) {
-      await sallaService.goToCheckout();
-      return;
-    }
+    try {
+      // If on Salla platform, redirect to Salla checkout
+      if (config.useSallaBackend && sallaService.isAvailable()) {
+        return await sallaService.goToCheckout();
+      }
+      // 1. Create real order in backend
+      const orderPayload = {
+        customer: {
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+        },
+        items: cartItems.map((item) => ({
+          productId: item._id || item.id,
+          quantity: item.quantity,
+          price: item.price,
+          size: item.selectedSize,
+        })),
+        total,
+        discountAmount,
+        couponUsed: appliedCoupon?.code,
+      };
 
-    // Fallback to WhatsApp for local development or if SDK is unavailable
-    const orderDetails = cartItems
-      .map(
-        (item, index) =>
-          `${index + 1}. ${item.name}\n   المقاس: ${
-            item.selectedSize || "غير محدد"
-          }\n   الكمية: ${item.quantity}\n   السعر: ${item.price}`,
-      )
-      .join("\n\n");
+      const response = await axios.post(
+        `${config.apiUrl}/api/orders`,
+        orderPayload,
+      );
+      const dbOrder = response.data;
 
-    const message = `
+      // 2. Fallback to WhatsApp with the real order ID
+      const orderDetails = cartItems
+        .map(
+          (item, index) =>
+            `${index + 1}. ${item.name}\n   المقاس: ${item.selectedSize || "غير محدد"}\n   الكمية: ${item.quantity}\n   السعر: ${item.price}`,
+        )
+        .join("\n\n");
+
+      const message = `
 🛍️ *طلب جديد من متجر ستوريا*
-رقم الطلب: ${orderId}
+رقم الطلب: ${dbOrder.orderNumber}
 
 *بيانات العميل:*
 الاسم: ${formData.fullName}
@@ -132,37 +145,29 @@ const Checkout = ({ theme }) => {
 العنوان: ${formData.address}
 المدينة: ${formData.city}
 
-*طريقة الدفع:*
-${
-  paymentMethod === "mada"
-    ? "مدى (Mada)"
-    : paymentMethod === "applepay"
-      ? "Apple Pay"
-      : paymentMethod === "stcpay"
-        ? "STC Pay"
-        : "بطاقة ائتمانية"
-}
-
 *تفاصيل الطلب:*
 ${orderDetails}
 
 *ملخص الفاتورة:*
 المجموع الفرعي: ${subtotal.toFixed(2)} ر.س
-الشحن: ${shipping.toFixed(2)} ر.س
+${discountAmount > 0 ? `الخصم: -${discountAmount.toFixed(2)} ر.س\n` : ""}الشحن: ${shipping.toFixed(2)} ر.س
 الضريبة (15%): ${tax.toFixed(2)} ر.س
 الإجمالي: ${total.toFixed(2)} ر.س
+      `.trim();
 
-${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
-    `.trim();
+      const phoneNumber = "966500000000";
+      const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, "_blank");
 
-    const phoneNumber = "966500000000"; // Replace with actual WhatsApp number
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
-      message,
-    )}`;
-    window.open(whatsappUrl, "_blank");
-
-    dispatch(clearCart());
-    dispatch(setCurrentPage("home"));
+      dispatch(clearCart());
+      dispatch(removeCoupon());
+      dispatch(setCurrentPage("home"));
+    } catch (error) {
+      alert("حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.");
+      console.error("Submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -173,44 +178,30 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
       }`}
     >
       <div className="max-w-6xl mx-auto">
-        {/* Progress Steps Header */}
         <div className="flex justify-between items-end mb-12">
           <div className="flex gap-4 items-center">
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 ${
-                step === "shipping"
-                  ? "bg-brand-gold border-brand-gold text-brand-charcoal"
-                  : "border-brand-gold text-brand-gold"
-              }`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 ${step === "shipping" ? "bg-brand-gold border-brand-gold text-brand-charcoal" : "border-brand-gold text-brand-gold"}`}
             >
               1
             </div>
             <div
-              className={`h-[2px] w-12 ${
-                step === "payment" ? "bg-brand-gold" : "bg-brand-gold/20"
-              }`}
+              className={`h-[2px] w-12 ${step === "payment" ? "bg-brand-gold" : "bg-brand-gold/20"}`}
             ></div>
             <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 ${
-                step === "payment"
-                  ? "bg-brand-gold border-brand-gold text-brand-charcoal"
-                  : "border-brand-gold/20 text-brand-gold/20"
-              }`}
+              className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-2 ${step === "payment" ? "bg-brand-gold border-brand-gold text-brand-charcoal" : "border-brand-gold/20 text-brand-gold/20"}`}
             >
               2
             </div>
           </div>
           <h1
-            className={`text-4xl md:text-5xl font-sans text-right ${
-              theme === "green" ? "text-brand-charcoal" : "text-white"
-            }`}
+            className={`text-4xl md:text-5xl font-sans text-right ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
           >
             {step === "shipping" ? "إتمام الطلب" : "تفاصيل الدفع"}
           </h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Main Content Area (Form) */}
           <div className="lg:col-span-2">
             {step === "shipping" ? (
               <ShippingForm
@@ -231,16 +222,23 @@ ${formData.notes ? `*ملاحظات:*\n${formData.notes}` : ""}
                 theme={theme}
               />
             )}
+            {isSubmitting && (
+              <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+                <div className="bg-white p-8 rounded-2xl flex flex-col items-center gap-4">
+                  <div className="w-12 h-12 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
+                  <p className="font-bold text-gray-900">جاري معالجة طلبك...</p>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Order Summary Sidebar */}
           <OrderSummary
             cartItems={cartItems}
             subtotal={subtotal}
             shipping={shipping}
             tax={tax}
             total={total}
-            orderId={orderId}
+            orderId={"—"} // Order ID will be generated by backend
             step={step}
             onBackToCart={() => dispatch(setCurrentPage("cart"))}
             theme={theme}

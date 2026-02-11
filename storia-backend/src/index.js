@@ -13,6 +13,8 @@ const reviewsRoutes = require("./routes/reviews");
 const ordersRoutes = require("./routes/orders");
 const analyticsRoutes = require("./routes/analytics");
 const bestSellersRoutes = require("./routes/bestsellers");
+const customersRoutes = require("./routes/customers");
+const couponsRoutes = require("./routes/coupons");
 
 // Initialize Express app
 const app = express();
@@ -78,6 +80,8 @@ app.use("/api/reviews", reviewsRoutes);
 app.use("/api/orders", ordersRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/bestsellers", bestSellersRoutes);
+app.use("/api/customers", customersRoutes);
+app.use("/api/coupons", couponsRoutes);
 
 // Error handling middleware
 app.use((err, req, res) => {

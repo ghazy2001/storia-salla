@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 
 const AnalyticsTab = ({ analytics }) => {
-  const { kpis, dailySales, topProducts } = analytics || {
+  const { kpis, dailySales, topProducts, growth } = analytics || {
     kpis: {
       totalSales: 0,
       ordersCount: 0,
@@ -17,6 +17,7 @@ const AnalyticsTab = ({ analytics }) => {
     },
     dailySales: [],
     topProducts: [],
+    growth: 0,
   };
   return (
     <div className="space-y-6 animate-fade-in">
@@ -27,9 +28,15 @@ const AnalyticsTab = ({ analytics }) => {
             <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
               <DollarSign size={24} />
             </div>
-            <span className="text-xs text-green-600 flex items-center gap-1">
-              <TrendingUp size={12} />
-              +12.5%
+            <span
+              className={`text-xs flex items-center gap-1 ${growth >= 0 ? "text-green-600" : "text-red-600"}`}
+            >
+              <TrendingUp
+                size={12}
+                className={growth < 0 ? "rotate-180" : ""}
+              />
+              {growth >= 0 ? "+" : ""}
+              {growth}%
             </span>
           </div>
           <p className="text-sm text-gray-500 mb-1">إجمالي المبيعات</p>

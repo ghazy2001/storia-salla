@@ -42,6 +42,8 @@ import {
   Plus,
   Star,
   ClipboardList,
+  Users,
+  Ticket,
 } from "lucide-react";
 import {
   setAdminActiveTab,
@@ -58,6 +60,8 @@ import FAQsTab from "./dashboard/FAQsTab";
 import BestSellersTab from "./dashboard/BestSellersTab";
 import CategoriesTab from "./dashboard/CategoriesTab";
 import InventoryTab from "./dashboard/InventoryTab";
+import CustomersTab from "./dashboard/CustomersTab";
+import CouponsTab from "./dashboard/CouponsTab";
 import ProductModal from "./dashboard/ProductModal";
 
 const AdminDashboard = () => {
@@ -322,6 +326,28 @@ const AdminDashboard = () => {
         <Package size={18} />
         <span>الأقسام</span>
       </button>
+      <button
+        onClick={() => dispatch(setAdminActiveTab("customers"))}
+        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
+          activeTab === "customers"
+            ? "bg-brand-burgundy text-white shadow-lg"
+            : "bg-white text-gray-500 hover:bg-gray-100"
+        }`}
+      >
+        <Users size={18} />
+        <span>العملاء</span>
+      </button>
+      <button
+        onClick={() => dispatch(setAdminActiveTab("coupons"))}
+        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
+          activeTab === "coupons"
+            ? "bg-brand-burgundy text-white shadow-lg"
+            : "bg-white text-gray-500 hover:bg-gray-100"
+        }`}
+      >
+        <Ticket size={18} />
+        <span>كوبونات الخصم</span>
+      </button>
     </div>
   );
 
@@ -416,6 +442,8 @@ const AdminDashboard = () => {
           />
         )}
         {activeTab === "inventory" && <InventoryTab products={products} />}
+        {activeTab === "customers" && <CustomersTab />}
+        {activeTab === "coupons" && <CouponsTab />}
 
         {/* Modal */}
         <ProductModal

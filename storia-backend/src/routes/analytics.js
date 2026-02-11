@@ -1,25 +1,46 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 
 // GET /api/analytics - Get dashboard analytics
 router.get("/", async (req, res) => {
   try {
-    // 1. Total Sales (Paid Orders)
-    const paidOrders = await Order.find({ paymentStatus: "completed" });
-    const totalSales = paidOrders.reduce((sum, order) => sum + order.total, 0);
+    // 1. Total Sales (Paid/Processing/Shipped Orders)
+    const activeOrders = await Order.find({
+      status: { $in: ["paid", "processing", "shipped", "completed"] },
+    });
+    const totalSales = activeOrders.reduce(
+      (sum, order) => sum + order.total,
+      0,
+    );
 
     // 2. Orders Count (All non-cancelled)
     const ordersCount = await Order.countDocuments({
       status: { $ne: "cancelled" },
     });
 
-    // 3. Customers Count (Unique emails)
-    const customers = await Order.distinct("customer.email");
-    const customersCount = customers.length;
+    // 3. Customers Count
+    const customersCount = await mongoose.model("Customer").countDocuments();
 
-    // 4. Average Order Value
+    // 4. Monthly Growth (Simplistic)
+    const lastMonth = new Date();
+    lastMonth.setMonth(lastMonth.getMonth() - 1);
+    const lastMonthSales = await Order.find({
+      createdAt: { $lt: new Date(), $gte: lastMonth },
+      status: { $in: ["paid", "processing", "shipped", "completed"] },
+    });
+    const lastMonthTotal = lastMonthSales.reduce(
+      (sum, order) => sum + order.total,
+      0,
+    );
+    const growth =
+      lastMonthTotal > 0
+        ? ((totalSales - lastMonthTotal) / lastMonthTotal) * 100
+        : 100;
+
+    // 5. Average Order Value
     const averageOrderValue =
       ordersCount > 0 ? Math.round(totalSales / ordersCount) : 0;
 
@@ -77,6 +98,7 @@ router.get("/", async (req, res) => {
         sales: tp.sales,
         price: `${tp._id?.price || 0} ر.س`,
       })),
+      growth: Math.round(growth),
     });
   } catch (error) {
     console.error("Error fetching analytics:", error);

@@ -54,6 +54,13 @@ const orderSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed", "refunded"],
       default: "pending",
     },
+    trackingNumber: String,
+    shippingMethod: String,
+    discountAmount: {
+      type: Number,
+      default: 0,
+    },
+    couponUsed: String,
   },
   {
     timestamps: true,

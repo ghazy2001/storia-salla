@@ -1,22 +1,15 @@
-import React from "react";
-import { ArrowRight } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowRight, Tag, X, Check } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import axios from "axios";
+import { config } from "../../config/config";
+import {
+  applyCoupon,
+  removeCoupon,
+  selectAppliedCoupon,
+  selectCartDiscount,
+} from "../../store/slices/cartSlice";
 
-/**
- * OrderSummary Component
- *
- * Displays the summary of purchased items, pricing breakdown, and order details.
- *
- * Props:
- * @param {Array} cartItems - List of items in the cart
- * @param {number} subtotal - Subtotal amount
- * @param {number} shipping - Shipping cost
- * @param {number} tax - Calculated tax
- * @param {number} total - Final total amount
- * @param {string} orderId - Unique order identifier
- * @param {string} step - Current checkout step ('shipping' or 'payment')
- * @param {Function} onBackToCart - Handler to navigate back to cart
- * @param {string} theme - Current application theme
- */
 const OrderSummary = ({
   cartItems,
   subtotal,
@@ -28,6 +21,36 @@ const OrderSummary = ({
   onBackToCart,
   theme,
 }) => {
+  const dispatch = useDispatch();
+  const appliedCoupon = useSelector(selectAppliedCoupon);
+  const discountAmount = useSelector(selectCartDiscount);
+  const [couponCode, setCouponCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode) return;
+    setLoading(true);
+    setError("");
+    try {
+      const response = await axios.post(
+        `${config.apiUrl}/api/coupons/validate`,
+        {
+          code: couponCode,
+          cartAmount: subtotal,
+        },
+      );
+      dispatch(applyCoupon(response.data));
+      setCouponCode("");
+    } catch (err) {
+      setError(err.response?.data?.error || "خطأ في تفعيل الكود");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const finalTotal = total - discountAmount;
+
   return (
     <div
       className={`border-2 p-8 h-fit sticky top-24 ${
@@ -82,44 +105,76 @@ const OrderSummary = ({
           </div>
         ))}
 
+        {/* Pricing Breakdown */}
         <div
-          className={`flex justify-between text-right pb-4 border-b ${
-            theme === "green"
-              ? "border-brand-charcoal/10 text-brand-charcoal"
-              : "border-white/10 text-white"
-          }`}
+          className={`space-y-3 pt-4 ${theme === "green" ? "text-brand-charcoal" : "text-white"}`}
         >
-          <span>المجموع الفرعي</span>
-          <span className="font-semibold">{subtotal.toFixed(2)} ر.س</span>
+          <div className="flex justify-between text-right">
+            <span>المجموع الفرعي</span>
+            <span className="font-semibold">{subtotal.toFixed(2)} ر.س</span>
+          </div>
+
+          {appliedCoupon && (
+            <div className="flex justify-between text-right text-green-500 font-bold">
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => dispatch(removeCoupon())}
+                  className="hover:text-red-500 transition-colors"
+                >
+                  <X size={14} />
+                </button>
+                <span>الخصم ({appliedCoupon.code})</span>
+              </div>
+              <span>-{discountAmount.toFixed(2)} ر.س</span>
+            </div>
+          )}
+
+          <div className="flex justify-between text-right">
+            <span>الشحن</span>
+            <span className="font-semibold">{shipping.toFixed(2)} ر.س</span>
+          </div>
+          <div className="flex justify-between text-right">
+            <span>الضريبة (15%)</span>
+            <span className="font-semibold">{tax.toFixed(2)} ر.س</span>
+          </div>
+
+          <div className="flex justify-between text-right text-xl font-bold pt-4 border-t border-white/10">
+            <span>الإجمالي</span>
+            <span className="text-brand-gold">{finalTotal.toFixed(2)} ر.س</span>
+          </div>
         </div>
-        <div
-          className={`flex justify-between text-right pb-4 border-b ${
-            theme === "green"
-              ? "border-brand-charcoal/10 text-brand-charcoal"
-              : "border-white/10 text-white"
-          }`}
-        >
-          <span>الشحن</span>
-          <span className="font-semibold">{shipping.toFixed(2)} ر.س</span>
+      </div>
+
+      {/* Coupon Input */}
+      <div className="mb-8">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="كود الخصم"
+            value={couponCode}
+            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            className={`flex-1 px-4 py-2 border-2 text-right outline-none transition-all ${
+              theme === "green"
+                ? "bg-white border-brand-charcoal/10 focus:border-brand-gold text-brand-charcoal"
+                : "bg-white/5 border-white/10 focus:border-brand-gold text-white"
+            }`}
+          />
+          <button
+            onClick={handleApplyCoupon}
+            disabled={loading || !couponCode}
+            className="bg-brand-gold text-brand-burgundy px-4 py-2 font-bold hover:shadow-lg disabled:opacity-50 transition-all flex items-center justify-center"
+          >
+            {loading ? "..." : <Tag size={18} />}
+          </button>
         </div>
-        <div
-          className={`flex justify-between text-right pb-4 border-b ${
-            theme === "green"
-              ? "border-brand-charcoal/10 text-brand-charcoal"
-              : "border-white/10 text-white"
-          }`}
-        >
-          <span>الضريبة (15%)</span>
-          <span className="font-semibold">{tax.toFixed(2)} ر.س</span>
-        </div>
-        <div
-          className={`flex justify-between text-right text-xl font-bold pt-4 ${
-            theme === "green" ? "text-brand-charcoal" : "text-white"
-          }`}
-        >
-          <span>الإجمالي</span>
-          <span className="text-brand-gold">{total.toFixed(2)} ر.س</span>
-        </div>
+        {error && (
+          <p className="text-red-500 text-xs mt-2 text-right">{error}</p>
+        )}
+        {appliedCoupon && !error && (
+          <p className="text-green-500 text-xs mt-2 text-right flex items-center justify-end gap-1">
+            تم تفعيل كود الخصم بنجاح <Check size={12} />
+          </p>
+        )}
       </div>
 
       {step === "shipping" && (

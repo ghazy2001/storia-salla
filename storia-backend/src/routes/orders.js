@@ -2,8 +2,56 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
+const Customer = require("../models/Customer");
+const Coupon = require("../models/Coupon");
 
-// GET /api/orders - Get all orders (Admin)
+// POST /api/orders - Create new order
+router.post("/", async (req, res) => {
+  try {
+    const { customer, items, total, discountAmount, couponUsed } = req.body;
+
+    // 1. Create Order
+    const order = new Order({
+      customer,
+      items,
+      total,
+      discountAmount,
+      couponUsed,
+      status: "pending",
+      paymentStatus: "pending",
+    });
+    await order.save();
+
+    // 2. Update/Create Customer
+    let dbCustomer = await Customer.findOne({
+      email: customer.email.toLowerCase(),
+    });
+    if (!dbCustomer) {
+      dbCustomer = new Customer({
+        name: customer.name,
+        email: customer.email.toLowerCase(),
+        phone: customer.phone,
+      });
+    }
+    dbCustomer.totalSpent += total;
+    dbCustomer.orderCount += 1;
+    dbCustomer.lastOrderDate = new Date();
+    await dbCustomer.save();
+
+    // 3. Update Coupon Usage if applicable
+    if (couponUsed) {
+      await Coupon.findOneAndUpdate(
+        { code: couponUsed.toUpperCase() },
+        { $inc: { usedCount: 1 } },
+      );
+    }
+
+    res.status(201).json(order);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(400).json({ error: "Failed to create order" });
+  }
+});
 router.get("/", async (req, res) => {
   try {
     const orders = await Order.find()
@@ -32,17 +80,22 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/orders/:id - Delete order (Admin)
-router.delete("/admin/:id", async (req, res) => {
+// PUT /api/orders/admin/:id - Update order status/tracking (Admin)
+router.put("/admin/:id", async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: "Invalid ID format" });
     }
-    const order = await Order.findByIdAndDelete(req.params.id);
+    const { status, trackingNumber, paymentStatus } = req.body;
+    const order = await Order.findByIdAndUpdate(
+      req.params.id,
+      { status, trackingNumber, paymentStatus },
+      { new: true },
+    );
     if (!order) return res.status(404).json({ error: "Order not found" });
-    res.json({ message: "Order deleted successfully" });
+    res.json(order);
   } catch {
-    res.status(500).json({ error: "Failed to delete order" });
+    res.status(500).json({ error: "Failed to update order" });
   }
 });
 

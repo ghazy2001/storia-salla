@@ -14,6 +14,7 @@ const getInitialPage = () => {
 const initialState = {
   cartItems: getInitialCart(),
   currentPage: getInitialPage(),
+  appliedCoupon: null,
 };
 
 const cartSlice = createSlice({
@@ -119,6 +120,12 @@ const cartSlice = createSlice({
         localStorage.setItem("storia_current_page", action.payload);
       }
     },
+    applyCoupon: (state, action) => {
+      state.appliedCoupon = action.payload;
+    },
+    removeCoupon: (state) => {
+      state.appliedCoupon = null;
+    },
   },
 });
 
@@ -129,6 +136,8 @@ export const {
   updateQuantity,
   clearCart,
   setCurrentPage,
+  applyCoupon,
+  removeCoupon,
 } = cartSlice.actions;
 
 // Selectors
@@ -148,5 +157,15 @@ export const selectCartTotal = (state) =>
   }, 0);
 export const selectCartCount = (state) =>
   state.cart.cartItems.reduce((count, item) => count + item.quantity, 0);
+export const selectAppliedCoupon = (state) => state.cart.appliedCoupon;
+export const selectCartDiscount = (state) => {
+  const subtotal = selectCartTotal(state);
+  const coupon = state.cart.appliedCoupon;
+  if (!coupon) return 0;
+  if (coupon.discountType === "percentage") {
+    return (subtotal * coupon.value) / 100;
+  }
+  return coupon.value;
+};
 
 export default cartSlice.reducer;
