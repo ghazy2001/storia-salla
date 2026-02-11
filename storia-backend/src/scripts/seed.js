@@ -1,0 +1,167 @@
+require("dotenv").config({
+  path: require("path").resolve(__dirname, "../../.env"),
+});
+const mongoose = require("mongoose");
+const Product = require("../models/Product");
+
+const products = [
+  {
+    name: { ar: "عباية سوداء رسمية - كريب ملكي" },
+    price: 390,
+    category: "official",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p01/p01_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p01/p01_2.jpg",
+        order: 2,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p01/p01_3.jpg",
+        order: 3,
+      },
+    ],
+  },
+  {
+    name: { ar: "عباية كلوش - قماش إنترنت ناعم" },
+    price: 350,
+    category: "cloche",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "عباية بقصة كلوش واسعة تمنحك حرية الحركة وأناقة استثنائية. مصممة من قماش الإنترنت الناعم الذي يتميز ببرودة ونعومة فائقة، مثالية للاستخدام اليومي.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p02/p02_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p02/p02_2.jpg",
+        order: 2,
+      },
+    ],
+  },
+  {
+    name: { ar: "عباية بشت مطرزة - شك يدوي" },
+    price: 480,
+    category: "bisht",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "تحفة فنية بتصميم البشت التقليدي مع لمسات عصرية، مزينة بشك يدوي دقيق يضيف بريقاً هادئاً وفخامة لا تضاهى. الخيار الأمثل للمناسبات الخاصة.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p03/p03_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p03/p03_2.jpg",
+        order: 2,
+      },
+    ],
+  },
+  {
+    name: { ar: "عباية نواعم - تصميم كلاسيكي" },
+    price: 320,
+    category: "classic",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "البساطة هي عنوان الأناقة.، تصميم نواعم الكلاسيكي يبرز جمالك الطبيعي بتفاصيل هادئة وخامة عملية مريحة تدوم طويلاً.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p04/p04_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p04/p04_2.jpg",
+        order: 2,
+      },
+    ],
+  },
+  {
+    name: { ar: "عباية رسمية بتطريز هادئ" },
+    price: 420,
+    category: "official",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "توازن مثالي بين الرسمية والأنوثة. تتميز بتطريزات ناعمة على الأكمام والياقة، تضفي لمسة جمالية دون مبالغة.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p05/p05_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p05/p05_2.jpg",
+        order: 2,
+      },
+    ],
+  },
+  {
+    name: { ar: "عباية عملية يومية بجيوب" },
+    price: 290,
+    category: "practical",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "الرفيق المثالي لروتينك اليومي. مصممة لتكون عملية ومريحة، مع جيوب مخفية وقماش يتحمل الاستخدام المتكرر دون فقدان رونقه.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p06/p06_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p06/p06_2.jpg",
+        order: 2,
+      },
+    ],
+  },
+  {
+    name: { ar: "عباية حرير طبيعي - فاخرة" },
+    price: 550,
+    category: "luxury",
+    sizes: ["S", "M", "L", "XL"],
+    description: {
+      ar: "قمة الفخامة والنعومة. عباية منسوجة من مزيج الحرير الطبيعي، تمنحك ملمساً لا يضاهى ومظهراً يفيض بالرقي والجاذبية.",
+    },
+    images: [
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p07/p07_1.jpg",
+        order: 1,
+      },
+      {
+        url: "https://storia-salla.vercel.app/assets/products/p07/p07_2.jpg",
+        order: 2,
+      },
+    ],
+  },
+];
+
+async function seedProducts() {
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("Connected to MongoDB for seeding...");
+
+    // Clear existing products
+    await Product.deleteMany({});
+    console.log("Deleted existing products");
+
+    // Insert new products
+    await Product.insertMany(products);
+    console.log("Successfully seeded database with original products!");
+
+    mongoose.connection.close();
+  } catch (error) {
+    console.error("Error seeding products:", error);
+    process.exit(1);
+  }
+}
+
+seedProducts();
