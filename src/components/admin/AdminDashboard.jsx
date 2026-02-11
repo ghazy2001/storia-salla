@@ -154,22 +154,31 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (activeTab === "products") {
-      if (isEditing) {
-        dispatch(updateProduct({ ...productForm, id: currentId }));
-      } else {
-        dispatch(addProduct(productForm));
+    try {
+      if (activeTab === "products") {
+        if (isEditing) {
+          const result = await dispatch(
+            updateProduct({ ...productForm, id: currentId }),
+          ).unwrap();
+          if (result) setIsModalOpen(false);
+        } else {
+          const result = await dispatch(addProduct(productForm)).unwrap();
+          if (result) setIsModalOpen(false);
+        }
+      } else if (activeTab === "faqs") {
+        if (isEditing) {
+          dispatch(updateFAQ({ ...faqForm, id: currentId }));
+          setIsModalOpen(false);
+        } else {
+          dispatch(addFAQ(faqForm));
+          setIsModalOpen(false);
+        }
       }
-    } else if (activeTab === "faqs") {
-      if (isEditing) {
-        dispatch(updateFAQ({ ...faqForm, id: currentId }));
-      } else {
-        dispatch(addFAQ(faqForm));
-      }
+    } catch (error) {
+      alert(`خطأ: ${error}`);
     }
-    setIsModalOpen(false);
   };
 
   const renderTabs = () => (

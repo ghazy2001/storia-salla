@@ -12,7 +12,7 @@ router.post("/products", async (req, res) => {
     const productData = {
       name: { ar: data.name, en: data.name },
       description: { ar: data.description, en: data.description },
-      price: parseFloat(data.price),
+      price: parseFloat(data.price) || 0,
       category: data.category || "official",
       sizes: data.sizes || ["S", "M", "L", "XL"],
       images: [
@@ -22,7 +22,7 @@ router.post("/products", async (req, res) => {
         },
       ],
       isActive: true,
-      stock: data.stock || 0,
+      stock: parseInt(data.stock) || 0,
     };
 
     const product = new Product(productData);
@@ -41,7 +41,7 @@ router.put("/products/:id", async (req, res) => {
     const updateData = {
       name: { ar: data.name, en: data.name },
       description: { ar: data.description, en: data.description },
-      price: parseFloat(data.price),
+      price: parseFloat(data.price) || 0,
       category: data.category,
       sizes: data.sizes,
       images: [
@@ -51,7 +51,7 @@ router.put("/products/:id", async (req, res) => {
         },
       ],
       isActive: data.isActive ?? true,
-      stock: data.stock,
+      stock: parseInt(data.stock) || 0,
     };
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {
