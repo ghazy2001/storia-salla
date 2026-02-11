@@ -16,6 +16,7 @@ import {
 import NavigationArrows from "../common/NavigationArrows";
 import Lightbox from "../common/Lightbox";
 import { resolveAsset } from "../../utils/assetUtils";
+import { config } from "../../config/config";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,16 +35,10 @@ const BestSellers = ({ onProductSelect }) => {
   useEffect(() => {
     const loadBestSellers = async () => {
       try {
-        const apiBaseUrl =
-          import.meta.env.MODE === "development"
-            ? "http://localhost:3000/api"
-            : "https://storia-salla.fly.dev/api";
-
-        const response = await fetch(`${apiBaseUrl}/bestsellers`);
+        const response = await fetch(`${config.apiUrl}/api/bestsellers`);
 
         if (response.ok) {
           const config = await response.json();
-          console.log("[BestSellers] Loaded from database:", config);
           setFeaturedConfig(config);
         } else {
           console.warn("[BestSellers] API failed, using fallback product");
@@ -75,20 +70,24 @@ const BestSellers = ({ onProductSelect }) => {
   const lightbox = useLightbox(carouselImages);
 
   useEffect(() => {
+    if (loading || !featuredConfig) return;
+
     const ctx = gsap.context(() => {
-      gsap.fromTo(
-        sectionRef.current,
-        { opacity: 0, y: 50 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          scrollTrigger: { trigger: sectionRef.current, start: "top 70%" },
-        },
-      );
+      if (sectionRef.current) {
+        gsap.fromTo(
+          sectionRef.current,
+          { opacity: 0, y: 50 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            scrollTrigger: { trigger: sectionRef.current, start: "top 70%" },
+          },
+        );
+      }
     }, sectionRef);
     return () => ctx.revert();
-  }, []);
+  }, [loading, featuredConfig]);
 
   if (loading || !featuredConfig) return null;
 

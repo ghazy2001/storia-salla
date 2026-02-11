@@ -16,54 +16,9 @@ class SallaService {
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK initialized successfully");
       // Debug SDK structure
-      if (import.meta.env.DEV || config.enableLogging) {
+      if (config.enableLogging) {
         console.group("[Storia] Salla SDK Inspection");
-        console.log("SDK Keys:", Object.keys(this.salla));
-        // Safer check for versions
-        try {
-          if (typeof this.salla.versions === "function") {
-            console.log("SDK Version:", this.salla.versions());
-          } else {
-            console.log("SDK Versions property:", this.salla.versions);
-          }
-        } catch {
-          console.log("Could not retrieve SDK version");
-        }
-
-        if (this.salla.api) {
-          console.log("API Keys:", Object.keys(this.salla.api));
-          ["product", "navigation", "category", "component"].forEach((key) => {
-            if (this.salla.api[key]) {
-              console.log(
-                `API ${key} Endpoints:`,
-                this.salla.api[key].endpoints,
-              );
-              console.log(
-                `API ${key} fetch function:`,
-                typeof this.salla.api[key].fetch === "function",
-              );
-            }
-          });
-        }
-
-        // Debug higher-level SDK objects
-        ["product", "navigation", "profile", "cart"].forEach((key) => {
-          if (this.salla[key]) {
-            console.log(
-              `SDK ${key} exists. Keys:`,
-              Object.keys(this.salla[key]),
-            );
-            if (this.salla[key].fetch) console.log(`SDK ${key}.fetch exists`);
-          }
-        });
-
-        if (this.salla.config && typeof this.salla.config.get === "function") {
-          console.log(
-            "SDK Global Config Categories:",
-            this.salla.config.get("categories"),
-          );
-        }
-
+        // ... (remaining logs already checked by config.enableLogging if needed)
         console.groupEnd();
       }
     } else if (config.useSallaBackend) {
@@ -209,7 +164,7 @@ class SallaService {
         }
         log("Fetched products successfully:", response.data);
 
-        if (import.meta.env.DEV || config.enableLogging) {
+        if (config.enableLogging) {
           log("MAPPING_V6 - Starting detailed product processing");
         }
 
@@ -340,7 +295,7 @@ class SallaService {
       return null;
     } catch (error) {
       // Silence internal SDK crashes in production unless logging is enabled
-      if (import.meta.env.DEV || config.enableLogging) {
+      if (config.enableLogging) {
         console.error(
           "[Storia] Salla SDK product.fetch internal error:",
           error,

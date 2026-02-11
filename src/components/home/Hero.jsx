@@ -20,50 +20,67 @@ const Hero = ({ goToStore, onProductSelect }) => {
   const baseColor = "#0a0a0a";
 
   useEffect(() => {
-    const tl = gsap.timeline();
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline();
 
-    // Text Entrance
-    tl.fromTo(
-      textRef.current.children,
-      { y: 30, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.2, stagger: 0.15, ease: "power2.out" },
-      0.8,
-    );
+      // Text Entrance
+      if (textRef.current && textRef.current.children.length > 0) {
+        tl.fromTo(
+          textRef.current.children,
+          { y: 30, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1.2,
+            stagger: 0.15,
+            ease: "power2.out",
+          },
+          0.8,
+        );
+      }
 
-    // Strips Entrance
-    stripsRef.current.forEach((strip, index) => {
-      gsap.fromTo(
-        strip,
-        { scaleY: 0, opacity: 0 },
-        {
-          scaleY: 1,
-          opacity: 1,
-          duration: 1.8,
-          delay: index * 0.08,
-          ease: "expo.out",
-        },
-      );
-    });
+      // Strips Entrance
+      stripsRef.current.forEach((strip, index) => {
+        if (strip) {
+          gsap.fromTo(
+            strip,
+            { scaleY: 0, opacity: 0 },
+            {
+              scaleY: 1,
+              opacity: 1,
+              duration: 1.8,
+              delay: index * 0.08,
+              ease: "expo.out",
+            },
+          );
+        }
+      });
 
-    // Scroll Animation
-    gsap.to(containerRef.current, {
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: "top top",
-        end: "bottom top",
-        scrub: true,
-      },
-      borderBottomLeftRadius: "50% 120px",
-      borderBottomRightRadius: "50% 120px",
-      ease: "none",
-    });
+      // Scroll Animation
+      if (containerRef.current) {
+        gsap.to(containerRef.current, {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+          borderBottomLeftRadius: "50% 120px",
+          borderBottomRightRadius: "50% 120px",
+          ease: "none",
+        });
+      }
+    }, containerRef);
 
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      ctx.revert();
+    };
   }, []);
 
   // Create a specific order for the Hero strips
