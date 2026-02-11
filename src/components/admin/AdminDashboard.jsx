@@ -41,6 +41,7 @@ import {
   HelpCircle,
   Plus,
   Star,
+  ClipboardList,
 } from "lucide-react";
 import {
   setAdminActiveTab,
@@ -56,6 +57,7 @@ import ReviewsTab from "./dashboard/ReviewsTab";
 import FAQsTab from "./dashboard/FAQsTab";
 import BestSellersTab from "./dashboard/BestSellersTab";
 import CategoriesTab from "./dashboard/CategoriesTab";
+import InventoryTab from "./dashboard/InventoryTab";
 import ProductModal from "./dashboard/ProductModal";
 
 const AdminDashboard = () => {
@@ -266,6 +268,17 @@ const AdminDashboard = () => {
         <span>المنتجات</span>
       </button>
       <button
+        onClick={() => dispatch(setAdminActiveTab("inventory"))}
+        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
+          activeTab === "inventory"
+            ? "bg-brand-burgundy text-white shadow-lg"
+            : "bg-white text-gray-500 hover:bg-gray-100"
+        }`}
+      >
+        <ClipboardList size={18} />
+        <span>المخزون والجرد</span>
+      </button>
+      <button
         onClick={() => dispatch(setAdminActiveTab("reviews"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "reviews"
@@ -402,6 +415,7 @@ const AdminDashboard = () => {
             handleDelete={handleDelete}
           />
         )}
+        {activeTab === "inventory" && <InventoryTab products={products} />}
 
         {/* Modal */}
         <ProductModal
