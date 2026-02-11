@@ -21,7 +21,10 @@ export const useAddToCart = () => {
         const result = await sallaService.addToCart(
           product.id,
           quantity,
-          { variantId: size }, // Map size to variant if needed
+          {
+            variantId: size,
+            sallaProductId: product.sallaProductId,
+          }, // Pass Salla Product ID for real cart sync
         );
 
         // Silently handle errors - local cart still works

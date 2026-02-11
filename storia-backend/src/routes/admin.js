@@ -30,6 +30,7 @@ router.post("/products", async (req, res) => {
       isActive: true,
       stock: parseInt(data.stock) || 0,
       sizeVariants: data.sizeVariants || [],
+      sallaProductId: data.sallaProductId,
     };
 
     const product = new Product(productData);
@@ -66,6 +67,7 @@ router.put("/products/:id", async (req, res) => {
       isActive: data.isActive ?? true,
       stock: parseInt(data.stock) || 0,
       sizeVariants: data.sizeVariants || [],
+      sallaProductId: data.sallaProductId,
     };
 
     const product = await Product.findByIdAndUpdate(req.params.id, updateData, {

@@ -368,7 +368,7 @@ class SallaService {
 
     try {
       const payload = {
-        id: productId,
+        id: options.sallaProductId || productId,
         quantity: quantity,
       };
 

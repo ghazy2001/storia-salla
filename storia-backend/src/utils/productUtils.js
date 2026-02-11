@@ -30,6 +30,7 @@ const formatProduct = (p) => {
     stock: p.stock,
     isActive: p.isActive,
     sizeVariants: p.sizeVariants || [],
+    sallaProductId: p.sallaProductId,
     isNew: false,
     rating: 5.0,
     reviews: 0,

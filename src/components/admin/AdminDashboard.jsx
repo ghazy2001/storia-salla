@@ -91,6 +91,7 @@ const AdminDashboard = () => {
     media: [],
     originalPrice: "",
     bestSellerDescription: "",
+    sallaProductId: "",
   };
 
   const initialFAQState = {

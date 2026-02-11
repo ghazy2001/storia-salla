@@ -59,6 +59,26 @@ const ProductModal = ({
                     required
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Salla Product ID (للربط مع سلة)
+                  </label>
+                  <input
+                    type="text"
+                    value={productForm.sallaProductId || ""}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        sallaProductId: e.target.value,
+                      })
+                    }
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
+                    placeholder="مثال: 123456789"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">
+                    أدخل رقم المنتج من لوحة تحكم سلة لتمكين الدفع
+                  </p>
+                </div>
               </div>
 
               {/* Section: Details */}
