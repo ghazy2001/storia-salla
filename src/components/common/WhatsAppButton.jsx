@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
+import { config } from "../../config/config";
 
 const WhatsAppButton = () => {
   const buttonRef = useRef(null);
-  // Replace with actual number when available
-  const phoneNumber = "966500000000";
+  const phoneNumber = config.whatsappNumber;
   const message = "مرحباً، لدي استفسار بخصوص منتجات ستوريا";
 
   useEffect(() => {

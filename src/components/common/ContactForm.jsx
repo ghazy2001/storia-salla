@@ -4,6 +4,7 @@ import { X, Send, User, Mail, MessageSquare } from "lucide-react";
 import { useDispatch } from "react-redux";
 import { showToast } from "../../store/slices/uiSlice";
 import { CONTACT_INFO } from "../../utils/constants";
+import { config } from "../../config/config";
 
 const ContactForm = ({ isOpen, onClose, theme }) => {
   const dispatch = useDispatch();
@@ -254,7 +255,7 @@ const ContactForm = ({ isOpen, onClose, theme }) => {
               </a>
               <span className="hidden sm:block text-white/10">|</span>
               <a
-                href="https://wa.me/966XXXXXXXX"
+                href={`https://wa.me/${config.whatsappNumber}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-brand-gold hover:text-white transition-colors text-sm font-medium"

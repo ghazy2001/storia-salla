@@ -12,12 +12,12 @@ export const USE_SALLA_BACKEND =
 
 // API Configuration
 export const config = {
-  apiUrl: import.meta.env.VITE_API_URL || "http://localhost:3000",
+  apiUrl: import.meta.env.VITE_API_URL || "https://storia-backend.fly.dev",
   useSallaBackend: USE_SALLA_BACKEND,
   isSallaEnv: IS_SALLA_ENV,
 
   // Business Configuration
-  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "966500000000",
+  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "966503610444",
   shippingFee: 30,
 
   // Logging disabled temporarily for debugging integration
