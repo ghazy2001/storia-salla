@@ -12,7 +12,7 @@ export const USE_SALLA_BACKEND =
 
 // API Configuration
 export const config = {
-  apiUrl: import.meta.env.VITE_API_URL || "https://storia-backend.fly.dev",
+  apiUrl: import.meta.env.VITE_API_URL || "https://storia-salla.fly.dev",
   useSallaBackend: USE_SALLA_BACKEND,
   isSallaEnv: IS_SALLA_ENV,
 
