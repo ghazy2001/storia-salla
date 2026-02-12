@@ -42,11 +42,18 @@ if (
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+
+      // Check if it's in the explicitly allowed list
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+
+      // Dynamically allow all Salla related subdomains (useful for theme editor)
+      if (origin.endsWith(".salla.sa") || origin === "https://s.salla.sa") {
+        return callback(null, true);
       }
+
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   }),

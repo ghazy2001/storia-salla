@@ -222,9 +222,15 @@ class SallaService {
                 targetProduct.currency || targetProduct.price.currency || "SAR";
 
               // Map SAR to Arabic currency symbol
-              if (currency.toUpperCase().trim() === "SAR") currency = "ر.س";
-
-              priceStr = `${amount} ${currency}`;
+              if (
+                currency.toUpperCase().trim() === "SAR" ||
+                currency.trim() === "ر.س"
+              ) {
+                currency = "ر.س";
+                priceStr = `${amount} ${currency}`;
+              } else {
+                priceStr = `${amount} ${currency}`;
+              }
             }
 
             const mappedProduct = {
