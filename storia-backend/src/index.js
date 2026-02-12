@@ -48,8 +48,10 @@ app.use(
       // Check if it's in the explicitly allowed list
       if (allowedOrigins.includes(origin)) return callback(null, true);
 
-      // Dynamically allow all Salla related subdomains (useful for theme editor)
-      if (origin.endsWith(".salla.sa") || origin === "https://s.salla.sa") {
+      // Dynamically allow all Salla related domains (subdomains and primary)
+      const sallaRegex =
+        /^https?:\/\/([a-z0-9-]+\.)*(salla\.(sa|network)|storiasa\.com)$/i;
+      if (sallaRegex.test(origin)) {
         return callback(null, true);
       }
 
@@ -90,9 +92,18 @@ app.use("/api/bestsellers", bestSellersRoutes);
 app.use("/api/customers", customersRoutes);
 app.use("/api/coupons", couponsRoutes);
 
-// Error handling middleware
-app.use((err, req, res) => {
-  console.error(err.stack);
+// Error handling middleware (MUST have 4 arguments for Express to recognize as error handler)
+app.use((err, req, res, next) => {
+  console.error("[Backend Error]", err.stack || err.message || err);
+
+  // Special handling for CORS errors to return a specific message instead of 500
+  if (err.message === "Not allowed by CORS") {
+    return res.status(403).json({
+      error: "CORS Error",
+      message: "This origin is not allowed to access this resource",
+    });
+  }
+
   res.status(500).json({
     error: "خطأ في النظام!",
     message:

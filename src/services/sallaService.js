@@ -227,9 +227,22 @@ class SallaService {
                 currency.trim() === "ر.س"
               ) {
                 currency = "ر.س";
-                priceStr = `${amount} ${currency}`;
+              }
+
+              // Check if amount is already a string containing the currency
+              const amountStr = String(amount);
+              if (amountStr.includes("ر.س") || amountStr.includes("SAR")) {
+                priceStr = amountStr.replace(/SAR/g, "ر.س");
               } else {
                 priceStr = `${amount} ${currency}`;
+              }
+
+              // Final safety check to avoid double currency in string
+              if (
+                priceStr.includes("ر.س") &&
+                priceStr.split("ر.س").length > 2
+              ) {
+                priceStr = priceStr.replace(/\s*ر\.س\s*$/, "").trim() + " ر.س";
               }
             }
 
