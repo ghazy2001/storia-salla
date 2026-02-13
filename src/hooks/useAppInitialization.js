@@ -18,9 +18,13 @@ export const useAppInitialization = () => {
         // Fix: Use resolveAsset to get absolute URLs for Salla
         const criticalImages = [resolveAsset("assets/logo.png")];
 
-        // Add first product/hero image if available
-        if (products && products.length > 0 && products[0].image) {
-          criticalImages.push(products[0].image);
+        // Add top 4 product images for Hero section (if available)
+        if (products && products.length > 0) {
+          const heroImages = products
+            .slice(0, 4)
+            .map((p) => p.image)
+            .filter(Boolean);
+          criticalImages.push(...heroImages);
         }
 
         await preloadImages(criticalImages);
