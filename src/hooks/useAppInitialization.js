@@ -23,7 +23,37 @@ const preloadImages = (srcArray) => {
   );
 };
 
-// ... inside useAppInitialization ...
+/**
+ * Hook to handle application initialization logic
+ * - Syncs browser history with Redux state
+ * - Syncs theme with DOM
+ * - Manages preloader ready state
+ */
+export const useAppInitialization = () => {
+  const dispatch = useDispatch();
+  const theme = useSelector(selectTheme);
+  const [isReady, setIsReady] = useState(false);
+
+  // Sync theme with DOM
+  useEffect(() => {
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+  }, [theme]);
+
+  // Handle initialization
+  useEffect(() => {
+    const init = async () => {
+      // 1. Check for stored theme preference or system preference
+      const storedTheme = localStorage.getItem("theme");
+      if (storedTheme) {
+        dispatch(setTheme(storedTheme));
+      } else if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        dispatch(setTheme("dark"));
+      }
+
       // 2. Start all data fetching
       const productPromise = dispatch(fetchProductsFromSalla()).unwrap();
       const categoryPromise = dispatch(fetchCategoriesFromSalla()).unwrap();
@@ -35,11 +65,11 @@ const preloadImages = (srcArray) => {
         // Wait for all critical data, but don't fail if non-criticals fail
         // We really need products for the hero image
         const [products] = await Promise.all([
-            productPromise,
-            categoryPromise,
-            customerPromise,
-            faqPromise,
-            reviewPromise
+          productPromise,
+          categoryPromise,
+          customerPromise,
+          faqPromise,
+          reviewPromise,
         ]);
 
         // Fix: Use resolveAsset to get absolute URLs for Salla
