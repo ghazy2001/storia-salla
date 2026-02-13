@@ -88,9 +88,9 @@ router.post("/checkout", async (req, res) => {
     });
 
     // The redirect should go to the cart/add page which then takes them to checkout
-    // Many Salla themes redirect to cart automatically after add.
-    // To go directly to checkout, Salla sometimes supports a 'next' param or we redirect to /checkout after a delay
-    // But usually, /cart/add with params is the most compatible way to sync.
+    // To ensure they go to the cart page, we add a checkout=1 or similar if supported,
+    // but the most reliable way in Salla is /cart/add then it redirects to /cart.
+    // We will use the /cart/add endpoint.
     const checkoutUrl = `${storeUrl}/cart/add?${params.toString()}`;
 
     res.json({

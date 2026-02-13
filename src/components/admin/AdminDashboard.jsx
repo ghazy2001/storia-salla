@@ -257,14 +257,22 @@ const AdminDashboard = () => {
         );
         const result = await response.json();
         if (result.success === false) {
-          alert(`فشل المزامنة: ${result.error}`);
+          alert(`فشل المزامنة: ${result.error || "خطأ غير معروف"}`);
         } else {
-          alert(
-            `تمت المزامنة بنجاح!\nإجمالي: ${result.total}\nتم رفع: ${result.success}\nفشل: ${result.failed}`,
-          );
+          const summary =
+            `تمت المزامنة بنجاح!\n\n` +
+            `✅ تم بنجاح: ${result.success_count || result.success}\n` +
+            `❌ فشل: ${result.failed}\n` +
+            `📦 الإجمالي: ${result.total}`;
+
+          alert(summary);
+
           if (result.errors && result.errors.length > 0) {
             console.error("Sync Errors:", result.errors);
-            alert("راجع الكونسول لمعرفة تفاصيل الأخطاء");
+            const errorList = result.errors
+              .map((e) => `- ${e.name}: ${e.error}`)
+              .join("\n");
+            alert(`الأخطاء التفصيلية:\n${errorList}`);
           }
         }
       } catch (error) {

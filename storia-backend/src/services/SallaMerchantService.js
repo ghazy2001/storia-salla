@@ -95,43 +95,40 @@ class SallaMerchantService {
   prepareProductPayload(product) {
     // Basic fields
     const payload = {
-      name: product.name.ar, // Salla uses 'name' as main name (usually AR)
+      name: product.name.ar,
       price: product.price,
       product_type: "product",
-      quantity: 100, // Default stock for "Payment Only" logic
+      quantity: product.stock || 100, // Use stock from product if available
       description: product.description.ar,
-      // hidden_quantity: true, // Hide quantity from store if possible
+      status: "sale", // Ensure product is for sale
     };
 
     // Images (Send URLs)
-    // Images (Send URLs)
-    // Ensure images are absolute URLs for Salla to fetch
-    const baseUrl = "https://storia-salla.vercel.app";
+    const baseUrl = process.env.BASE_URL || "https://storia-salla.vercel.app";
 
     if (product.images && product.images.length > 0) {
-      payload.images = product.images.map((img) => {
+      payload.images = product.images.map((img, index) => {
         let url = img.url;
         if (url && !url.startsWith("http")) {
-          // Remove leading slash if exists to avoid double slashes
           const cleanPath = url.startsWith("/") ? url.substring(1) : url;
           url = `${baseUrl}/${cleanPath}`;
         }
         return {
           original: url,
-          default: img.order === 0,
+          default: index === 0,
         };
       });
     }
 
-    // Sizes (Options)
-    // Salla format for options is trickier. For 'Payment Only', we might skip options
-    // IF the user selects the size in our app, we might need to create a specific product
-    // or passed as a note.
-    // BUT, proper way is creating options.
-    // For MVP transparency, let's stick to simple product first to avoid "invalid_payload" errors
-    // with complex options.
-    // User goal: "Payment Only".
-    // If we send a product with price X, user pays X. Good enough.
+    // If there are main images but no images array
+    if (!payload.images && product.image) {
+      let url = product.image;
+      if (url && !url.startsWith("http")) {
+        const cleanPath = url.startsWith("/") ? url.substring(1) : url;
+        url = `${baseUrl}/${cleanPath}`;
+      }
+      payload.images = [{ original: url, default: true }];
+    }
 
     return payload;
   }
@@ -143,7 +140,7 @@ class SallaMerchantService {
     const products = await Product.find({ isActive: true });
     const results = {
       total: products.length,
-      success: 0,
+      success_count: 0,
       failed: 0,
       errors: [],
     };
@@ -151,7 +148,7 @@ class SallaMerchantService {
     for (const product of products) {
       const res = await this.syncProduct(product);
       if (res.success) {
-        results.success++;
+        results.success_count++;
       } else {
         results.failed++;
         results.errors.push({
@@ -161,6 +158,7 @@ class SallaMerchantService {
         });
       }
     }
+    results.success = true; // Overall route success
     return results;
   }
 }
