@@ -261,7 +261,7 @@ const AdminDashboard = () => {
         } else {
           const summary =
             `تمت المزامنة بنجاح!\n\n` +
-            `✅ تم بنجاح: ${result.success_count || result.success}\n` +
+            `✅ تم بنجاح: ${result.success_count}\n` +
             `❌ فشل: ${result.failed}\n` +
             `📦 الإجمالي: ${result.total}`;
 
