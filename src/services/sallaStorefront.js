@@ -65,6 +65,14 @@ class SallaStorefrontService {
       // Or to use a backend proxy that holds the Salla Merchant Token.
 
       // Since we have a backend (storia-backend), we can use it to create a Salla cart and get a link.
+      // UPDATE: Using direct payment product link for simplified checkout
+      const checkOutUrl = `https://storiasa.com/payment/p432374980?quantity=${quantity}`;
+      window.location.href = checkOutUrl;
+
+      return { success: true };
+
+      /* 
+      // Old method:
       const response = await fetch(`${config.apiUrl}/api/salla/checkout`, {
         method: "POST",
         headers: {
@@ -80,6 +88,7 @@ class SallaStorefrontService {
       }
 
       throw new Error(data.message || "Failed to get checkout URL");
+      */
     } catch (error) {
       console.error("[Storia] Sync and Checkout failed:", error);
       return { success: false, error: error.message };
