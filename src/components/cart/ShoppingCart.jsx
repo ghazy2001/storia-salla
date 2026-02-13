@@ -311,8 +311,9 @@ const ShoppingCart = ({ onContinueShopping }) => {
                   btn.disabled = true;
 
                   if (config.useSallaBackend) {
+                    // Pass total amount to the new payment product logic
                     const { success, error } =
-                      await sallaStorefront.syncAndCheckout(cartItems);
+                      await sallaStorefront.syncAndCheckout(cartItems, total);
                     if (!success) {
                       alert(`عذراً، فشل التحويل للدفع: ${error}`);
                     }
