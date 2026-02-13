@@ -54,55 +54,54 @@ export const useAppInitialization = () => {
         dispatch(setTheme("dark"));
       }
 
-      // 2. Start all data fetching
-      const productPromise = dispatch(fetchProductsFromSalla()).unwrap();
-      const categoryPromise = dispatch(fetchCategoriesFromSalla()).unwrap();
-      const customerPromise = dispatch(fetchCustomer()).unwrap();
-      const faqPromise = dispatch(fetchFAQs()).unwrap();
-      const reviewPromise = dispatch(fetchReviews()).unwrap();
-
+      // 3. Wait for everything to be ready
       try {
-        // Wait for all critical data, but don't fail if non-criticals fail
-        // We really need products for the hero image
-        const [products] = await Promise.all([
-          productPromise,
-          categoryPromise,
-          customerPromise,
-          faqPromise,
-          reviewPromise,
+        await Promise.all([
+          // Wait for critical data and images
+          (async () => {
+            // Start fetching data
+            const productPromise = dispatch(fetchProductsFromSalla()).unwrap();
+            const categoryPromise = dispatch(
+              fetchCategoriesFromSalla(),
+            ).unwrap();
+            const customerPromise = dispatch(fetchCustomer()).unwrap();
+            const faqPromise = dispatch(fetchFAQs()).unwrap();
+            const reviewPromise = dispatch(fetchReviews()).unwrap();
+
+            const [products] = await Promise.all([
+              productPromise,
+              categoryPromise,
+              customerPromise,
+              faqPromise,
+              reviewPromise,
+            ]);
+
+            const criticalImages = [resolveAsset("assets/logo.png")];
+            if (products && products.length > 0) {
+              const heroImages = products
+                .slice(0, 4)
+                .map((p) => p.image)
+                .filter(Boolean);
+              criticalImages.push(...heroImages);
+            }
+
+            await preloadImages(criticalImages);
+          })(),
+          // Wait for minimum time
+          new Promise((resolve) => setTimeout(resolve, 2500)),
+          // Wait for window load
+          new Promise((resolve) => {
+            if (document.readyState === "complete") {
+              resolve();
+            } else {
+              window.addEventListener("load", resolve, { once: true });
+            }
+          }),
         ]);
-
-        // Fix: Use resolveAsset to get absolute URLs for Salla
-        const criticalImages = [resolveAsset("assets/logo.png")];
-
-        // Add top 4 product images for Hero section (if available)
-        if (products && products.length > 0) {
-          const heroImages = products
-            .slice(0, 4)
-            .map((p) => p.image)
-            .filter(Boolean);
-          criticalImages.push(...heroImages);
-        }
-
-        await preloadImages(criticalImages);
       } catch (error) {
         console.error("[Storia] Initialization error:", error);
-      }
-
-      // 3. Minimum loading time for smooth transition
-      const minLoadingTime = 1200;
-      const startTime = Date.now();
-
-      const finishLoading = () => {
-        const elapsedTime = Date.now() - startTime;
-        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
-        setTimeout(() => setIsReady(true), remainingTime);
-      };
-
-      if (document.readyState === "complete") {
-        finishLoading();
-      } else {
-        window.addEventListener("load", finishLoading, { once: true });
+      } finally {
+        setIsReady(true);
       }
     };
 
