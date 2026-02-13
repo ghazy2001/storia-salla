@@ -6,6 +6,13 @@ const Preloader = ({ isReady }) => {
 
   useEffect(() => {
     if (isReady) {
+      // Remove Salla Theme Shield if it exists
+      const shield = document.getElementById("storia-salla-shield");
+      if (shield) {
+        shield.style.opacity = "0";
+        setTimeout(() => shield.remove(), 1000);
+      }
+
       // Allow the fade-out transition to complete before unmounting
       const timer = setTimeout(() => setShouldRender(false), 1000);
       return () => clearTimeout(timer);

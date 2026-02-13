@@ -64,24 +64,61 @@ export const useAppInitialization = () => {
 
   // Handle Window Load / Preloader
   useEffect(() => {
-    // Fetch real products and categories from Salla on app mount
-    dispatch(fetchProductsFromSalla());
-    dispatch(fetchCategoriesFromSalla());
-    dispatch(fetchCustomerFromSalla());
-    dispatch(fetchFAQs());
-    dispatch(fetchReviews());
+    const init = async () => {
+      // 1. Start all data fetching
+      const productPromise = dispatch(fetchProductsFromSalla()).unwrap();
+      dispatch(fetchCategoriesFromSalla());
+      dispatch(fetchCustomerFromSalla());
+      dispatch(fetchFAQs());
+      dispatch(fetchReviews());
 
-    const handleLoad = () => {
-      setTimeout(() => setIsReady(true), 100);
+      // 2. Critical Image Preloading (Logo and Hero)
+      const preloadImages = (urls) => {
+        return Promise.all(
+          urls.map((url) => {
+            return new Promise((resolve) => {
+              const img = new Image();
+              img.onload = resolve;
+              img.onerror = resolve; // Continue even if image fails
+              img.src = url;
+            });
+          }),
+        );
+      };
+
+      try {
+        // Wait for products because we need the hero image from there
+        const products = await productPromise;
+        const criticalImages = ["assets/logo.png"];
+
+        // Add first product/hero image if available
+        if (products && products.length > 0 && products[0].image) {
+          criticalImages.push(products[0].image);
+        }
+
+        await preloadImages(criticalImages);
+      } catch (error) {
+        console.error("[Storia] Initialization error:", error);
+      }
+
+      // 3. Minimum loading time for smooth transition
+      const minLoadingTime = 1200;
+      const startTime = Date.now();
+
+      const finishLoading = () => {
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, minLoadingTime - elapsedTime);
+        setTimeout(() => setIsReady(true), remainingTime);
+      };
+
+      if (document.readyState === "complete") {
+        finishLoading();
+      } else {
+        window.addEventListener("load", finishLoading, { once: true });
+      }
     };
 
-    if (document.readyState === "complete") {
-      handleLoad();
-    } else {
-      window.addEventListener("load", handleLoad);
-    }
-
-    return () => window.removeEventListener("load", handleLoad);
+    init();
   }, [dispatch]);
 
   return { isReady, theme };

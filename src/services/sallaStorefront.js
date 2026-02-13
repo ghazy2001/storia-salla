@@ -26,25 +26,33 @@ class SallaStorefrontService {
       if (this.salla && this.salla.cart) {
         log("Using Salla SDK for cart sync");
 
-        // Clear Salla cart first to avoid duplicates if possible
-        // The SDK doesn't always have a clearCart, so we might need to loop or just add
+        try {
+          // Clear Salla cart first to avoid duplicates if possible
+          // The SDK doesn't always have a clearCart, so we might need to loop or just add
 
-        for (const item of cartItems) {
-          await this.salla.cart.addItem({
-            id: item.sallaProductId || item.id,
-            quantity: item.quantity,
-            // Add variant if available
-            variant_id: item.variantId || null,
-          });
-        }
+          for (const item of cartItems) {
+            await this.salla.cart.addItem({
+              id: item.sallaProductId || item.id,
+              quantity: item.quantity,
+              // Add variant if available
+              variant_id: item.variantId || null,
+            });
+          }
 
-        log("Redirecting to Salla checkout via SDK");
-        if (typeof this.salla.cart.submit === "function") {
-          await this.salla.cart.submit();
-        } else {
-          window.location.href = "/checkout";
+          log("Redirecting to Salla checkout via SDK");
+          if (typeof this.salla.cart.submit === "function") {
+            await this.salla.cart.submit();
+            return { success: true };
+          } else {
+            // If submit is missing, we might still want to try the fallback below
+            log("SDK submit missing, falling back to manual redirect");
+          }
+        } catch (sdkError) {
+          log(
+            `Salla SDK error (likely 410): ${sdkError.message}. Falling back to backend checkout.`,
+          );
+          // If SDK fails, we continue to the headless fallback instead of failing
         }
-        return { success: true };
       }
 
       // 2. Headless Fallback: Use Salla API directly (needs CORS or Proxy)
