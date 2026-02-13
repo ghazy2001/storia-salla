@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
 import {
   fetchProductsFromSalla,
   fetchCategoriesFromSalla,
@@ -32,7 +31,6 @@ const preloadImages = (srcArray) => {
  */
 export const useAppInitialization = () => {
   const dispatch = useDispatch();
-  const location = useLocation();
   const theme = useSelector(selectTheme);
   const [isReady, setIsReady] = useState(false);
 
