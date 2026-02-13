@@ -406,12 +406,23 @@ const AdminDashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 font-sans">
             لوحة التحكم
           </h1>
-          <button
-            onClick={handleLogout}
-            className="text-red-500 hover:text-red-700 font-medium px-4 py-2 border border-red-500 rounded hover:bg-red-50 transition-colors"
-          >
-            تسجيل خروج
-          </button>
+          <div className="flex gap-3">
+            <a
+              href={sallaService.getDashboardUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 font-medium px-4 py-2 border border-blue-600 rounded hover:bg-blue-50 transition-colors flex items-center gap-2"
+            >
+              <ExternalLink size={18} />
+              <span>لوحة تحكم سلة</span>
+            </a>
+            <button
+              onClick={handleLogout}
+              className="text-red-500 hover:text-red-700 font-medium px-4 py-2 border border-red-500 rounded hover:bg-red-50 transition-colors"
+            >
+              تسجيل خروج
+            </button>
+          </div>
         </div>
 
         {renderTabs()}
@@ -437,32 +448,6 @@ const AdminDashboard = () => {
                       : "إضافة تصميم جديد"}
               </span>
             </button>
-
-            {activeTab === "products" && (
-              <div className="flex gap-3">
-                <a
-                  href={sallaService.getDashboardUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <ExternalLink size={18} />
-                  <span>لوحة تحكم سلة</span>
-                </a>
-                <button
-                  onClick={handleSync}
-                  disabled={syncing}
-                  className={`bg-blue-600 text-white px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors ${
-                    syncing ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                >
-                  <RefreshCw
-                    size={18}
-                    className={syncing ? "animate-spin" : ""}
-                  />
-                  <span>{syncing ? "جاري المزامنة..." : "مزامنة مع سلة"}</span>
-                </button>
-              </div>
-            )}
           </div>
         )}
 
