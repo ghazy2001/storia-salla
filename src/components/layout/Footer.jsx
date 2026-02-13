@@ -167,19 +167,16 @@ const Footer = ({ theme }) => {
           <h4 className="uppercase tracking-[0.3em] text-xs mb-8 font-semibold">
             اشترك معنا ليصلك كل جديد
           </h4>
-          <form
-            onSubmit={handleSubscribe}
-            className="flex border-b border-white/30 pb-2"
-          >
+          <form onSubmit={handleSubscribe} className="relative w-full mt-4">
             <input
               type="email"
               placeholder="البريد الإلكتروني"
-              className="bg-transparent text-xs tracking-widest focus:outline-none w-full placeholder:text-white/20 text-right"
+              className="w-full bg-transparent border-b border-white/20 py-3 pl-16 pr-2 text-right text-brand-light placeholder:text-brand-light/30 focus:outline-none focus:border-brand-gold transition-all duration-300 text-sm font-light"
               required
             />
             <button
               type="submit"
-              className="uppercase tracking-widest text-xs text-brand-gold hover:text-white transition-colors"
+              className="absolute left-0 bottom-3 text-xs font-bold text-brand-gold hover:text-white transition-colors duration-300 border-b border-transparent hover:border-white pb-0.5"
             >
               اشتراك
             </button>

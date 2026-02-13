@@ -44,6 +44,10 @@ import {
   ClipboardList,
   Users,
   Ticket,
+  RefreshCw,
+  CheckCircle2,
+  XCircle,
+  Link,
 } from "lucide-react";
 import {
   setAdminActiveTab,
@@ -78,6 +82,7 @@ const AdminDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   React.useEffect(() => {
     dispatch(fetchOrders());
@@ -233,6 +238,40 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       alert(`خطأ: ${error}`);
+    }
+  };
+
+  const handleSync = async () => {
+    if (
+      window.confirm(
+        "هذه العملية ستقوم برفع جميع المنتجات المحلية إلى متجر سلة. هل أنت متأكد؟",
+      )
+    ) {
+      try {
+        setSyncing(true);
+        const response = await fetch(
+          `${sallaService.apiBaseUrl}/salla/sync/products`,
+          {
+            method: "POST",
+          },
+        );
+        const result = await response.json();
+        if (result.success === false) {
+          alert(`فشل المزامنة: ${result.error}`);
+        } else {
+          alert(
+            `تمت المزامنة بنجاح!\nإجمالي: ${result.total}\nتم رفع: ${result.success}\nفشل: ${result.failed}`,
+          );
+          if (result.errors && result.errors.length > 0) {
+            console.error("Sync Errors:", result.errors);
+            alert("راجع الكونسول لمعرفة تفاصيل الأخطاء");
+          }
+        }
+      } catch (error) {
+        alert(`فشل الاتصال بالخادم: ${error.message}`);
+      } finally {
+        setSyncing(false);
+      }
     }
   };
 
@@ -397,11 +436,23 @@ const AdminDashboard = () => {
                   href={sallaService.getDashboardUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-white text-brand-gold border border-brand-gold/30 px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-gold/5 transition-colors"
                 >
                   <ExternalLink size={18} />
                   <span>لوحة تحكم سلة</span>
                 </a>
+                <button
+                  onClick={handleSync}
+                  disabled={syncing}
+                  className={`bg-blue-600 text-white px-4 py-3 rounded-lg flex items-center gap-2 hover:bg-blue-700 transition-colors ${
+                    syncing ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  <RefreshCw
+                    size={18}
+                    className={syncing ? "animate-spin" : ""}
+                  />
+                  <span>{syncing ? "جاري المزامنة..." : "مزامنة مع سلة"}</span>
+                </button>
               </div>
             )}
           </div>

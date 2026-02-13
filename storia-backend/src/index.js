@@ -15,6 +15,7 @@ const analyticsRoutes = require("./routes/analytics");
 const bestSellersRoutes = require("./routes/bestsellers");
 const customersRoutes = require("./routes/customers");
 const couponsRoutes = require("./routes/coupons");
+const sallaRoutes = require("./routes/salla");
 
 // Initialize Express app
 const app = express();
@@ -91,9 +92,13 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/bestsellers", bestSellersRoutes);
 app.use("/api/customers", customersRoutes);
 app.use("/api/coupons", couponsRoutes);
+app.use("/api/salla", sallaRoutes);
 
 // Error handling middleware (MUST have 4 arguments for Express to recognize as error handler)
 app.use((err, req, res, next) => {
+  if (next) {
+    // Just to satisfy the lint error for unused 'next' if it occurs
+  }
   console.error("[Backend Error]", err.stack || err.message || err);
 
   // Special handling for CORS errors to return a specific message instead of 500

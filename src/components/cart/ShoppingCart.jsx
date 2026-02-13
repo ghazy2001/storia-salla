@@ -11,7 +11,7 @@ import {
 import { selectTheme } from "../../store/slices/uiSlice";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import gsap from "gsap";
-import sallaService from "../../services/sallaService";
+import sallaStorefront from "../../services/sallaStorefront";
 import { config } from "../../config/config";
 import { resolveAsset } from "../../utils/assetUtils";
 
@@ -304,13 +304,27 @@ const ShoppingCart = ({ onContinueShopping }) => {
 
             <button
               onClick={async () => {
-                if (config.useSallaBackend && sallaService.isAvailable()) {
-                  await sallaService.goToCheckout();
-                } else {
-                  dispatch(setCurrentPage("checkout"));
+                const btn = document.activeElement;
+                const originalText = btn.innerText;
+                try {
+                  btn.innerText = "جاري التحويل...";
+                  btn.disabled = true;
+
+                  if (config.useSallaBackend) {
+                    const { success, error } =
+                      await sallaStorefront.syncAndCheckout(cartItems);
+                    if (!success) {
+                      alert(`عذراً، فشل التحويل للدفع: ${error}`);
+                    }
+                  } else {
+                    dispatch(setCurrentPage("checkout"));
+                  }
+                } finally {
+                  btn.innerText = originalText;
+                  btn.disabled = false;
                 }
               }}
-              className="w-full bg-brand-gold text-brand-charcoal py-4 uppercase tracking-widest font-bold hover:shadow-lg transition-all duration-300 active:scale-95 mb-4"
+              className="w-full bg-brand-gold text-brand-charcoal py-4 uppercase tracking-widest font-bold hover:shadow-lg transition-all duration-300 active:scale-95 mb-4 disabled:opacity-50"
             >
               متابعة الشراء
             </button>
