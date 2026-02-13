@@ -5,7 +5,7 @@ import {
   fetchCategoriesFromSalla,
 } from "../store/slices/productSlice";
 import { fetchReviews, fetchFAQs } from "../store/slices/contentSlice";
-import { fetchCustomer } from "../store/slices/customerSlice";
+import { fetchCustomerFromSalla } from "../store/slices/userSlice";
 import { setTheme, selectTheme } from "../store/slices/uiSlice";
 import { resolveAsset } from "../utils/assetUtils";
 
@@ -64,7 +64,7 @@ export const useAppInitialization = () => {
             const categoryPromise = dispatch(
               fetchCategoriesFromSalla(),
             ).unwrap();
-            const customerPromise = dispatch(fetchCustomer()).unwrap();
+            const customerPromise = dispatch(fetchCustomerFromSalla()).unwrap();
             const faqPromise = dispatch(fetchFAQs()).unwrap();
             const reviewPromise = dispatch(fetchReviews()).unwrap();
 

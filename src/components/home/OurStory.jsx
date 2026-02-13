@@ -3,13 +3,14 @@ import gsap from "gsap";
 import { resolveAsset } from "../../utils/assetUtils";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useDispatch } from "react-redux";
-import { setCurrentPage } from "../../store/slices/cartSlice";
+import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const OurStory = ({ theme }) => {
   const sectionRef = useRef(null);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const isLightTheme = theme === "green";
 
@@ -146,7 +147,7 @@ const OurStory = ({ theme }) => {
             {/* Mobile Shop Button */}
             <div className="flex lg:hidden justify-center mt-20 relative z-20">
               <button
-                onClick={() => dispatch(setCurrentPage("store"))}
+                onClick={() => navigate("/store")}
                 className="group relative px-10 py-4 overflow-hidden border border-brand-gold/70 bg-transparent transition-colors duration-300 hover:border-brand-gold"
               >
                 <span className="relative z-10 font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300 text-[var(--story-text-color)]">
@@ -211,7 +212,7 @@ const OurStory = ({ theme }) => {
 
                 <div className="pt-16 hidden lg:flex justify-start story-text">
                   <button
-                    onClick={() => dispatch(setCurrentPage("store"))}
+                    onClick={() => navigate("/store")}
                     className="group relative px-10 py-4 overflow-hidden border border-brand-gold/70 bg-transparent transition-colors duration-300 hover:border-brand-gold"
                   >
                     <span className="relative z-10 font-medium tracking-widest uppercase text-sm group-hover:text-brand-charcoal transition-colors duration-300 text-[var(--story-text-color)]">

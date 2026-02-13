@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import {
   selectCartItems,
   selectCartTotal,
-  setCurrentPage,
   clearCart,
   selectAppliedCoupon,
   selectCartDiscount,

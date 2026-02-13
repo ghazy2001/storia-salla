@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector, useDispatch } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
-import { setCurrentPage } from "../../store/slices/cartSlice";
+import { useNavigate } from "react-router-dom";
 import { selectTheme } from "../../store/slices/uiSlice";
 import { ArrowRight } from "lucide-react";
 import { useScrollContainer } from "../../hooks/useScrollContainer";
@@ -26,6 +26,7 @@ const BestSellers = ({ onProductSelect }) => {
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
   const { containerRef, scrollLeft, scrollRight } = useScrollContainer(320);
+  const navigate = useNavigate();
 
   // State for BestSellers configuration from database
   const [featuredConfig, setFeaturedConfig] = useState(null);
@@ -124,7 +125,7 @@ const BestSellers = ({ onProductSelect }) => {
               </p>
 
               <button
-                onClick={() => dispatch(setCurrentPage("store"))}
+                onClick={() => navigate("/store")}
                 className="px-10 py-3 border border-white text-white uppercase tracking-widest text-sm hover:bg-white hover:text-black transition-all duration-300"
               >
                 {featuredConfig.ctaText?.ar || "تسوق الآن"}

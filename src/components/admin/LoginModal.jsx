@@ -6,13 +6,14 @@ import {
   setShowLoginModal,
   login,
 } from "../../store/slices/adminSlice";
-import { setCurrentPage } from "../../store/slices/cartSlice";
+import { useNavigate } from "react-router-dom";
 
 import { CONTACT_INFO } from "../../utils/constants";
 
 const LoginModal = () => {
   const showLoginModal = useSelector(selectShowLoginModal);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
@@ -24,7 +25,7 @@ const LoginModal = () => {
       dispatch(login(email));
       setError("");
       setEmail("");
-      dispatch(setCurrentPage("admin-dashboard")); // Navigate to admin dashboard
+      navigate("/admin-dashboard"); // Navigate to admin dashboard
     } else {
       setError("البريد الإلكتروني غير صحيح");
     }

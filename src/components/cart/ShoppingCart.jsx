@@ -7,7 +7,6 @@ import {
   removeFromCart,
   updateQuantity,
   clearCart,
-  setCurrentPage,
 } from "../../store/slices/cartSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
