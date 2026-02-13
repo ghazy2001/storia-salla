@@ -73,15 +73,18 @@ const PageContent = () => {
           <Store
             initialFilter={selectedCategory}
             onProductSelect={handleProductSelect}
+            theme={theme}
           />
         }
       />
       <Route
         path="/cart"
-        element={<ShoppingCart onContinueShopping={handleGoToStore} />}
+        element={
+          <ShoppingCart onContinueShopping={handleGoToStore} theme={theme} />
+        }
       />
       <Route path="/checkout" element={<Checkout theme={theme} />} />
-      <Route path="/product/:id" element={<ProductDetails />} />
+      <Route path="/product/:id" element={<ProductDetails theme={theme} />} />
       <Route
         path="/admin-dashboard"
         element={<AdminDashboard theme={theme} />}

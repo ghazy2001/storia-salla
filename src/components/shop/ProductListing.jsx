@@ -114,11 +114,17 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
   return (
     <section
       ref={sectionRef}
-      className="py-24 px-6 md:px-12 bg-brand-offwhite transition-colors duration-500"
+      className={`py-24 px-6 md:px-12 transition-colors duration-500 ${
+        theme === "green" ? "bg-[#fdfcf8]" : "bg-brand-burgundy"
+      }`}
     >
       <div className="flex justify-between items-end mb-16 px-4">
         <div className="text-right">
-          <h3 className="text-4xl md:text-5xl font-sans uppercase tracking-tighter">
+          <h3
+            className={`text-4xl md:text-5xl font-sans uppercase tracking-tighter ${
+              theme === "green" ? "text-brand-charcoal" : "text-white"
+            }`}
+          >
             مجموعة ستوريا المختارة
           </h3>
         </div>
@@ -171,13 +177,23 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                     </button>
                   </div>
                   <div className="px-2 transition-transform duration-500 group-hover:translate-x-[-8px]">
-                    <h4 className="text-xl font-sans mb-1 group-hover:text-brand-gold transition-colors">
+                    <h4
+                      className={`text-xl font-sans mb-1 group-hover:text-brand-gold transition-colors ${
+                        theme === "green" ? "text-brand-charcoal" : "text-white"
+                      }`}
+                    >
                       {product.name}
                     </h4>
                     <p className="text-lg font-bold text-brand-gold mb-2">
                       {product.price} ر.س
                     </p>
-                    <p className="text-sm font-light text-brand-charcoal/60 leading-relaxed line-clamp-2 pl-4">
+                    <p
+                      className={`text-sm font-light leading-relaxed line-clamp-2 pl-4 ${
+                        theme === "green"
+                          ? "text-brand-charcoal/60"
+                          : "text-white/60"
+                      }`}
+                    >
                       {product.description}
                     </p>
                   </div>

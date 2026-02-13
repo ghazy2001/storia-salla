@@ -72,10 +72,10 @@ const Footer = ({ theme }) => {
         <div className="col-span-1 md:col-span-2 order-1">
           <img
             src={resolveAsset(
-              getThemeValue(theme, "/assets/logo2.png", "/assets/logo.png"),
+              getThemeValue(theme, "/assets/logo.png", "/assets/logo.png"),
             )}
             alt="STORIA DESIGN"
-            className={`h-16 mb-6 ml-auto ${getThemeValue(theme, "brightness-0 invert", "")}`}
+            className="h-16 mb-6 ml-auto brightness-0 invert"
           />
           <p className="text-xs md:text-sm font-light text-brand-light/50 leading-relaxed tracking-wide mb-8">
             عباية STORIA علامة تجارية فاخرة للعبايات، تستمد إلهامها من الأناقة

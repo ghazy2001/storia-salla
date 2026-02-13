@@ -36,22 +36,25 @@ export const useAppInitialization = () => {
 
   // Sync theme with DOM
   useEffect(() => {
-    document.documentElement.classList.remove("light", "dark");
+    // We use data-theme attribute as defined in index.css
+    document.documentElement.setAttribute("data-theme", theme);
+    // Also keep the class for any tailwind-specific dark: selectors if needed
+    document.documentElement.classList.remove("green", "burgundy");
     document.documentElement.classList.add(theme);
   }, [theme]);
 
   // Handle initialization
   useEffect(() => {
     const init = async () => {
-      // 1. Check for stored theme preference or system preference
-      const storedTheme = localStorage.getItem("theme");
+      // 1. Check for stored theme preference (using consistent key)
+      const storedTheme = localStorage.getItem("storia_theme");
       if (storedTheme) {
         dispatch(setTheme(storedTheme));
       } else if (
         window.matchMedia &&
         window.matchMedia("(prefers-color-scheme: dark)").matches
       ) {
-        dispatch(setTheme("dark"));
+        dispatch(setTheme("burgundy"));
       }
 
       // 3. Wait for everything to be ready

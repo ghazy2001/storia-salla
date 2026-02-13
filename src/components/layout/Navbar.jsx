@@ -130,7 +130,9 @@ const Navbar = ({ theme, toggleTheme }) => {
 
   const logoFilter = isTransparent
     ? "brightness-0 invert"
-    : getThemeValue(theme, "", "brightness-0 invert");
+    : theme === "burgundy"
+      ? "brightness-0 invert"
+      : "";
 
   return (
     <>
@@ -142,11 +144,12 @@ const Navbar = ({ theme, toggleTheme }) => {
             : "translate-y-0 opacity-100"
         } ${
           !isTransparent
-            ? "py-4 bg-white/80 backdrop-blur-md shadow-sm border-b border-brand-charcoal/5"
+            ? "py-4 shadow-sm border-b border-brand-charcoal/5"
             : "py-4 md:py-8 bg-transparent"
         } ${effectiveTextColor}`}
         style={{
           backgroundColor: !isTransparent ? "var(--nav-bg)" : "transparent",
+          backdropBlur: !isTransparent ? "12px" : "none",
         }}
       >
         <div className="flex items-center gap-4 md:gap-10">
