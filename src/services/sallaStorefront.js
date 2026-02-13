@@ -1,4 +1,4 @@
-import { config, log } from "../config/config";
+import { log } from "../config/config";
 
 /**
  * Salla Storefront Service
@@ -18,79 +18,34 @@ class SallaStorefrontService {
    * Syncs the React cart with Salla and redirects to checkout
    * @param {Array} cartItems - Items from Redux cart
    */
-  async syncAndCheckout(cartItems) {
-    log("Starting cart sync with Salla...");
+  /**
+   * Syncs the React cart with Salla via 'Payment Product' method
+   * @param {Array} cartItems - Items from Redux cart
+   * @param {Number} totalAmount - Total amount of the cart
+   */
+  async syncAndCheckout(cartItems, totalAmount) {
+    log("Starting checkout via Payment Product...");
 
     try {
-      // 1. If SDK is available, it's easier to use
-      if (this.salla && this.salla.cart) {
-        log("Using Salla SDK for cart sync");
-
-        try {
-          // Clear Salla cart first to avoid duplicates if possible
-          // The SDK doesn't always have a clearCart, so we might need to loop or just add
-
-          for (const item of cartItems) {
-            await this.salla.cart.addItem({
-              id: item.sallaProductId || item.id,
-              quantity: item.quantity,
-              // Add variant if available
-              variant_id: item.variantId || null,
-            });
-          }
-
-          log("Redirecting to Salla checkout via SDK");
-          if (typeof this.salla.cart.submit === "function") {
-            await this.salla.cart.submit();
-            return { success: true };
-          } else {
-            // If submit is missing, we might still want to try the fallback below
-            log("SDK submit missing, falling back to manual redirect");
-          }
-        } catch (sdkError) {
-          log(
-            `Salla SDK error (likely 410): ${sdkError.message}. Falling back to backend checkout.`,
-          );
-          // If SDK fails, we continue to the headless fallback instead of failing
-        }
+      // Calculate integer quantity (Ceiling to ensure full coverage)
+      let finalAmount = totalAmount;
+      if (!finalAmount) {
+        finalAmount = cartItems.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0,
+        );
       }
 
-      // 2. Headless Fallback: Use Salla API directly (needs CORS or Proxy)
-      // Note: This part usually requires a Storefront token or being on the same apex domain.
-      // If we are on storied-salla.vercel.app and store is storiasa.com, we need a redirect approach.
+      const quantity = Math.ceil(finalAmount);
+      log(`Redirecting to Salla with ${quantity} units of Payment Product`);
 
-      log("Salla SDK not found, attempting direct checkout redirect");
-
-      // If no SDK, the best way for "Checkout only" is actually to use a special Salla URL format if available
-      // Or to use a backend proxy that holds the Salla Merchant Token.
-
-      // Since we have a backend (storia-backend), we can use it to create a Salla cart and get a link.
-      // UPDATE: Using direct payment product link for simplified checkout
+      // Using direct payment product link
       const checkOutUrl = `https://storiasa.com/payment/p432374980?quantity=${quantity}`;
       window.location.href = checkOutUrl;
 
       return { success: true };
-
-      /* 
-      // Old method:
-      const response = await fetch(`${config.apiUrl}/api/salla/checkout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ items: cartItems }),
-      });
-
-      const data = await response.json();
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
-        return { success: true };
-      }
-
-      throw new Error(data.message || "Failed to get checkout URL");
-      */
     } catch (error) {
-      console.error("[Storia] Sync and Checkout failed:", error);
+      console.error("[Storia] Checkout redirect failed:", error);
       return { success: false, error: error.message };
     }
   }
