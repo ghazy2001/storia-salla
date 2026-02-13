@@ -82,7 +82,6 @@ const AdminDashboard = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [syncing, setSyncing] = useState(false);
 
   React.useEffect(() => {
     dispatch(fetchOrders());
@@ -238,48 +237,6 @@ const AdminDashboard = () => {
       }
     } catch (error) {
       alert(`خطأ: ${error}`);
-    }
-  };
-
-  const handleSync = async () => {
-    if (
-      window.confirm(
-        "هذه العملية ستقوم برفع جميع المنتجات المحلية إلى متجر سلة. هل أنت متأكد؟",
-      )
-    ) {
-      try {
-        setSyncing(true);
-        const response = await fetch(
-          `${sallaService.apiBaseUrl}/salla/sync/products`,
-          {
-            method: "POST",
-          },
-        );
-        const result = await response.json();
-        if (result.success === false) {
-          alert(`فشل المزامنة: ${result.error || "خطأ غير معروف"}`);
-        } else {
-          const summary =
-            `تمت المزامنة بنجاح!\n\n` +
-            `✅ تم بنجاح: ${result.success_count}\n` +
-            `❌ فشل: ${result.failed}\n` +
-            `📦 الإجمالي: ${result.total}`;
-
-          alert(summary);
-
-          if (result.errors && result.errors.length > 0) {
-            console.error("Sync Errors:", result.errors);
-            const errorList = result.errors
-              .map((e) => `- ${e.name}: ${e.error}`)
-              .join("\n");
-            alert(`الأخطاء التفصيلية:\n${errorList}`);
-          }
-        }
-      } catch (error) {
-        alert(`فشل الاتصال بالخادم: ${error.message}`);
-      } finally {
-        setSyncing(false);
-      }
     }
   };
 
