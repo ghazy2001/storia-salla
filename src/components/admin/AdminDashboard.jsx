@@ -361,21 +361,21 @@ const AdminDashboard = () => {
             لوحة التحكم
           </h1>
           <div className="flex gap-3">
-            <a
-              href={sallaService.getDashboardUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-800 font-medium px-4 py-2 border border-blue-600 rounded hover:bg-blue-50 transition-colors flex items-center gap-2"
-            >
-              <ExternalLink size={18} />
-              <span>لوحة تحكم سلة</span>
-            </a>
             <button
               onClick={handleLogout}
               className="text-red-500 hover:text-red-700 font-medium px-4 py-2 border border-red-500 rounded hover:bg-red-50 transition-colors"
             >
               تسجيل خروج
             </button>
+            <a
+              href={sallaService.getDashboardUrl()}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-blue-600 text-white hover:bg-blue-700 font-medium px-4 py-2 rounded transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <ExternalLink size={18} />
+              <span>لوحة تحكم سلة</span>
+            </a>
           </div>
         </div>
 
