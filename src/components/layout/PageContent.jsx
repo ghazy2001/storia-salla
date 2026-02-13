@@ -1,15 +1,10 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  selectCurrentPage,
-  setCurrentPage,
-} from "../../store/slices/cartSlice";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import {
   selectTheme,
   selectSelectedCategory,
-  selectSelectedProductId,
   setSelectedCategory,
-  setSelectedProductId,
 } from "../../store/slices/uiSlice";
 
 // Components
@@ -25,64 +20,74 @@ import Reviews from "../home/Reviews";
 import FAQ from "../home/FAQ";
 import AdminDashboard from "../admin/AdminDashboard";
 
+const HomePage = ({ handleGoToStore, handleProductSelect, theme }) => (
+  <>
+    <Hero goToStore={handleGoToStore} onProductSelect={handleProductSelect} />
+    <ProductListing
+      goToStore={handleGoToStore}
+      onProductSelect={handleProductSelect}
+    />
+    <OurStory theme={theme} />
+    <BestSellers onProductSelect={handleProductSelect} />
+    <Reviews theme={theme} />
+    <FAQ theme={theme} />
+  </>
+);
+
 const PageContent = () => {
-  const currentPage = useSelector(selectCurrentPage);
   const theme = useSelector(selectTheme);
   const selectedCategory = useSelector(selectSelectedCategory);
-  const selectedProductId = useSelector(selectSelectedProductId);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Scroll to top on navigation/page changes
+  // Scroll to top on navigation changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [currentPage, selectedProductId, selectedCategory]);
+  }, [location.pathname]);
 
   const handleProductSelect = (id) => {
-    dispatch(setSelectedProductId(id));
-    dispatch(setCurrentPage("product-details"));
+    navigate(`/product/${id}`);
   };
 
   const handleGoToStore = () => {
     dispatch(setSelectedCategory("all"));
-    dispatch(setCurrentPage("store"));
+    navigate("/store");
   };
 
-  switch (currentPage) {
-    case "store":
-      return (
-        <Store
-          initialFilter={selectedCategory}
-          onProductSelect={handleProductSelect}
-        />
-      );
-    case "admin-dashboard":
-      return <AdminDashboard theme={theme} />;
-    case "cart":
-      return <ShoppingCart onContinueShopping={handleGoToStore} />;
-    case "checkout":
-      return <Checkout theme={theme} />;
-    case "product-details":
-      return (
-        <ProductDetails key={selectedProductId} productId={selectedProductId} />
-      );
-    default:
-      return (
-        <>
-          <Hero
-            goToStore={handleGoToStore}
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <HomePage
+            handleGoToStore={handleGoToStore}
+            handleProductSelect={handleProductSelect}
+            theme={theme}
+          />
+        }
+      />
+      <Route
+        path="/store"
+        element={
+          <Store
+            initialFilter={selectedCategory}
             onProductSelect={handleProductSelect}
           />
-          <ProductListing
-            goToStore={handleGoToStore}
-            onProductSelect={handleProductSelect}
-          />
-          <OurStory theme={theme} />
-          <BestSellers onProductSelect={handleProductSelect} />
-          <Reviews theme={theme} />
-          <FAQ theme={theme} />
-        </>
-      );
-  }
+        }
+      />
+      <Route
+        path="/cart"
+        element={<ShoppingCart onContinueShopping={handleGoToStore} />}
+      />
+      <Route path="/checkout" element={<Checkout theme={theme} />} />
+      <Route path="/product/:id" element={<ProductDetails />} />
+      <Route
+        path="/admin-dashboard"
+        element={<AdminDashboard theme={theme} />}
+      />
+    </Routes>
+  );
 };
 
 export default PageContent;

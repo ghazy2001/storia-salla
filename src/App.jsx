@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { toggleTheme } from "./store/slices/uiSlice";
 import { Provider } from "react-redux";
 import { store } from "./store/store";
+import { HashRouter } from "react-router-dom";
 
 // Components
 import Navbar from "./components/layout/Navbar";
@@ -16,7 +17,6 @@ import { useAppInitialization } from "./hooks/useAppInitialization";
 function AppContent() {
   const { isReady, theme } = useAppInitialization();
   const dispatch = useDispatch();
-  // currentPage is accessed by Navbar/PageContent via Redux now.
 
   return (
     <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10">
@@ -28,11 +28,7 @@ function AppContent() {
         }`}
         aria-hidden={!isReady}
       >
-        <Navbar
-          theme={theme}
-          toggleTheme={() => dispatch(toggleTheme())}
-          // Navigation and other handlers are now internal to Navbar using Redux
-        />
+        <Navbar theme={theme} toggleTheme={() => dispatch(toggleTheme())} />
         <main className="flex-grow">
           <PageContent />
         </main>
@@ -45,7 +41,9 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <AppContent />
+      <HashRouter>
+        <AppContent />
+      </HashRouter>
     </Provider>
   );
 }

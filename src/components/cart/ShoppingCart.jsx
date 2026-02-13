@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   selectCartItems,
   selectCartTotal,
@@ -15,12 +16,13 @@ import sallaStorefront from "../../services/sallaStorefront";
 import { config } from "../../config/config";
 import { resolveAsset } from "../../utils/assetUtils";
 
-const ShoppingCart = ({ onContinueShopping }) => {
+const ShoppingCart = () => {
   const cartItems = useSelector(selectCartItems);
   const theme = useSelector(selectTheme);
   const dispatch = useDispatch();
   const subtotal = useSelector(selectCartTotal);
   const containerRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -82,7 +84,7 @@ const ShoppingCart = ({ onContinueShopping }) => {
               ابدئي التسوق واختاري من مجموعتنا الفاخرة
             </p>
             <button
-              onClick={onContinueShopping}
+              onClick={() => navigate("/store")}
               className="inline-flex items-center gap-2 bg-brand-gold text-brand-charcoal px-8 py-4 uppercase tracking-widest font-bold hover:shadow-lg transition-all duration-300 active:scale-95"
             >
               العودة للتسوق
@@ -318,7 +320,7 @@ const ShoppingCart = ({ onContinueShopping }) => {
                       alert(`عذراً، فشل التحويل للدفع: ${error}`);
                     }
                   } else {
-                    dispatch(setCurrentPage("checkout"));
+                    navigate("/checkout");
                   }
                 } finally {
                   btn.innerText = originalText;
@@ -331,7 +333,7 @@ const ShoppingCart = ({ onContinueShopping }) => {
             </button>
 
             <button
-              onClick={onContinueShopping}
+              onClick={() => navigate("/store")}
               className={`w-full py-4 uppercase tracking-widest font-bold border-2 transition-all duration-300 hover:scale-105 ${
                 theme === "green"
                   ? "border-brand-charcoal/30 text-brand-charcoal hover:border-brand-charcoal"

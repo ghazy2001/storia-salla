@@ -11,11 +11,8 @@ import {
 } from "lucide-react";
 import gsap from "gsap";
 import { useSelector, useDispatch } from "react-redux";
-import {
-  selectCartCount,
-  setCurrentPage,
-  selectCurrentPage,
-} from "../../store/slices/cartSlice";
+import { useNavigate, useLocation } from "react-router-dom";
+import { selectCartCount } from "../../store/slices/cartSlice";
 import { selectIsAdmin, toggleLoginModal } from "../../store/slices/adminSlice";
 import { selectCustomer } from "../../store/slices/userSlice";
 import {
@@ -31,12 +28,13 @@ const Navbar = ({ theme, toggleTheme }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const cartCount = useSelector(selectCartCount);
-  const currentPage = useSelector(selectCurrentPage);
   const navLinks = useSelector(selectCategories);
   const customer = useSelector(selectCustomer);
   const dispatch = useDispatch();
   const isAdmin = useSelector(selectIsAdmin);
-  const isHomePage = currentPage === "home";
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
   const [isMoreOpen, setIsMoreOpen] = useState(false);
@@ -45,16 +43,16 @@ const Navbar = ({ theme, toggleTheme }) => {
 
   const handleNavigate = (category) => {
     dispatch(setSelectedCategory(category));
-    dispatch(setCurrentPage("store"));
+    navigate("/store");
   };
 
   const handleBack = () => {
-    if (currentPage === "product-details") {
-      dispatch(setCurrentPage("store"));
-    } else if (currentPage === "store") {
-      dispatch(setCurrentPage("home"));
+    if (location.pathname.includes("/product/")) {
+      navigate("/store");
+    } else if (location.pathname === "/store") {
+      navigate("/");
     } else {
-      dispatch(setCurrentPage("home"));
+      navigate("/");
     }
   };
 
@@ -63,13 +61,16 @@ const Navbar = ({ theme, toggleTheme }) => {
   };
 
   const handleFAQClick = () => {
-    dispatch(setCurrentPage("home"));
-    setTimeout(() => {
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const faqSection = document.getElementById("faq");
+        if (faqSection) faqSection.scrollIntoView({ behavior: "smooth" });
+      }, 500);
+    } else {
       const faqSection = document.getElementById("faq");
-      if (faqSection) {
-        faqSection.scrollIntoView({ behavior: "smooth" });
-      }
-    }, 100);
+      if (faqSection) faqSection.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   // ... (keep useEffects and constants same, I will use replace_file_content for specific blocks if possible, but the prompt implies complete file replacement or specific chunks. I'll target the PROPS line first, then the MENU items.)
@@ -168,7 +169,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
             onClick={() => {
               if (isAdmin) {
-                dispatch(setCurrentPage("admin-dashboard"));
+                navigate("/admin-dashboard");
               } else {
                 dispatch(toggleLoginModal());
               }
@@ -249,7 +250,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             if (isHomePage) {
               window.scrollTo({ top: 0, behavior: "smooth" });
             } else {
-              dispatch(setCurrentPage("home"));
+              navigate("/");
             }
           }}
         >
@@ -276,7 +277,7 @@ const Navbar = ({ theme, toggleTheme }) => {
           </button>
           <button
             className="relative group cursor-pointer flex items-center justify-center p-2 rounded-full hover:bg-black/5 transition-all duration-300"
-            onClick={() => dispatch(setCurrentPage("cart"))}
+            onClick={() => navigate("/cart")}
             aria-label="عرض حقيبة التسوق"
           >
             <ShoppingBag
@@ -293,7 +294,7 @@ const Navbar = ({ theme, toggleTheme }) => {
           <button
             onClick={() => {
               if (isAdmin) {
-                dispatch(setCurrentPage("admin-dashboard"));
+                navigate("/admin-dashboard");
               } else if (customer) {
                 // If Salla SDK provides a profile page, we could redirect there
                 // For now, toggle login modal as a profile view or stay as is
@@ -400,7 +401,7 @@ const Navbar = ({ theme, toggleTheme }) => {
             <button
               onClick={() => {
                 if (isAdmin) {
-                  dispatch(setCurrentPage("admin-dashboard"));
+                  navigate("/admin-dashboard");
                 } else {
                   dispatch(toggleLoginModal());
                 }

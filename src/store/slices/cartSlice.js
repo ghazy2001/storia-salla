@@ -6,14 +6,9 @@ const getInitialCart = () => {
   return savedCart ? JSON.parse(savedCart) : [];
 };
 
-const getInitialPage = () => {
-  if (typeof window === "undefined") return "home";
-  return localStorage.getItem("storia_current_page") || "home";
-};
-
 const initialState = {
   cartItems: getInitialCart(),
-  currentPage: getInitialPage(),
+
   appliedCoupon: null,
 };
 
@@ -114,12 +109,7 @@ const cartSlice = createSlice({
         localStorage.removeItem("storia_cart");
       }
     },
-    setCurrentPage: (state, action) => {
-      state.currentPage = action.payload;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("storia_current_page", action.payload);
-      }
-    },
+
     applyCoupon: (state, action) => {
       state.appliedCoupon = action.payload;
     },
@@ -135,14 +125,14 @@ export const {
   updateItemSize,
   updateQuantity,
   clearCart,
-  setCurrentPage,
+
   applyCoupon,
   removeCoupon,
 } = cartSlice.actions;
 
 // Selectors
 export const selectCartItems = (state) => state.cart.cartItems;
-export const selectCurrentPage = (state) => state.cart.currentPage;
+
 export const selectCartTotal = (state) =>
   state.cart.cartItems.reduce((total, item) => {
     // Robust price parsing handles both numeric and string formats from various sources

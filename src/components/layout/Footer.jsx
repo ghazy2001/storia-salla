@@ -3,7 +3,7 @@ import { resolveAsset } from "../../utils/assetUtils";
 import { Instagram, Facebook, Mail } from "lucide-react";
 import { getThemeValue } from "../../utils/themeUtils";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentPage } from "../../store/slices/cartSlice";
+import { useNavigate } from "react-router-dom";
 import {
   setSelectedCategory,
   setContactFormOpen,
@@ -15,13 +15,14 @@ import { SOCIAL_URLS, CONTACT_INFO } from "../../utils/constants";
 
 const Footer = ({ theme }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const categories = useSelector(selectCategories);
   const [showAll, setShowAll] = useState(false);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
   const handleNavigate = (category) => {
     dispatch(setSelectedCategory(category));
-    dispatch(setCurrentPage("store"));
+    navigate("/store");
   };
 
   const socialIcons = [

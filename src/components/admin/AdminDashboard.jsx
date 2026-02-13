@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   selectProducts,
   addProduct,
@@ -31,7 +32,6 @@ import {
   selectOrders,
   selectAnalytics,
 } from "../../store/slices/dashboardSlice";
-import { setCurrentPage } from "../../store/slices/cartSlice";
 import {
   BarChart3,
   ShoppingBag,
@@ -74,6 +74,7 @@ const AdminDashboard = () => {
   const activeTab = useSelector(selectAdminActiveTab);
   const categories = useSelector(selectCategories);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState(null);
@@ -133,7 +134,7 @@ const AdminDashboard = () => {
   const [categoryForm, setCategoryForm] = useState(initialCategoryState);
 
   const handleLogout = () => {
-    dispatch(setCurrentPage("home"));
+    navigate("/");
     dispatch(logout());
   };
 
