@@ -22,8 +22,7 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
             if (variant) return variant.price;
           }
           return product.price;
-        })()}{" "}
-        ر.س
+        })()}
       </p>
       <p className="text-brand-charcoal/70 text-lg leading-relaxed max-w-xl mb-8">
         {product.description}

@@ -202,7 +202,7 @@ const BestSellers = ({ onProductSelect }) => {
               <div className="w-full text-right">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-brand-gold text-3xl font-bold">
-                    {featuredConfig.price || 0} ر.س
+                    {featuredConfig.price || 0}
                   </div>
                 </div>
                 <p
