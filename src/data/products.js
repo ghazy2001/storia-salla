@@ -2,9 +2,17 @@ export const products = [
   {
     id: 1,
     name: "عباية سوداء رسمية - كريب ملكي",
-    price: "390 ر.س",
+    price: 390,
+    cost: 230,
+    stock: 25,
     category: "official",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 390, stock: 5, cost: 230 },
+      { size: "M", price: 390, stock: 8, cost: 230 },
+      { size: "L", price: 390, stock: 7, cost: 230 },
+      { size: "XL", price: 390, stock: 5, cost: 230 },
+    ],
     description:
       "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
     image: "/assets/products/p01/p01_1.jpg",
@@ -21,9 +29,17 @@ export const products = [
   {
     id: 2,
     name: "عباية كلوش - قماش إنترنت ناعم",
-    price: "350 ر.س",
+    price: 350,
+    cost: 200,
+    stock: 18,
     category: "cloche",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 350, stock: 4, cost: 200 },
+      { size: "M", price: 350, stock: 6, cost: 200 },
+      { size: "L", price: 350, stock: 5, cost: 200 },
+      { size: "XL", price: 350, stock: 3, cost: 200 },
+    ],
     description:
       "عباية بقصة كلوش واسعة تمنحك حرية الحركة وأناقة استثنائية. مصممة من قماش الإنترنت الناعم الذي يتميز ببرودة ونعومة فائقة، مثالية للاستخدام اليومي.",
     image: "/assets/products/p02/p02_1.jpg",
@@ -39,9 +55,17 @@ export const products = [
   {
     id: 3,
     name: "عباية بشت مطرزة - شك يدوي",
-    price: "480 ر.س",
+    price: 480,
+    cost: 280,
+    stock: 12,
     category: "bisht",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 480, stock: 2, cost: 280 },
+      { size: "M", price: 480, stock: 4, cost: 280 },
+      { size: "L", price: 480, stock: 4, cost: 280 },
+      { size: "XL", price: 480, stock: 2, cost: 280 },
+    ],
     description:
       "تحفة فنية بتصميم البشت التقليدي مع لمسات عصرية، مزينة بشك يدوي دقيق يضيف بريقاً هادئاً وفخامة لا تضاهى. الخيار الأمثل للمناسبات الخاصة.",
     image: "/assets/products/p03/p03_1.jpg",
@@ -60,10 +84,18 @@ export const products = [
   {
     id: 4,
     name: "عباية نواعم - تصميم كلاسيكي",
-    price: "320 ر.س",
-    originalPrice: "500 ر.س",
+    price: 320,
+    originalPrice: 500,
+    cost: 180,
+    stock: 30,
     category: "classic",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 320, stock: 8, cost: 180 },
+      { size: "M", price: 320, stock: 10, cost: 180 },
+      { size: "L", price: 320, stock: 8, cost: 180 },
+      { size: "XL", price: 320, stock: 4, cost: 180 },
+    ],
     description:
       "البساطة هي عنوان الأناقة.، تصميم نواعم الكلاسيكي يبرز جمالك الطبيعي بتفاصيل هادئة وخامة عملية مريحة تدوم طويلاً.",
     bestSellerDescription:
@@ -83,9 +115,17 @@ export const products = [
   {
     id: 5,
     name: "عباية رسمية بتطريز هادئ",
-    price: "420 ر.س",
+    price: 420,
+    cost: 250,
+    stock: 15,
     category: "official",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 420, stock: 3, cost: 250 },
+      { size: "M", price: 420, stock: 5, cost: 250 },
+      { size: "L", price: 420, stock: 4, cost: 250 },
+      { size: "XL", price: 420, stock: 3, cost: 250 },
+    ],
     description:
       "توازن مثالي بين الرسمية والأنوثة. تتميز بتطريزات ناعمة على الأكمام والياقة، تضفي لمسة جمالية دون مبالغة.",
     image: "/assets/products/p05/p05_1.jpg",
@@ -101,9 +141,17 @@ export const products = [
   {
     id: 6,
     name: "عباية عملية يومية بجيوب",
-    price: "290 ر.س",
+    price: 290,
+    cost: 160,
+    stock: 40,
     category: "practical",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 290, stock: 10, cost: 160 },
+      { size: "M", price: 290, stock: 12, cost: 160 },
+      { size: "L", price: 290, stock: 10, cost: 160 },
+      { size: "XL", price: 290, stock: 8, cost: 160 },
+    ],
     description:
       "الرفيق المثالي لروتينك اليومي. مصممة لتكون عملية ومريحة، مع جيوب مخفية وقماش يتحمل الاستخدام المتكرر دون فقدان رونقه.",
     image: "/assets/products/p06/p06_1.jpg",
@@ -119,9 +167,17 @@ export const products = [
   {
     id: 7,
     name: "عباية حرير طبيعي - فاخرة",
-    price: "550 ر.س",
+    price: 550,
+    cost: 350,
+    stock: 8,
     category: "luxury",
     sizes: ["S", "M", "L", "XL"],
+    sizeVariants: [
+      { size: "S", price: 550, stock: 2, cost: 350 },
+      { size: "M", price: 550, stock: 2, cost: 350 },
+      { size: "L", price: 550, stock: 2, cost: 350 },
+      { size: "XL", price: 550, stock: 2, cost: 350 },
+    ],
     description:
       "قمة الفخامة والنعومة. عباية منسوجة من مزيج الحرير طبيعي، تمنحك ملمساً لا يضاهى ومظهراً يفيض بالرقي والجاذبية.",
     image: "/assets/products/p07/p07_1.jpg",

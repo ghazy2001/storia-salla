@@ -13,6 +13,7 @@ class SallaService {
     this.salla =
       typeof window !== "undefined" && window.salla ? window.salla : null;
     this.apiBaseUrl = `${config.apiUrl}/api`;
+    this.isLocalForced = true; // Temporary flag to force local mode
 
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK initialized successfully");
@@ -535,6 +536,10 @@ class SallaService {
    * Create a new product in custom backend
    */
   async createProduct(productData) {
+    if (this.isLocalForced) {
+      console.log("[Storia Service] Mock Create Product:", productData);
+      return { ...productData, id: Date.now() };
+    }
     try {
       const response = await fetch(`${this.apiBaseUrl}/admin/products`, {
         method: "POST",
@@ -556,6 +561,10 @@ class SallaService {
    * Update an existing product in custom backend
    */
   async updateProduct(id, productData) {
+    if (this.isLocalForced) {
+      console.log("[Storia Service] Mock Update Product:", id, productData);
+      return { ...productData, id };
+    }
     try {
       const response = await fetch(`${this.apiBaseUrl}/admin/products/${id}`, {
         method: "PUT",
@@ -577,6 +586,10 @@ class SallaService {
    * Delete a product from custom backend
    */
   async deleteProduct(id) {
+    if (this.isLocalForced) {
+      console.log("[Storia Service] Mock Delete Product:", id);
+      return { id, deleted: true };
+    }
     try {
       const response = await fetch(`${this.apiBaseUrl}/admin/products/${id}`, {
         method: "DELETE",
