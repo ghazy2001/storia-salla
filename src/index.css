@@ -118,3 +118,23 @@ select,
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Premium Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-site);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--accent-gold);
+  border-radius: 4px;
+  border: 2px solid var(--bg-site);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #bfa145;
+}
