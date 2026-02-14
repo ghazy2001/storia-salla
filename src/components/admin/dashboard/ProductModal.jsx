@@ -143,7 +143,7 @@ const ProductModal = ({
                   </label>
                   <div className="space-y-4">
                     <div className="flex flex-wrap gap-2 mb-4">
-                      {["S", "M", "L", "XL", "XXL"].map((size) => {
+                      {["S", "M", "L", "XL", "XXL", "XXXL"].map((size) => {
                         const isSelected = productForm.sizes?.includes(size);
                         return (
                           <label
@@ -218,8 +218,10 @@ const ProductModal = ({
                                   const newVariants = [
                                     ...productForm.sizeVariants,
                                   ];
-                                  newVariants[idx].price =
-                                    parseFloat(e.target.value) || 0;
+                                  newVariants[idx] = {
+                                    ...newVariants[idx],
+                                    price: parseFloat(e.target.value) || 0,
+                                  };
                                   setProductForm({
                                     ...productForm,
                                     sizeVariants: newVariants,
@@ -237,8 +239,10 @@ const ProductModal = ({
                                   const newVariants = [
                                     ...productForm.sizeVariants,
                                   ];
-                                  newVariants[idx].stock =
-                                    parseInt(e.target.value) || 0;
+                                  newVariants[idx] = {
+                                    ...newVariants[idx],
+                                    stock: parseInt(e.target.value) || 0,
+                                  };
                                   setProductForm({
                                     ...productForm,
                                     sizeVariants: newVariants,
