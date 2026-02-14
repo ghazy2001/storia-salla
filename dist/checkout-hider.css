@@ -1,0 +1,22 @@
+/* HIDE SALLA STORE NAME - CSS ONLY */
+/* Paste this into Salla Dashboard -> Theme Settings -> Custom CSS */
+
+.store-info__detail h1,
+.store-info h1,
+header.store-info h1,
+h1.store-name,
+.store-name,
+div[class*="store-info"] h1 {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  font-size: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Ensure empty container doesn't take space */
+.store-info__detail {
+  min-height: 0 !important;
+}
