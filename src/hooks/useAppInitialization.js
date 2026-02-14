@@ -60,38 +60,58 @@ export const useAppInitialization = () => {
       // 3. Wait for everything to be ready
       try {
         await Promise.all([
-          // Wait for critical data and images
+          // Timeout race: If fetching takes too long (e.g. 8s), give up and show app
+          new Promise((resolve) =>
+            setTimeout(() => {
+              console.warn(
+                "⚠️ Initialization timed out - forcing ready state.",
+              );
+              resolve();
+            }, 8000),
+          ),
+
+          // Critical data fetching
           (async () => {
-            // Start fetching data
-            const productPromise = dispatch(fetchProductsFromSalla()).unwrap();
-            const categoryPromise = dispatch(
-              fetchCategoriesFromSalla(),
-            ).unwrap();
-            const customerPromise = dispatch(fetchCustomerFromSalla()).unwrap();
-            const faqPromise = dispatch(fetchFAQs()).unwrap();
-            const reviewPromise = dispatch(fetchReviews()).unwrap();
+            try {
+              // Start fetching data
+              const productPromise = dispatch(
+                fetchProductsFromSalla(),
+              ).unwrap();
+              const categoryPromise = dispatch(
+                fetchCategoriesFromSalla(),
+              ).unwrap();
+              const customerPromise = dispatch(
+                fetchCustomerFromSalla(),
+              ).unwrap();
+              const faqPromise = dispatch(fetchFAQs()).unwrap();
+              const reviewPromise = dispatch(fetchReviews()).unwrap();
 
-            const [products] = await Promise.all([
-              productPromise,
-              categoryPromise,
-              customerPromise,
-              faqPromise,
-              reviewPromise,
-            ]);
+              const [products] = await Promise.all([
+                productPromise,
+                categoryPromise,
+                customerPromise,
+                faqPromise,
+                reviewPromise,
+              ]);
 
-            const criticalImages = [resolveAsset("assets/logo.png")];
-            if (products && products.length > 0) {
-              const heroImages = products
-                .slice(0, 4)
-                .map((p) => p.image)
-                .filter(Boolean);
-              criticalImages.push(...heroImages);
+              const criticalImages = [resolveAsset("assets/logo.png")];
+              if (products && products.length > 0) {
+                const heroImages = products
+                  .slice(0, 4)
+                  .map((p) => p.image)
+                  .filter(Boolean);
+                criticalImages.push(...heroImages);
+              }
+
+              await preloadImages(criticalImages);
+            } catch (err) {
+              console.error("Data fetch failed in init", err);
             }
-
-            await preloadImages(criticalImages);
           })(),
+
           // Wait for minimum time
           new Promise((resolve) => setTimeout(resolve, 2500)),
+
           // Wait for window load
           new Promise((resolve) => {
             if (document.readyState === "complete") {
