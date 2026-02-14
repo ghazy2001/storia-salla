@@ -50,9 +50,11 @@ export const useAppInitialization = () => {
       const storedTheme = localStorage.getItem("storia_theme");
       if (storedTheme) {
         dispatch(setTheme(storedTheme));
-      } else {
-        // Default to Green (Light) if no preference is saved, ignoring system preference
-        dispatch(setTheme("green"));
+      } else if (
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches
+      ) {
+        dispatch(setTheme("burgundy"));
       }
 
       // 3. Wait for everything to be ready
