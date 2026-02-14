@@ -59,26 +59,7 @@ const ProductModal = ({
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Salla Product ID (للربط مع سلة)
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.sallaProductId || ""}
-                    onChange={(e) =>
-                      setProductForm({
-                        ...productForm,
-                        sallaProductId: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
-                    placeholder="مثال: 123456789"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">
-                    أدخل رقم المنتج من لوحة تحكم سلة لتمكين الدفع
-                  </p>
-                </div>
+                {/* Salla Product ID section removed as requested */}
               </div>
 
               {/* Section: Details */}
@@ -170,6 +151,7 @@ const ProductModal = ({
                                       {
                                         size,
                                         price: productForm.price || 0,
+                                        cost: productForm.cost || 0,
                                         stock: productForm.stock || 0,
                                       },
                                     ],
@@ -199,7 +181,8 @@ const ProductModal = ({
                       <div className="bg-gray-50 rounded-xl p-4 border border-gray-100 space-y-3">
                         <div className="grid grid-cols-4 gap-4 text-xs font-bold text-gray-500 pb-2 border-b border-gray-200">
                           <div>المقاس</div>
-                          <div className="col-span-2">السعر (ر.س)</div>
+                          <div className="col-span-1">السعر (ر.س)</div>
+                          <div className="col-span-1">التكلفة (ر.س)</div>
                           <div>المخزون</div>
                         </div>
                         {productForm.sizeVariants.map((variant, idx) => (
@@ -210,7 +193,7 @@ const ProductModal = ({
                             <div className="font-bold text-brand-burgundy">
                               {variant.size}
                             </div>
-                            <div className="col-span-2">
+                            <div className="col-span-1">
                               <input
                                 type="number"
                                 value={variant.price}
@@ -229,6 +212,27 @@ const ProductModal = ({
                                 }}
                                 className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-gold/50 outline-none"
                                 placeholder="السعر"
+                              />
+                            </div>
+                            <div className="col-span-1">
+                              <input
+                                type="number"
+                                value={variant.cost}
+                                onChange={(e) => {
+                                  // Update state immutably and keep value as is to allow decimals/empty state
+                                  const newVariants =
+                                    productForm.sizeVariants.map((v, i) =>
+                                      i === idx
+                                        ? { ...v, cost: e.target.value }
+                                        : v,
+                                    );
+                                  setProductForm({
+                                    ...productForm,
+                                    sizeVariants: newVariants,
+                                  });
+                                }}
+                                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-brand-gold/50 outline-none"
+                                placeholder="التكلفة"
                               />
                             </div>
                             <div>
