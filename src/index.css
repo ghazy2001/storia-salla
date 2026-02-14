@@ -32,11 +32,13 @@
 }
 
 body {
-  background-color: var(--bg-site);
+  background-color: var(
+    --bg-footer
+  ); /* Start with Brand Green to match Preloader */
   color: var(--text-main);
   transition:
-    background-color 0.5s ease,
-    color 0.5s ease;
+    background-color 1s ease-in-out,
+    /* Smooth transition for theme switch */ color 0.5s ease;
   overflow-x: hidden;
 }
 

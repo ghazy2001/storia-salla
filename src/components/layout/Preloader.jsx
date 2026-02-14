@@ -21,9 +21,12 @@ const Preloader = ({ isReady }) => {
         const nativeLoader = document.getElementById("native-preloader");
         if (nativeLoader) nativeLoader.remove();
 
-        // Reset body styles to allow scrolling and correct theme background
+        // Reset body styles to allow scrolling
         document.body.style.overflow = "";
-        document.body.style.backgroundColor = "";
+
+        // Explicitly switch to the theme's background color
+        // This triggers the CSS transition we added in index.css
+        document.body.style.backgroundColor = "var(--bg-site)";
       }, 1000); // Match the duration-1000 in App.jsx and css transition
 
       // Also clean up Salla shield if present
