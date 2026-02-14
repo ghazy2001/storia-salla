@@ -6,15 +6,33 @@ const Preloader = ({ isReady }) => {
 
   useEffect(() => {
     if (isReady) {
-      // Remove Salla Theme Shield if it exists
+      // 1. Start the fade-out of the React preloader
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+
+        // 2. Cleanup Native Loader & Styles (after React is visible)
+        // We do this here to ensure no "white flash" occurs.
+
+        // Remove the style block that forces green background
+        const nativeStyle = document.getElementById("storia-preloader-style");
+        if (nativeStyle) nativeStyle.remove();
+
+        // Remove the native preloader DOM element (if it exists outside root)
+        const nativeLoader = document.getElementById("native-preloader");
+        if (nativeLoader) nativeLoader.remove();
+
+        // Reset body styles to allow scrolling and correct theme background
+        document.body.style.overflow = "";
+        document.body.style.backgroundColor = "";
+      }, 1000); // Match the duration-1000 in App.jsx and css transition
+
+      // Also clean up Salla shield if present
       const shield = document.getElementById("storia-salla-shield");
       if (shield) {
         shield.style.opacity = "0";
-        setTimeout(() => shield.remove(), 1000);
+        setTimeout(() => shield.remove(), 500);
       }
 
-      // Allow the fade-out transition to complete before unmounting
-      const timer = setTimeout(() => setShouldRender(false), 1000);
       return () => clearTimeout(timer);
     }
   }, [isReady]);
