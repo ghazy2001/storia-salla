@@ -36,7 +36,7 @@ const ProductsTab = ({ products, handleEdit, handleDelete }) => {
             <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
               {product.name}
             </h3>
-            <p className="text-brand-gold font-bold">{product.price} ر.س</p>
+            <p className="text-brand-gold font-bold">{product.price}</p>
             <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
               {(() => {
                 const categoryLabels = {

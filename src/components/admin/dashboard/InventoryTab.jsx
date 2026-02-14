@@ -270,7 +270,7 @@ const InventoryTab = ({ products }) => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-600">
-                      {item.variantPrice} ر.س
+                      {item.variantPrice}
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-gray-400">
                       {isEditing ? (
