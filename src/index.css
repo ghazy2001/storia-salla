@@ -42,6 +42,7 @@ body {
 
 /* Ensure React root takes full control */
 #root {
+  direction: rtl; /* Force content back to RTL */
   position: relative !important;
   z-index: 9999 !important;
   min-height: 100vh !important;
