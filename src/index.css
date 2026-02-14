@@ -54,7 +54,7 @@ body {
 }
 
 /* Hide Salla's default theme elements that appear behind our app */
-body > *:not(#root):not(#storia-preloader):not(script):not(style):not(link) {
+body > *:not(#root):not(script):not(style):not(link) {
   display: none !important;
   visibility: hidden !important;
 }

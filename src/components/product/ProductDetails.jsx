@@ -8,66 +8,6 @@ import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 
-const ProductContent = ({ product, theme }) => {
-  const navigate = useNavigate();
-  const [activeMedia, setActiveMedia] = useState(0);
-  const [showToast, setShowToast] = useState(false);
-  const { addToCart: addToCartWithSync } = useAddToCart();
-
-  // Initialize selected size state - simplified logic
-  // Since we use key={product.id}, this runs only once per product
-  const [selectedSize, setSelectedSize] = useState(() =>
-    product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
-  );
-
-  const handleAddToCart = async () => {
-    if (!selectedSize && product.sizes && product.sizes.length > 0) {
-      alert("الرجاء اختيار المقاس");
-      return;
-    }
-
-    // Get price for selected size if available
-    let price = product.price;
-    if (selectedSize && product.sizeVariants?.length > 0) {
-      const variant = product.sizeVariants.find((v) => v.size === selectedSize);
-      if (variant) price = variant.price;
-    }
-
-    await addToCartWithSync({ ...product, price }, 1, selectedSize);
-    setShowToast(true);
-  };
-
-  return (
-    <div className="max-w-[1920px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
-      <Toast
-        message="تمت إضافة المنتج إلى السلة بنجاح"
-        isVisible={showToast}
-        onClose={() => setShowToast(false)}
-        theme={theme}
-        action={{
-          label: "عرض السلة >>",
-          onClick: () => navigate("/cart"),
-        }}
-      />
-      {/* Gallery Section */}
-      <ProductGallery
-        product={product}
-        activeMedia={activeMedia}
-        setActiveMedia={setActiveMedia}
-      />
-
-      {/* Product Info */}
-      <ProductInfo
-        product={product}
-        selectedSize={selectedSize}
-        setSelectedSize={setSelectedSize}
-        handleAddToCart={handleAddToCart}
-        theme={theme}
-      />
-    </div>
-  );
-};
-
 const ProductDetails = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
@@ -79,6 +19,24 @@ const ProductDetails = () => {
     const targetId = String(productId);
     return pId === targetId;
   });
+
+  const [activeMedia, setActiveMedia] = useState(0);
+  const [showToast, setShowToast] = useState(false);
+  // Initialize selected size state
+  const [selectedSize, setSelectedSize] = useState(() =>
+    product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
+  );
+
+  // Reset selected size when product changes
+  useEffect(() => {
+    if (product?.sizes && product.sizes.length > 0) {
+      setSelectedSize(product.sizes[0]);
+    } else {
+      setSelectedSize("");
+    }
+  }, [product?.id]);
+
+  const { addToCart: addToCartWithSync } = useAddToCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -114,14 +72,53 @@ const ProductDetails = () => {
     );
   }
 
+  const handleAddToCart = async () => {
+    if (!selectedSize && product.sizes && product.sizes.length > 0) {
+      alert("الرجاء اختيار المقاس");
+      return;
+    }
+
+    // Get price for selected size if available
+    let price = product.price;
+    if (selectedSize && product.sizeVariants?.length > 0) {
+      const variant = product.sizeVariants.find((v) => v.size === selectedSize);
+      if (variant) price = variant.price;
+    }
+
+    await addToCartWithSync({ ...product, price }, 1, selectedSize);
+    setShowToast(true);
+  };
+
   return (
     <div className="min-h-screen bg-brand-offwhite text-brand-charcoal pt-24 pb-12">
-      {/* Use key to force remount (and state reset) when product changes */}
-      <ProductContent
-        key={product._id || product.id}
-        product={product}
+      <Toast
+        message="تمت إضافة المنتج إلى السلة بنجاح"
+        isVisible={showToast}
+        onClose={() => setShowToast(false)}
         theme={theme}
+        action={{
+          label: "عرض السلة >>",
+          onClick: () => navigate("/cart"),
+        }}
       />
+
+      <div className="max-w-[1920px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
+        {/* Gallery Section */}
+        <ProductGallery
+          product={product}
+          activeMedia={activeMedia}
+          setActiveMedia={setActiveMedia}
+        />
+
+        {/* Product Info */}
+        <ProductInfo
+          product={product}
+          selectedSize={selectedSize}
+          setSelectedSize={setSelectedSize}
+          handleAddToCart={handleAddToCart}
+          theme={theme}
+        />
+      </div>
     </div>
   );
 };

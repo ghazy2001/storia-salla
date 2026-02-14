@@ -64,19 +64,19 @@
     </div>
 
     <style>
-      /* Native Preloader Styles (Green Mode Default) */
+      /* Native Preloader Styles (Light Mode Default) */
       html {
-        background-color: #0e352f; /* Brand Green */
+        background-color: #fdfcf8; /* Brand Off-White */
       }
       body {
         margin: 0;
-        background-color: #0e352f;
+        background-color: #fdfcf8;
       }
       #storia-preloader {
         position: fixed;
         inset: 0;
         z-index: 99999;
-        background-color: #0e352f; /* Brand Green */
+        background-color: #fdfcf8;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -85,8 +85,8 @@
       .storia-logo-spinner {
         height: 4rem;
         width: auto;
-        /* Start with White Logo (brightness-0 invert-1) */
-        filter: brightness(0) invert(1);
+        /* Start with Dark Logo (brightness-0) */
+        filter: brightness(0);
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       }
       @keyframes pulse {
