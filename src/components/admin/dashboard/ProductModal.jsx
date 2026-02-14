@@ -215,11 +215,13 @@ const ProductModal = ({
                                 type="number"
                                 value={variant.price}
                                 onChange={(e) => {
-                                  const newVariants = [
-                                    ...productForm.sizeVariants,
-                                  ];
-                                  newVariants[idx].price =
-                                    parseFloat(e.target.value) || 0;
+                                  // Update state immutably and keep value as is to allow decimals/empty state
+                                  const newVariants =
+                                    productForm.sizeVariants.map((v, i) =>
+                                      i === idx
+                                        ? { ...v, price: e.target.value }
+                                        : v,
+                                    );
                                   setProductForm({
                                     ...productForm,
                                     sizeVariants: newVariants,
@@ -234,11 +236,13 @@ const ProductModal = ({
                                 type="number"
                                 value={variant.stock}
                                 onChange={(e) => {
-                                  const newVariants = [
-                                    ...productForm.sizeVariants,
-                                  ];
-                                  newVariants[idx].stock =
-                                    parseInt(e.target.value) || 0;
+                                  // Update state immutably
+                                  const newVariants =
+                                    productForm.sizeVariants.map((v, i) =>
+                                      i === idx
+                                        ? { ...v, stock: e.target.value }
+                                        : v,
+                                    );
                                   setProductForm({
                                     ...productForm,
                                     sizeVariants: newVariants,
