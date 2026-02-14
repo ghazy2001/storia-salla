@@ -12,6 +12,22 @@ const isSallaPage =
   path.includes("/cart");
 
 if (!isSallaPage) {
+  // Fail-safe: Ensure preloader is removed even if React app crashes or hangs
+  // This prevents the "Green Screen of Death" where the site stays locked forever.
+  setTimeout(() => {
+    const nativeStyle = document.getElementById("storia-preloader-style");
+    const nativeLoader = document.getElementById("native-preloader");
+    const shield = document.getElementById("storia-salla-shield");
+
+    if (nativeStyle) nativeStyle.remove();
+    if (nativeLoader) nativeLoader.remove();
+    if (shield) shield.remove();
+
+    // Reset body styles just in case
+    document.body.style.overflow = "";
+    document.body.style.backgroundColor = "";
+  }, 5000); // 5 seconds max wait time
+
   createRoot(document.getElementById("root")).render(
     <StrictMode>
       <App />
