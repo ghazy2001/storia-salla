@@ -18,7 +18,8 @@ const CustomCursor = () => {
 
     const createSnowflake = (x, y) => {
       const snowflake = document.createElement("div");
-      snowflake.className = "fixed pointer-events-none z-[10000] rounded-full";
+      snowflake.className =
+        "fixed pointer-events-none z-[9999999] rounded-full";
 
       const size = Math.random() * 4 + 1.5;
       const opacity = Math.random() * 0.4 + 0.4;
@@ -33,7 +34,10 @@ const CustomCursor = () => {
       // Add a subtle border/glow so it's visible on white
       snowflake.style.boxShadow = "0 0 4px rgba(0,0,0,0.15), 0 0 2px gold";
 
-      document.body.appendChild(snowflake);
+      // Append to root to avoid "body > *" CSS hiding rule
+      const root = document.getElementById("root");
+      if (root) root.appendChild(snowflake);
+      else document.body.appendChild(snowflake);
 
       // Animation: Drift and Fall
       gsap.to(snowflake, {
