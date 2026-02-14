@@ -13,16 +13,6 @@ const Preloader = ({ isReady }) => {
         setTimeout(() => shield.remove(), 1000);
       }
 
-      // Remove Native Preloader (Seamless Transition)
-      const nativePreloader = document.getElementById("storia-preloader");
-      if (nativePreloader) {
-        // Verify we have content before removing
-        if (document.getElementById("root").childElementCount > 0) {
-          nativePreloader.style.opacity = "0";
-          setTimeout(() => nativePreloader.remove(), 500);
-        }
-      }
-
       // Allow the fade-out transition to complete before unmounting
       const timer = setTimeout(() => setShouldRender(false), 1000);
       return () => clearTimeout(timer);
