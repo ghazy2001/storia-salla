@@ -50,11 +50,9 @@ export const useAppInitialization = () => {
       const storedTheme = localStorage.getItem("storia_theme");
       if (storedTheme) {
         dispatch(setTheme(storedTheme));
-      } else if (
-        window.matchMedia &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-      ) {
-        dispatch(setTheme("burgundy"));
+      } else {
+        // Default to green always on first load
+        dispatch(setTheme("green"));
       }
 
       // 3. Wait for everything to be ready
@@ -110,7 +108,7 @@ export const useAppInitialization = () => {
           })(),
 
           // Wait for minimum time
-          new Promise((resolve) => setTimeout(resolve, 2500)),
+          new Promise((resolve) => setTimeout(resolve, 1000)),
 
           // Wait for window load
           new Promise((resolve) => {

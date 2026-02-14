@@ -59,7 +59,57 @@ class SallaService {
    * Alternative: Use Salla REST API with merchant token (backend integration)
    */
   async fetchProducts() {
-    log("Attempting to fetch products from custom backend...");
+    log("Attempting to fetch products...");
+
+    // 1. Try Salla SDK first if available (for real IDs and sync)
+    if (this.isAvailable()) {
+      try {
+        log("Attempting to fetch products from Salla API...");
+
+        const productManager =
+          this.salla.product ||
+          (this.salla.api ? this.salla.api.product : null);
+
+        if (!productManager || typeof productManager.fetch !== "function") {
+          throw new Error("Salla Product fetch is not available");
+        }
+
+        let response = null;
+        const variants = [
+          { source: "latest" },
+          { source: "all" },
+          { source: "store" },
+          { source: "web" },
+          "web",
+          "store",
+        ];
+
+        for (const variant of variants) {
+          try {
+            const label =
+              typeof variant === "string" ? variant : JSON.stringify(variant);
+            log(`Trying product.fetch(${label})...`);
+            response = await productManager.fetch(variant);
+            if (response && response.data) {
+              log(`Success with variant: ${label}`);
+              break;
+            }
+          } catch {
+            /* ignore */
+          }
+        }
+
+        if (response && response.data) {
+          // Process and return mapped Salla products
+          return await this._processSallaProducts(response.data);
+        }
+      } catch (error) {
+        log("Salla SDK fetch failed or returned no data:", error);
+      }
+    }
+
+    // 2. Fallback to custom backend (e.g. for development or standalone)
+    log("Falling back to custom backend...");
     try {
       const response = await fetch(`${this.apiBaseUrl}/products`);
       if (response.ok) {
@@ -71,257 +121,131 @@ class SallaService {
           return products;
         }
       }
-      log("Custom backend returned no products, falling back to Salla SDK...");
     } catch (error) {
-      log(
-        "Error fetching from custom backend, falling back to Salla SDK:",
-        error,
-      );
+      log("Error fetching from custom backend:", error);
     }
 
-    if (!this.isAvailable()) {
-      log("Salla SDK not available, cannot fetch products");
-      return null;
+    return null;
+  }
+
+  /**
+   * Internal helper to process and map Salla products
+   * @private
+   */
+  async _processSallaProducts(productsData) {
+    if (config.enableLogging) {
+      log("MAPPING_V6 - Starting detailed product processing");
     }
 
-    try {
-      log("Attempting to fetch products from Salla API...");
-
-      // The "Source value cannot be empty" error is very specific.
-      // We will try several variants in order.
-      // 1. Try passing 'web' as a string (common in some Salla SDK versions)
-      // 2. Try passing { source: 'store' } (another common variant)
-      // 3. Try passing { source: 'web' } again but with more defensive checks
-
-      const productManager =
-        this.salla.product || (this.salla.api ? this.salla.api.product : null);
-
-      if (!productManager || typeof productManager.fetch !== "function") {
-        log("Salla Product fetch is not available");
-        return null;
-      }
-
-      let response = null;
-
-      // Extensive variants to find the right 'Source'
-      const variants = [
-        { source: "latest" },
-        { source: "all" },
-        { source: "store" },
-        { source: "web" },
-        "web",
-        "store",
-      ];
-
-      for (const variant of variants) {
-        try {
-          const label =
-            typeof variant === "string" ? variant : JSON.stringify(variant);
-          log(`Trying product.fetch(${label})...`);
-          response = await productManager.fetch(variant);
-          if (response && response.data) {
-            log(`Success with variant: ${label}`);
-            break;
-          }
-        } catch {
-          // Continue to next variant
-        }
-      }
-
-      // Final SDK Fallback: Try just fetch() again in case of intermittent failure
-      if (!response) {
-        try {
-          response = await productManager.fetch();
-        } catch {
-          /* ignore */
-        }
-      }
-
-      // Final fallthrough: Direct Axios call if we can't get it via SDK
-      if (!response && this.salla.api && this.salla.api.axios) {
-        try {
-          log(
-            "Fetching products via direct Axios call to /products/index.json...",
-          );
-          const axiosRes = await this.salla.api.axios.get(
-            "/products/index.json",
-          );
-          if (axiosRes && axiosRes.data) {
-            log("Success via direct Axios call");
-            response = axiosRes.data;
-          }
-        } catch {
-          log("Direct products axios call failed");
-        }
-      }
-
-      if (response && response.data) {
-        if (response.data.length > 0) {
-          log(
-            "First raw product sample:",
-            JSON.stringify(response.data[0], null, 2),
-          );
-        }
-        log("Fetched products successfully:", response.data);
-
-        if (config.enableLogging) {
-          log("MAPPING_V6 - Starting detailed product processing");
-        }
-
-        // Map Salla product format to app format using async detail fetching
-        const mappedResults = await Promise.all(
-          response.data.map(async (p, index) => {
-            // Helper to handle localized strings from Salla API
-            const translate = (val) => {
-              if (!val) return "";
-              if (typeof val === "string") return val;
-              if (typeof val === "object") {
-                return (
-                  val.ar || val.en || val.default || Object.values(val)[0] || ""
-                );
-              }
-              return String(val);
-            };
-
-            // IF DESCRIPTION IS NULL, TRY TO FETCH FULL PRODUCT DETAILS
-            let description = translate(
-              p.description || p.short_description || p.subtitle,
+    const mappedResults = await Promise.all(
+      productsData.map(async (p, index) => {
+        const translate = (val) => {
+          if (!val) return "";
+          if (typeof val === "string") return val;
+          if (typeof val === "object") {
+            return (
+              val.ar || val.en || val.default || Object.values(val)[0] || ""
             );
-            let targetProduct = p;
+          }
+          return String(val);
+        };
 
-            if (!description && p.id) {
-              try {
-                log(`Fetching full details for product ${p.id}...`);
-                // Get the product manager from the SDK instance
-                const productManager = this.salla.api.product;
-                const detailedRes = await productManager.get({ id: p.id });
-                if (detailedRes && detailedRes.data) {
-                  targetProduct = detailedRes.data;
-                  description = translate(
-                    targetProduct.description ||
-                      targetProduct.short_description ||
-                      targetProduct.subtitle,
-                  );
-                }
-              } catch {
-                log(`Failed to fetch full details for ${p.id}`);
-              }
-            }
+        let description = translate(
+          p.description || p.short_description || p.subtitle,
+        );
+        let targetProduct = p;
 
-            // Improved price handling
-            let priceStr = "0 ر.س";
-            if (
-              targetProduct.price !== undefined &&
-              targetProduct.price !== null
-            ) {
-              const amount =
-                targetProduct.price.amount !== undefined
-                  ? targetProduct.price.amount
-                  : targetProduct.price;
-              let currency =
-                targetProduct.currency || targetProduct.price.currency || "SAR";
-
-              // Map SAR to Arabic currency symbol
-              if (
-                currency.toUpperCase().trim() === "SAR" ||
-                currency.trim() === "ر.س"
-              ) {
-                currency = "ر.س";
-              }
-
-              // Check if amount is already a string containing the currency
-              const amountStr = String(amount);
-              if (amountStr.includes("ر.س") || amountStr.includes("SAR")) {
-                priceStr = amountStr.replace(/SAR/g, "ر.س");
-              } else {
-                priceStr = `${amount} ${currency}`;
-              }
-
-              // Final safety check to avoid double currency in string
-              if (
-                priceStr.includes("ر.س") &&
-                priceStr.split("ر.س").length > 2
-              ) {
-                priceStr = priceStr.replace(/\s*ر\.س\s*$/, "").trim() + " ر.س";
-              }
-            }
-
-            const mappedProduct = {
-              id: targetProduct.id,
-              name: translate(targetProduct.name),
-              price: priceStr,
-              category: targetProduct.category
-                ? translate(targetProduct.category.name)
-                : "general",
-              sizes: targetProduct.options
-                ? targetProduct.options
-                    .filter(
-                      (opt) =>
-                        opt &&
-                        opt.name &&
-                        translate(opt.name).toLowerCase().includes("size"),
-                    )
-                    .flatMap((opt) =>
-                      (opt.values || []).map((v) => translate(v.name)),
-                    )
-                : ["S", "M", "L", "XL"],
-              description: description || "قريباً",
-              image:
-                targetProduct.main_image ||
-                targetProduct.image?.url ||
-                targetProduct.image?.src ||
-                "/assets/logo.png",
-              // IMPORTANT: Components expect objects with { type, src }
-              media:
-                targetProduct.images && targetProduct.images.length > 0
-                  ? targetProduct.images.map((img) => ({
-                      type: "image",
-                      src: img.url || img.src || targetProduct.main_image,
-                    }))
-                  : [
-                      {
-                        type: "image",
-                        src:
-                          targetProduct.main_image ||
-                          targetProduct.image?.url ||
-                          targetProduct.image?.src ||
-                          "/assets/logo.png",
-                      },
-                    ],
-              isNew: false,
-              rating: 5.0,
-              reviews: 0,
-            };
-
-            if (index === 0) {
-              log("Sample Mapped Product (V6):", mappedProduct);
-              log("Product Image URL:", mappedProduct.image);
-              log("Product Media Array:", mappedProduct.media);
-              log(
-                "First Media Item:",
-                JSON.stringify(mappedProduct.media[0], null, 2),
+        if (!description && p.id) {
+          try {
+            const productManager = this.salla.api.product;
+            const detailedRes = await productManager.get({ id: p.id });
+            if (detailedRes && detailedRes.data) {
+              targetProduct = detailedRes.data;
+              description = translate(
+                targetProduct.description ||
+                  targetProduct.short_description ||
+                  targetProduct.subtitle,
               );
-              log("Original Salla Product Image:", targetProduct.image);
             }
-            return mappedProduct;
-          }),
-        );
+          } catch {
+            log(`Failed to fetch full details for ${p.id}`);
+          }
+        }
 
-        return mappedResults;
-      }
+        let priceStr = "0 ر.س";
+        if (targetProduct.price !== undefined && targetProduct.price !== null) {
+          const amount =
+            targetProduct.price.amount !== undefined
+              ? targetProduct.price.amount
+              : targetProduct.price;
+          let currency =
+            targetProduct.currency || targetProduct.price.currency || "SAR";
+          if (
+            currency.toUpperCase().trim() === "SAR" ||
+            currency.trim() === "ر.س"
+          ) {
+            currency = "ر.س";
+          }
+          const amountStr = String(amount);
+          if (amountStr.includes("ر.س") || amountStr.includes("SAR")) {
+            priceStr = amountStr.replace(/SAR/g, "ر.س");
+          } else {
+            priceStr = `${amount} ${currency}`;
+          }
+        }
 
-      log("Product fetch returned no data, falling back to mock");
-      return null;
-    } catch (error) {
-      // Silence internal SDK crashes in production unless logging is enabled
-      if (config.enableLogging) {
-        console.error(
-          "[Storia] Salla SDK product.fetch internal error:",
-          error,
-        );
-      }
-      return null;
-    }
+        const mappedProduct = {
+          id: targetProduct.id,
+          sallaProductId: targetProduct.id, // Explicitly keep Salla ID
+          name: translate(targetProduct.name),
+          price: priceStr,
+          category: targetProduct.category
+            ? translate(targetProduct.category.name)
+            : "general",
+          sizes: targetProduct.options
+            ? targetProduct.options
+                .filter(
+                  (opt) =>
+                    opt &&
+                    opt.name &&
+                    translate(opt.name).toLowerCase().includes("size"),
+                )
+                .flatMap((opt) =>
+                  (opt.values || []).map((v) => translate(v.name)),
+                )
+            : ["S", "M", "L", "XL"],
+          description: description || "قريباً",
+          image:
+            targetProduct.main_image ||
+            targetProduct.image?.url ||
+            targetProduct.image?.src ||
+            "/assets/logo.png",
+          media:
+            targetProduct.images && targetProduct.images.length > 0
+              ? targetProduct.images.map((img) => ({
+                  type: "image",
+                  src: img.url || img.src || targetProduct.main_image,
+                }))
+              : [
+                  {
+                    type: "image",
+                    src:
+                      targetProduct.main_image ||
+                      targetProduct.image?.url ||
+                      targetProduct.image?.src ||
+                      "/assets/logo.png",
+                  },
+                ],
+          isNew: false,
+          rating: 5.0,
+          reviews: 0,
+        };
+
+        return mappedProduct;
+      }),
+    );
+
+    return mappedResults;
   }
 
   /**

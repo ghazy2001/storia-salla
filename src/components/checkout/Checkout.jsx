@@ -99,10 +99,18 @@ const Checkout = ({ theme }) => {
     setIsSubmitting(true);
 
     try {
+      console.log("[Storia] Initiating final submit. Config:", {
+        useSallaBackend: config.useSallaBackend,
+        isSallaAvailable: sallaService.isAvailable(),
+      });
+
       // If on Salla platform, redirect to Salla checkout
       if (config.useSallaBackend && sallaService.isAvailable()) {
+        console.log("[Storia] Redirecting to Salla checkout...");
         return await sallaService.goToCheckout();
       }
+
+      console.log("[Storia] Falling back to custom order creation/WhatsApp...");
       // 1. Create real order in backend
       const orderPayload = {
         customer: {

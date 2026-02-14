@@ -33,8 +33,8 @@
 
 body {
   background-color: var(
-    --bg-footer
-  ); /* Start with Brand Green to match Preloader */
+    --bg-site
+  ); /* Start with Site Background to prevent "Fake Dark Mode" */
   color: var(--text-main);
   transition:
     background-color 1s ease-in-out,

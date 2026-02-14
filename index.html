@@ -55,8 +55,65 @@
       property="twitter:image"
       content="https://storia-cyan.vercel.app/assets/storia_about.jpg"
     />
+
+    <style id="storia-preloader-style">
+      /* IMMEDIATE STYLE INJECTION TO PREVENT WHITE FLASH */
+      html,
+      body {
+        background-color: #fdfcf8 !important; /* Brand Light Beige */
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        width: 100%;
+        overflow: hidden !important;
+        font-family: "Cairo", sans-serif;
+      }
+      #root {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      /* Native Preloader Styles */
+      #native-preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 999999;
+        background-color: #fdfcf8; /* Brand Light Beige */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 1;
+        transition: opacity 0.5s ease-out;
+      }
+      .storia-logo-spinner {
+        height: 6rem;
+        width: auto;
+        /* Use original color for light background */
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.6;
+          transform: scale(0.95);
+        }
+      }
+    </style>
   </head>
   <body>
+    <!-- NATIVE HTML PRELOADER (Hides immediately on JS mount) -->
+    <div id="native-preloader">
+      <img
+        src="/assets/logo.png"
+        alt="Loading..."
+        class="storia-logo-spinner"
+      />
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

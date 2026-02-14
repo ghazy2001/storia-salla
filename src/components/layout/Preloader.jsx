@@ -6,28 +6,33 @@ const Preloader = ({ isReady }) => {
 
   useEffect(() => {
     if (isReady) {
-      // 1. Start the fade-out of the React preloader
+      // 1. Immediately hide the native preloader from index.html
+      const nativeLoader = document.getElementById("native-preloader");
+      if (nativeLoader) {
+        nativeLoader.style.opacity = "0";
+        nativeLoader.style.pointerEvents = "none";
+        // Remove it from DOM after transition
+        setTimeout(() => nativeLoader.remove(), 500);
+      }
+
+      // 2. Start the fade-out of the React preloader
       const timer = setTimeout(() => {
         setShouldRender(false);
 
-        // 2. Cleanup Native Loader & Styles (after React is visible)
-        // We do this here to ensure no "white flash" occurs.
-
-        // Remove the style block that forces green background
+        // Remove the style block that forces green background (from index.html or salla-loader)
         const nativeStyle = document.getElementById("storia-preloader-style");
-        if (nativeStyle) nativeStyle.remove();
+        if (nativeStyle) {
+          nativeStyle.remove();
+          console.log("✅ Cleaned up native preloader styles");
+        }
 
-        // Remove the native preloader DOM element (if it exists outside root)
-        const nativeLoader = document.getElementById("native-preloader");
-        if (nativeLoader) nativeLoader.remove();
-
-        // Reset body styles to allow scrolling
+        // Reset both html and body styles to allow scrolling
+        document.documentElement.style.overflow = "";
         document.body.style.overflow = "";
 
-        // Explicitly switch to the theme's background color
-        // This triggers the CSS transition we added in index.css
-        document.body.style.backgroundColor = "var(--bg-site)";
-      }, 1000); // Match the duration-1000 in App.jsx and css transition
+        // Remove any inline background-color to let CSS variables take over
+        document.body.style.backgroundColor = "";
+      }, 1000); // Wait for React transition
 
       // Also clean up Salla shield if present
       const shield = document.getElementById("storia-salla-shield");
