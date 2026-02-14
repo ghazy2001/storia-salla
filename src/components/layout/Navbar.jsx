@@ -417,26 +417,26 @@ const Navbar = ({ theme, toggleTheme }) => {
               </span>
               <User size={28} />
             </button>
-          </div>
-          <div className="mt-auto flex flex-col gap-4 text-sm font-light tracking-widest text-white/80">
-            <span
-              onClick={() => {
-                handleContactClick();
-                setIsMobileMenuOpen(false);
-              }}
-              className="cursor-pointer hover:text-brand-gold transition-colors text-right"
-            >
-              اتصل بنا
-            </span>
-            <span
-              onClick={() => {
-                handleFAQClick();
-                setIsMobileMenuOpen(false);
-              }}
-              className="cursor-pointer hover:text-brand-gold transition-colors text-right"
-            >
-              الأسئلة الشائعة
-            </span>
+            <div className="mt-8 border-t border-white/10 pt-8 flex flex-col gap-4 text-sm font-light tracking-widest text-white/80">
+              <span
+                onClick={() => {
+                  handleContactClick();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="cursor-pointer hover:text-brand-gold transition-colors text-right"
+              >
+                اتصل بنا
+              </span>
+              <span
+                onClick={() => {
+                  handleFAQClick();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="cursor-pointer hover:text-brand-gold transition-colors text-right"
+              >
+                الأسئلة الشائعة
+              </span>
+            </div>
           </div>
         </div>
       </div>

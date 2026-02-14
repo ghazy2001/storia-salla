@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -56,7 +54,7 @@ body {
 }
 
 /* Hide Salla's default theme elements that appear behind our app */
-body > *:not(#root):not(script):not(style):not(link) {
+body > *:not(#root):not(#storia-preloader):not(script):not(style):not(link) {
   display: none !important;
   visibility: hidden !important;
 }

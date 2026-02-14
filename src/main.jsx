@@ -17,6 +17,9 @@ if (!isSallaPage) {
       <App />
     </StrictMode>,
   );
+
+  // We leat the React <Preloader /> component handle the removal of the native preloader
+  // to ensure a smooth transition without flashing.
 } else {
   console.log("💰 Salla Native Page Detected - React App Halted.");
 }

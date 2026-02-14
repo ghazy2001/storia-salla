@@ -7,7 +7,7 @@ router.get("/", async (req, res) => {
   try {
     const coupons = await Coupon.find().sort({ createdAt: -1 });
     res.json(coupons);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to fetch coupons" });
   }
 });
@@ -40,7 +40,7 @@ router.delete("/:id", async (req, res) => {
   try {
     await Coupon.findByIdAndDelete(req.params.id);
     res.json({ message: "Coupon deleted successfully" });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Failed to delete coupon" });
   }
 });
@@ -74,7 +74,7 @@ router.post("/validate", async (req, res) => {
     }
 
     res.json(coupon);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "خطأ في التحقق من الكود" });
   }
 });

@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import { useNavigate } from "react-router-dom";
 import { selectTheme } from "../../store/slices/uiSlice";
@@ -24,7 +24,7 @@ const BestSellers = ({ onProductSelect }) => {
   const sectionRef = useRef(null);
   const products = useSelector(selectProducts);
   const theme = useSelector(selectTheme);
-  const dispatch = useDispatch();
+
   const { containerRef, scrollLeft, scrollRight } = useScrollContainer(320);
   const navigate = useNavigate();
 

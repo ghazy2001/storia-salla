@@ -215,7 +215,7 @@ const OrdersTab = ({ orders }) => {
                           className="text-xs border rounded-lg p-1 w-24 outline-none focus:ring-1 focus:ring-brand-gold"
                         />
                       ) : (
-                        <span className="text-xs text-gray-500 font-mono">
+                        <span className="text-xs text-gray-500">
                           {order.trackingNumber || "—"}
                         </span>
                       )}

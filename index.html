@@ -6,6 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>STORIA DESIGN | ستوريا - عبايات سعودية فاخرة</title>
 
+    <!-- Google Fonts: Cairo -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cairo:wght@200..1000&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Meta Tags for SEO & Social Media Preview -->
     <meta
       name="description"
@@ -49,6 +57,76 @@
     />
   </head>
   <body>
+    <div id="storia-preloader">
+      <div class="spinner-container">
+        <img src="/assets/logo.png" alt="Storia" class="storia-logo-spinner" />
+      </div>
+    </div>
+
+    <style>
+      /* Native Preloader Styles (Green Mode Default) */
+      html {
+        background-color: #0e352f; /* Brand Green */
+      }
+      body {
+        margin: 0;
+        background-color: #0e352f;
+      }
+      #storia-preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        background-color: #0e352f; /* Brand Green */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.5s ease-out;
+      }
+      .storia-logo-spinner {
+        height: 4rem;
+        width: auto;
+        /* Start with White Logo (brightness-0 invert-1) */
+        filter: brightness(0) invert(1);
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.6;
+          transform: scale(0.95);
+        }
+      }
+    </style>
+
+    <script>
+      // Restore Theme Immediately
+      (function () {
+        try {
+          const storedTheme = localStorage.getItem("storia_theme") || "green";
+          document.documentElement.setAttribute("data-theme", storedTheme);
+          document.documentElement.classList.add(storedTheme);
+
+          // Adjust background color based on theme
+          if (storedTheme === "burgundy") {
+            document.documentElement.style.backgroundColor = "#4d1330";
+            document.body.style.backgroundColor = "#4d1330";
+            const preloader = document.getElementById("storia-preloader");
+            if (preloader) preloader.style.backgroundColor = "#4d1330";
+
+            // Invert logo for dark theme (white logo)
+            const logo = document.querySelector(".storia-logo-spinner");
+            if (logo) logo.style.filter = "brightness(0) invert(1)";
+          }
+        } catch (e) {
+          console.error("Theme restore failed", e);
+        }
+      })();
+    </script>
+
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

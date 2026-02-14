@@ -6,11 +6,17 @@ const Preloader = ({ isReady }) => {
 
   useEffect(() => {
     if (isReady) {
-      // Remove Salla Theme Shield if it exists
-      const shield = document.getElementById("storia-salla-shield");
-      if (shield) {
-        shield.style.opacity = "0";
-        setTimeout(() => shield.remove(), 1000);
+      // Remove Native Preloader (Seamless Transition)
+      const nativePreloader = document.getElementById("storia-preloader");
+      if (nativePreloader) {
+        // Verify we have content before removing
+        if (
+          document.getElementById("root") &&
+          document.getElementById("root").childElementCount > 0
+        ) {
+          nativePreloader.style.opacity = "0";
+          setTimeout(() => nativePreloader.remove(), 500);
+        }
       }
 
       // Allow the fade-out transition to complete before unmounting
@@ -23,7 +29,7 @@ const Preloader = ({ isReady }) => {
 
   return (
     <div
-      className={`fixed inset-0 z-[100] bg-brand-charcoal flex items-center justify-center transition-opacity duration-700 ease-in-out ${isReady ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+      className={`fixed inset-0 z-[100] bg-brand-primary flex items-center justify-center transition-opacity duration-700 ease-in-out ${isReady ? "opacity-0 pointer-events-none" : "opacity-100"}`}
     >
       <div className="relative">
         <img

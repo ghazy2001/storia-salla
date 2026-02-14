@@ -2,14 +2,14 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { resolveAsset } from "../../utils/assetUtils";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useDispatch } from "react-redux";
+
 import { useNavigate } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const OurStory = ({ theme }) => {
   const sectionRef = useRef(null);
-  const dispatch = useDispatch();
+
   const navigate = useNavigate();
 
   const isLightTheme = theme === "green";
