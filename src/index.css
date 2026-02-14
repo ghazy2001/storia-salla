@@ -51,7 +51,8 @@ body {
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
-  background-color: var(--bg-site);
+  /* background-color: var(--bg-site);  <-- REMOVED: This was covering the green body */
+  background-color: transparent;
   overflow-x: hidden !important;
 }
 
