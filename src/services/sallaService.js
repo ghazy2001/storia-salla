@@ -56,22 +56,29 @@ class SallaService {
    * Waits for Salla SDK to initialize
    * @param {number} timeout - Max wait time in ms
    */
-  async waitForSalla(timeout = 3000) {
-    if (this.salla) return true;
+  async waitForSalla(timeout = 5000) {
+    if (
+      this.salla &&
+      (this.salla.cart || (this.salla.api && this.salla.api.cart))
+    )
+      return true;
 
-    log(`Waiting for Salla SDK (timeout: ${timeout}ms)...`);
+    log(`Waiting for Salla SDK & Cart (timeout: ${timeout}ms)...`);
     const start = Date.now();
 
     while (Date.now() - start < timeout) {
-      if (this.salla) {
-        log("Salla SDK detected!");
+      if (
+        this.salla &&
+        (this.salla.cart || (this.salla.api && this.salla.api.cart))
+      ) {
+        log("Salla SDK & Cart detected!");
         return true;
       }
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
 
-    log("Salla SDK wait timed out.");
-    return false;
+    log("Salla SDK wait timed out (Cart module missing).");
+    return !!this.salla; // Return true if Salla exists even if cart doesn't, to attempt falbacks
   }
 
   /**
@@ -408,6 +415,9 @@ class SallaService {
   /**
    * Get current cart from Salla
    */
+  /**
+   * Get current cart from Salla
+   */
   async getCart() {
     if (!this.isAvailable()) {
       log("Salla SDK not available, cannot get cart");
@@ -415,12 +425,28 @@ class SallaService {
     }
 
     try {
-      // Salla cart is managed on the page, we can get the current state
-      const response = await this.salla.cart.fetch();
+      let response = null;
+      const cartApi =
+        this.salla.cart || (this.salla.api ? this.salla.api.cart : null);
 
-      log("Fetched Salla cart:", response);
+      if (cartApi && typeof cartApi.fetch === "function") {
+        // Standard method
+        response = await cartApi.fetch();
+      } else if (cartApi && typeof cartApi.details === "function") {
+        // Alternative method
+        response = await cartApi.details();
+      } else if (this.salla.api && this.salla.api.axios) {
+        // Direct Axios fallback
+        const res = await this.salla.api.axios.get("/cart");
+        if (res && res.data) response = res.data;
+      }
 
-      return response;
+      if (response) {
+        log("Fetched Salla cart:", response);
+        return response;
+      }
+
+      return null;
     } catch (error) {
       console.error("[Storia] Error fetching Salla cart:", error);
       return null;

@@ -129,10 +129,11 @@ const cartSlice = createSlice({
 
           // Helper to check if total changed significantly imply discount
           // For now, we trust Salla's total is the final price
-
-          if (Array.isArray(data.items)) {
-            state.cartItems = data.items.map((item) => ({
-              id: item.product_id,
+          
+          if (data.items && Array.isArray(data.items)) {
+             console.log("[Storia Cart] Mapping items:", data.items.length);
+             state.cartItems = data.items.map((item) => ({
+              id: item.product_id || item.id,
               itemId: item.id,
               name: item.product_title || item.name,
               price: item.price
@@ -144,11 +145,12 @@ const cartSlice = createSlice({
               quantity: item.quantity,
               sallaProductId: item.product_id,
               options: item.options,
-              selectedSize:
-                item.options && item.options.length > 0
-                  ? item.options[0].value
-                  : null,
+              selectedSize: item.options && item.options.length > 0 ? item.options[0].value : null 
             }));
+          } else {
+             console.warn("[Storia Cart] No items found in response or invalid format", data);
+             state.cartItems = [];
+          }
 
             // Recalculate count from items if API returned 0 but we have items
             if (state.count === 0 && state.cartItems.length > 0) {
