@@ -126,8 +126,36 @@ class SallaService {
         }
 
         if (response && response.data) {
+          log(`Success with variant: ${response.data.length} items found`);
           // Process and return mapped Salla products
           return await this._processSallaProducts(response.data);
+        } else {
+          // FALLBACK: Targeted Fetch for known IDs
+          log(
+            "Bulk fetch yielded no results. Attempting targeted fetch for linked IDs...",
+          );
+          const targetIds = [1314742571, 1252773325]; // Abaya-2, Abaya
+          const targetedResults = [];
+
+          for (const id of targetIds) {
+            try {
+              // Try different signatures for .get()
+              let res = await productManager.get(id).catch(() => null);
+              if (!res)
+                res = await productManager.get({ id }).catch(() => null);
+
+              if (res && res.data) {
+                log(`Targeted fetch success for ${id}`);
+                targetedResults.push(res.data);
+              }
+            } catch (err) {
+              console.error(`Targeted fetch failed for ${id}`, err);
+            }
+          }
+
+          if (targetedResults.length > 0) {
+            return await this._processSallaProducts(targetedResults);
+          }
         }
       } catch (error) {
         log("Salla SDK fetch failed or returned no data:", error);

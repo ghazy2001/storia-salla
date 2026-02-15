@@ -198,8 +198,12 @@ const Footer = ({ theme }) => {
           {/* DEBUG STATUS */}
           <span className="text-[9px] opacity-40">
             SDK: {typeof window !== "undefined" && window.salla ? "OK" : "NR"} |
-            Salla: {products.find((p) => p.id === 1)?.price ? "Linked" : "Wait"}{" "}
-            | Items: {products.length}
+            Salla:{" "}
+            {
+              products.filter((p) => p.price && String(p.price).includes("ر.س"))
+                .length
+            }
+            /{products.length} | Items: {products.length}
           </span>
         </span>
         <div className="hidden md:block"></div>
