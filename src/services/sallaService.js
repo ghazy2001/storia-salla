@@ -222,93 +222,131 @@ class SallaService {
           return String(val);
         };
 
+        // 1. Get fundamental details
         let description = translate(
           p.description || p.short_description || p.subtitle,
         );
         let targetProduct = p;
 
-        if (!description && p.id) {
+        // 2. Fetch full details if description is missing and we have an ID
+        // (Only do this if absolutely necessary to avoid API rate limits)
+        if ((!description || description.length < 10) && p.id) {
           try {
-            const productManager = this.salla.api.product;
-            const detailedRes = await productManager.get({ id: p.id });
-            if (detailedRes && detailedRes.data) {
-              targetProduct = detailedRes.data;
-              description = translate(
-                targetProduct.description ||
-                  targetProduct.short_description ||
-                  targetProduct.subtitle,
-              );
+            const productManager =
+              this.salla.product ||
+              (this.salla.api ? this.salla.api.product : null);
+            if (productManager) {
+              const detailedRes = await productManager
+                .get(p.id)
+                .catch(() => null);
+              if (detailedRes && detailedRes.data) {
+                targetProduct = detailedRes.data;
+                description = translate(
+                  targetProduct.description ||
+                    targetProduct.short_description ||
+                    targetProduct.subtitle,
+                );
+              }
             }
           } catch {
             log(`Failed to fetch full details for ${p.id}`);
           }
         }
 
-        let priceStr = "0 ر.س";
-        if (targetProduct.price !== undefined && targetProduct.price !== null) {
-          const amount =
-            targetProduct.price.amount !== undefined
-              ? targetProduct.price.amount
-              : targetProduct.price;
-          let currency =
-            targetProduct.currency || targetProduct.price.currency || "SAR";
-          if (
-            currency.toUpperCase().trim() === "SAR" ||
-            currency.trim() === "ر.س"
-          ) {
-            currency = "ر.س";
-          }
-          const amountStr = String(amount);
-          if (amountStr.includes("ر.س") || amountStr.includes("SAR")) {
-            priceStr = amountStr.replace(/SAR/g, "ر.س");
+        // 3. Map Price
+        let amount = 0;
+        let currency = "SAR";
+
+        if (targetProduct.price) {
+          if (typeof targetProduct.price === "object") {
+            amount = targetProduct.price.amount || 0;
+            currency = targetProduct.price.currency || "SAR";
           } else {
-            priceStr = `${amount} ${currency}`;
+            amount = targetProduct.price;
           }
         }
 
+        // Format price string
+        let priceStr = `${amount} ${currency}`;
+        if (currency === "SAR" || currency === "RS" || currency === "ر.س") {
+          priceStr = `${amount} ر.س`;
+        }
+
+        // 4. Map Images
+        // Try to get all images from 'images' array, fallback to 'image' object
+        const rawImages = targetProduct.images || [];
+        const media = rawImages.map((img) => ({
+          type: "image",
+          src: img.url || img.src,
+          alt: img.alt || targetProduct.name,
+        }));
+
+        // Ensure main image is present
+        const mainImage =
+          targetProduct.image?.url ||
+          targetProduct.image?.src ||
+          targetProduct.main_image;
+        if (mainImage && !media.find((m) => m.src === mainImage)) {
+          media.unshift({ type: "image", src: mainImage });
+        }
+
+        // If no images, use logo
+        if (media.length === 0) {
+          media.push({ type: "image", src: "/assets/logo.png" });
+        }
+
+        // 5. Map Options (Sizes)
+        // Look for options that seem to be "Size" or "المقاس"
+        let sizes = ["S", "M", "L", "XL"]; // Default fallback
+        let sizeVariants = [];
+
+        const options = targetProduct.options || [];
+        const sizeOption = options.find((opt) => {
+          const name = translate(opt.name).toLowerCase();
+          return (
+            name.includes("size") ||
+            name.includes("مقاس") ||
+            name.includes("قياس")
+          );
+        });
+
+        if (sizeOption && sizeOption.values) {
+          sizes = sizeOption.values.map((v) => translate(v.name || v.label));
+          // Map values to sizeVariants structure
+          sizeVariants = sizeOption.values.map((v) => ({
+            size: translate(v.name || v.label),
+            price: v.price ? v.price.amount : amount,
+            stock: 10, // Salla doesn't always return stock per variant in list view
+            sallaVariantId: v.id,
+          }));
+        }
+
+        // 6. Map Category
+        const categoryName =
+          targetProduct.categories && targetProduct.categories.length > 0
+            ? translate(targetProduct.categories[0].name)
+            : targetProduct.category
+              ? translate(targetProduct.category.name)
+              : "General";
+
         const mappedProduct = {
           id: targetProduct.id,
-          sallaProductId: targetProduct.id, // Explicitly keep Salla ID
+          sallaProductId: targetProduct.id,
           name: translate(targetProduct.name),
-          price: priceStr,
-          category: targetProduct.category
-            ? translate(targetProduct.category.name)
-            : "general",
-          sizes: targetProduct.options
-            ? targetProduct.options
-                .filter(
-                  (opt) =>
-                    opt &&
-                    opt.name &&
-                    translate(opt.name).toLowerCase().includes("size"),
-                )
-                .flatMap((opt) =>
-                  (opt.values || []).map((v) => translate(v.name)),
-                )
-            : ["S", "M", "L", "XL"],
-          description: description || "قريباً",
-          image:
-            targetProduct.main_image ||
-            targetProduct.image?.url ||
-            targetProduct.image?.src ||
-            "/assets/logo.png",
-          media:
-            targetProduct.images && targetProduct.images.length > 0
-              ? targetProduct.images.map((img) => ({
-                  type: "image",
-                  src: img.url || img.src || targetProduct.main_image,
-                }))
-              : [
-                  {
-                    type: "image",
-                    src:
-                      targetProduct.main_image ||
-                      targetProduct.image?.url ||
-                      targetProduct.image?.src ||
-                      "/assets/logo.png",
-                  },
-                ],
-          isNew: false,
+          image: mainImage || "/assets/logo.png",
+          media: media,
+          price: amount,
+          priceStr: priceStr,
+          regularPrice: targetProduct.regular_price?.amount || 0,
+          currency: currency,
+          category: categoryName,
+          sizes: sizes,
+          sizeVariants: sizeVariants,
+          description: description || "No description available",
+          stock: targetProduct.quantity || 10,
+          isNew: targetProduct.is_new || false,
+          isPromoted: !!targetProduct.promotion,
+          promotionTitle: targetProduct.promotion?.title,
           rating: 5.0,
           reviews: 0,
         };

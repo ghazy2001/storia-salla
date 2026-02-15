@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { products as initialProducts } from "../../data/products";
+// import { products as initialProducts } from "../../data/products"; // Deprecated
 import { NAV_LINKS as initialCategories } from "../../utils/constants";
 import sallaService from "../../services/sallaService";
 
@@ -103,7 +103,7 @@ export const deleteProductAsync = createAsyncThunk(
 );
 
 const initialState = {
-  products: initialProducts,
+  products: [], // Start empty, load from Salla
   categories: initialCategories,
   loading: false,
   error: null,
@@ -113,8 +113,6 @@ const productSlice = createSlice({
   name: "product",
   initialState,
   reducers: {
-    // These remain as local-only fallbacks or for optimistic updates if needed
-    // But we'll primarily use extraReducers now
     setProducts: (state, action) => {
       state.products = action.payload;
     },
@@ -129,31 +127,12 @@ const productSlice = createSlice({
         state.loading = false;
         if (Array.isArray(action.payload)) {
           console.log(
-            "[Redux] Salla Products Fetched:",
+            "[Redux] Salla Products Fetched & Replaced:",
             action.payload.length,
             action.payload,
           );
-          // HYBRID MERGE: Keep local UI (names/images), take Salla business data (price/stock)
-          state.products = state.products.map((localProduct) => {
-            const sallaMatch = action.payload.find(
-              (sp) =>
-                sp.sallaProductId === localProduct.sallaProductId ||
-                sp.id === localProduct.sallaProductId,
-            );
-
-            if (sallaMatch) {
-              console.log(
-                `[Redux] Merging Salla Data for ${localProduct.name}: Price=${sallaMatch.price}, Name=${sallaMatch.name}`,
-              );
-              return {
-                ...localProduct,
-                price: sallaMatch.price, // Synced Price
-                name: sallaMatch.name, // Synced Name (for invoice consistency)
-                // sallaProductId: sallaMatch.id, // Update ID if it was missing
-              };
-            }
-            return localProduct;
-          });
+          // DIRECT REPLACEMENT: Salla is now the Source of Truth
+          state.products = action.payload;
         }
       })
       .addCase(fetchProductsFromSalla.rejected, (state, action) => {
