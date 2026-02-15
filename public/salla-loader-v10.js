@@ -12,14 +12,15 @@
   const style = document.createElement("style");
   style.id = "storia-preloader-style";
   style.innerHTML = `
-    html, body { 
-      background-color: #fdfcf8 !important; /* Brand Light Beige */
-      margin: 0; padding: 0; 
-      /* Ensure scrolling is ALWAYS enabled */
+    /* AGGRESSIVE SCROLL FIX v2 */
+    html, body, #app, .app-container, .store-layout, .salla-app, main { 
+      background-color: #fdfcf8 !important; 
+      overflow: auto !important;
       overflow-y: auto !important;
-      overflow-x: hidden;
       height: auto !important;
-      min-height: 100%;
+      position: static !important;
+      touch-action: auto !important;
+      -webkit-overflow-scrolling: touch !important;
     }
     #root { 
       display: block; width: 100%; height: 100%; 
@@ -58,8 +59,25 @@
   `;
   document.head.appendChild(style);
 
-  // 2. Brute Force Name Removal (Mutation Sync)
+  // 2. Brute Force Name Removal (Mutation Sync) & SCROLL ENFORCER
+  const enforceScroll = () => {
+    document.body.style.setProperty("overflow", "auto", "important");
+    document.body.style.setProperty("overflow-y", "auto", "important");
+    document.documentElement.style.setProperty("overflow", "auto", "important");
+    document.documentElement.style.setProperty(
+      "overflow-y",
+      "auto",
+      "important",
+    );
+    document.documentElement.style.setProperty(
+      "position",
+      "static",
+      "important",
+    );
+  };
+
   const hideNameBruteForce = () => {
+    enforceScroll(); // Run scroll fix with name hider
     const targets = ["Mahmoud Ghazy", "محمود غازي", "MahmoudGhazy"];
     const selectors = "h1, h2, h3, h4, h5, span, p, div, a, .store-info__name";
 
