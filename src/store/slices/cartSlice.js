@@ -11,12 +11,27 @@ export const fetchCartFromSalla = createAsyncThunk(
 
       // 2. Fetch Cart
       const response = await sallaService.getCart();
+      console.log("[Storia Cart Debug] Raw response from Salla:", response);
 
-      if (response && response.data) {
-        return response.data; // Should contain { items: [], total: ..., count: ... }
+      if (!response) return null;
+
+      // Handle varied response structures (some SDK versions return wrapped data, others direct)
+      if (response.data && (response.data.items || response.data.count)) {
+        return response.data;
       }
-      return null;
+
+      if (response.items || response.count) {
+        return response;
+      }
+
+      // Last ditch effort: maybe it's { status: 200, success: true, data: { cart: { ... } } }
+      if (response.data && response.data.cart) {
+        return response.data.cart;
+      }
+
+      return response; // Return whatever we got for reducer to inspect
     } catch (error) {
+      console.error("[Storia Cart Error]", error);
       return rejectWithValue(error.message);
     }
   },
@@ -118,21 +133,27 @@ const cartSlice = createSlice({
       .addCase(fetchCartFromSalla.fulfilled, (state, action) => {
         state.loading = false;
         const data = action.payload;
-
         if (data) {
-          state.count = data.count || data.items_count || 0;
-          state.total = data.total
-            ? typeof data.total === "object"
-              ? data.total.amount
-              : data.total
+          // Normalize data structure
+          const items = data.items || (data.data && data.data.items) || [];
+          const count =
+            data.count ||
+            data.items_count ||
+            (data.data && data.data.count) ||
+            0;
+          const total = data.total || (data.data && data.data.total) || 0;
+
+          // Map Salla Items to Internal Structure
+          state.count = count;
+          state.total = total
+            ? typeof total === "object"
+              ? total.amount
+              : total
             : 0;
 
-          // Helper to check if total changed significantly imply discount
-          // For now, we trust Salla's total is the final price
-
-          if (data.items && Array.isArray(data.items)) {
-            console.log("[Storia Cart] Mapping items:", data.items.length);
-            state.cartItems = data.items.map((item) => ({
+          if (Array.isArray(items)) {
+            console.log("[Storia Cart] Mapping items:", items.length);
+            state.cartItems = items.map((item) => ({
               id: item.product_id || item.id,
               itemId: item.id,
               name: item.product_title || item.name,
