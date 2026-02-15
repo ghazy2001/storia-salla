@@ -143,11 +143,12 @@ const productSlice = createSlice({
 
             if (sallaMatch) {
               console.log(
-                `[Redux] Merging Price for ${localProduct.name}: ${sallaMatch.price}`,
+                `[Redux] Merging Salla Data for ${localProduct.name}: Price=${sallaMatch.price}, Name=${sallaMatch.name}`,
               );
               return {
                 ...localProduct,
-                price: sallaMatch.price, // Update price from Salla
+                price: sallaMatch.price, // Synced Price
+                name: sallaMatch.name, // Synced Name (for invoice consistency)
                 // sallaProductId: sallaMatch.id, // Update ID if it was missing
               };
             }
