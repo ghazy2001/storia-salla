@@ -149,6 +149,14 @@ const cartSlice = createSlice({
                   ? item.options[0].value
                   : null,
             }));
+
+            // Recalculate count from items if API returned 0 but we have items
+            if (state.count === 0 && state.cartItems.length > 0) {
+              state.count = state.cartItems.reduce(
+                (acc, item) => acc + (item.quantity || 1),
+                0,
+              );
+            }
           }
         }
       })
@@ -163,7 +171,8 @@ export const { addToCartOptimistic, applyCoupon, removeCoupon } =
 
 // Selectors
 export const selectCartItems = (state) => state.cart.cartItems;
-export const selectCartCount = (state) => state.cart.count;
+export const selectCartCount = (state) =>
+  state.cart.cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
 export const selectCartTotal = (state) => state.cart.total;
 export const selectCartLoading = (state) => state.cart.loading;
 export const selectAppliedCoupon = (state) => state.cart.appliedCoupon;
