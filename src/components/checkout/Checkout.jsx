@@ -104,15 +104,10 @@ const Checkout = ({ theme }) => {
         isSallaAvailable: sallaService.isAvailable(),
       });
 
-      // If on Salla platform AND SDK is ready, redirect to Salla checkout
+      // If on Salla platform, redirect to Salla checkout
       if (config.useSallaBackend && sallaService.isAvailable()) {
         console.log("[Storia] Redirecting to Salla checkout...");
-        const result = await sallaService.goToCheckout();
-        if (result && result.success) return;
-        // If goToCheckout returns success:false or fails to redirect, fall through
-        console.warn(
-          "[Storia] Salla redirect failed, falling back to custom checkout...",
-        );
+        return await sallaService.goToCheckout();
       }
 
       console.log("[Storia] Falling back to custom order creation/WhatsApp...");
