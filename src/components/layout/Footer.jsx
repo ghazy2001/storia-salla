@@ -10,13 +10,17 @@ import {
   setTrackOrderOpen,
   showToast,
 } from "../../store/slices/uiSlice";
-import { selectCategories } from "../../store/slices/productSlice";
+import {
+  selectCategories,
+  selectProducts,
+} from "../../store/slices/productSlice";
 import { SOCIAL_URLS, CONTACT_INFO } from "../../utils/constants";
 
 const Footer = ({ theme }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const categories = useSelector(selectCategories);
+  const products = useSelector(selectProducts);
   const [showAll, setShowAll] = useState(false);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
@@ -186,8 +190,17 @@ const Footer = ({ theme }) => {
       </div>
       <div className="mt-12 w-full grid grid-cols-1 md:grid-cols-3 items-center text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2">
         <span className="text-center md:text-start">الرقم الضريبي</span>
-        <span dir="ltr" className="text-center">
-          &copy; 2026 STORIA DESIGN. All Rights Reserved.
+        <span
+          dir="ltr"
+          className="text-center flex flex-col items-center gap-1"
+        >
+          <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
+          {/* DEBUG STATUS */}
+          <span className="text-[9px] opacity-40">
+            SDK: {typeof window !== "undefined" && window.salla ? "OK" : "NR"} |
+            Salla: {products.find((p) => p.id === 1)?.price ? "Linked" : "Wait"}{" "}
+            | Items: {products.length}
+          </span>
         </span>
         <div className="hidden md:block"></div>
       </div>
