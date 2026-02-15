@@ -156,6 +156,24 @@ class SallaService {
           if (targetedResults.length > 0) {
             return await this._processSallaProducts(targetedResults);
           }
+
+          // FINAL FALLBACK: Direct Storefront API (REST)
+          log("SDK fetches failed. Attempting Direct Storefront API (REST)...");
+          try {
+            // Fetch directly from the store's public API
+            const restRes = await fetch("/api/v1/products?per_page=100");
+            if (restRes.ok) {
+              const restData = await restRes.json();
+              if (restData && restData.data) {
+                log(`Direct REST API success: ${restData.data.length} items`);
+                return await this._processSallaProducts(restData.data);
+              }
+            } else {
+              log(`Direct REST API failed: ${restRes.status}`);
+            }
+          } catch (err) {
+            console.error("Direct REST API error:", err);
+          }
         }
       } catch (error) {
         log("Salla SDK fetch failed or returned no data:", error);
