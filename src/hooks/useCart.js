@@ -18,29 +18,21 @@ export const useAddToCart = () => {
     // Note: This will fail silently if product IDs don't match Salla's products
     if (config.useSallaBackend && sallaService.isAvailable()) {
       try {
-        const result = await sallaService.addToCart(
-          product.id,
-          quantity,
-          {
-            variantId: size,
-            sallaProductId: product.sallaProductId,
-          }, // Pass Salla Product ID for real cart sync
-        );
+        const result = await sallaService.addToCart(product.id, quantity, {
+          variantId: size,
+          sallaProductId: product.sallaProductId,
+        });
 
-        // Silently handle errors - local cart still works
-        if (!result.success && import.meta.env.DEV) {
-          console.warn(
-            "[Storia] Cart sync unavailable (expected with mock products):",
-            result.error,
+        if (!result.success) {
+          console.error("[Storia] Cart sync failed:", result.error);
+          alert(
+            "فشل إضافة المنتج لسلة سلة. تأكد من أن المنتج موجود في سلة.\n" +
+              (result.error || ""),
           );
         }
-      } catch {
-        // Silently fail - don't spam console in production
-        if (import.meta.env.DEV) {
-          console.warn(
-            "[Storia] Cart sync failed (expected with mock products)",
-          );
-        }
+      } catch (err) {
+        console.error("[Storia] Cart sync error:", err);
+        alert("حدث خطأ أثناء الاتصال بسلة.");
       }
     }
   };
