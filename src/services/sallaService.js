@@ -442,8 +442,15 @@ class SallaService {
       // 1. Clear Cart
       try {
         await this.salla.cart.clear();
-      } catch {
-        // Ignore clear error (cart might be empty)
+        log("Salla cart cleared.");
+      } catch (e) {
+        console.warn("Cart clear failed, retrying...", e);
+        try {
+          await this.salla.cart.clear();
+        } catch (retryErr) {
+          console.error("Cart clear failed twice:", retryErr);
+          // Proceeding might cause duplicates, but we have no choice if clear fails
+        }
       }
 
       // 2. Add Items Sequentially
