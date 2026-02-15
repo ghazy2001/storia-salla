@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { selectProducts } from "../../store/slices/productSlice";
 import ProductCarousel from "./ProductCarousel";
 import { useAddToCart } from "../../hooks/useCart";
@@ -18,7 +17,6 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const [filter, setFilter] = useState(initialFilter);
   const [visibleProducts, setVisibleProducts] = useState([]); // Initialize with empty array
   const [showToast, setShowToast] = useState(false);
-  const navigate = useNavigate();
   const { addToCart: addToCartWithSync } = useAddToCart();
 
   // Sync internal filter state when initialFilter prop changes (e.g. from Navbar)
@@ -108,7 +106,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
           onClose={() => setShowToast(false)}
           action={{
             label: "عرض السلة >>",
-            onClick: () => navigate("/cart"),
+            onClick: () => (window.location.href = "/cart"),
           }}
         />
         {visibleProducts.map((product) => (

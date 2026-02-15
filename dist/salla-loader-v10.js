@@ -1,20 +1,30 @@
-/* STORIA DESIGN LOADER v11 - SCROLL FIX */
+/* STORIA DESIGN LOADER v11 - GREEN MODE + SCROLL FIX + CART BYPASS */
 (function () {
   const path = window.location.pathname.toLowerCase();
 
   const VERCEL_URL = "https://storia-salla.vercel.app";
   const TIMESTAMP = Date.now();
 
-  console.log("🚀 Storia Design Loader v10: Initializing (Aggressive Mode)...");
+  console.log(
+    "🚀 Storia Design Loader v11: Initializing (Green Mode + Fixes)...",
+  );
   console.log("📍 Current Path:", path);
 
-  // 1. Immediate Style Injection (Green/Beige Background + Hide Salla Headers)
+  // 1. Immediate Style Injection
+  const isSallaPage =
+    path.includes("/payment") ||
+    path.includes("/checkout") ||
+    path.includes("/cart");
+
   const style = document.createElement("style");
   style.id = "storia-preloader-style";
-  style.innerHTML = `
+
+  let cssContent = `
     /* AGGRESSIVE SCROLL FIX v2 */
     html, body, #app, .app-container, .store-layout, .salla-app, main { 
-      background-color: #fdfcf8 !important; 
+      background-color: #0e352f !important; /* Brand Green */
+      margin: 0; padding: 0;
+      /* CRITICAL: Must be auto for scrolling */
       overflow: auto !important;
       overflow-y: auto !important;
       height: auto !important;
@@ -25,7 +35,11 @@
     #root { 
       display: block; width: 100%; height: 100%; 
     }
-    /* Hide Salla Elements Globally */
+  `;
+
+  if (!isSallaPage) {
+    cssContent += `
+    /* Hide Salla Elements Globally (Only on React Pages) */
     .store-header, .site-header, .header, .salla-header,
     .store-footer, .site-footer, .footer,
     .mobile-menu, .salla-navbar, .app-header,
@@ -42,14 +56,20 @@
         overflow: hidden !important;
         pointer-events: none !important;
     }
+    `;
+  }
+
+  cssContent += `
     /* Native Preloader Styles */
     #native-preloader {
         position: fixed; inset: 0; z-index: 999999;
-        background-color: #fdfcf8; /* Brand Light Beige */
+        background-color: #0e352f; /* Brand Green */
         display: flex; align-items: center; justify-content: center;
     }
     .storia-logo-spinner {
         height: 4rem; width: auto;
+        /* Start with White Logo */
+        filter: brightness(0) invert(1);
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     @keyframes pulse {
@@ -57,6 +77,8 @@
         50% { opacity: 0.6; transform: scale(0.95); }
     }
   `;
+
+  style.innerHTML = cssContent;
   document.head.appendChild(style);
 
   // 2. Brute Force Name Removal (Mutation Sync) & SCROLL ENFORCER
@@ -84,7 +106,6 @@
     document.querySelectorAll(selectors).forEach((el) => {
       const text = el.textContent || "";
       if (targets.some((t) => text.includes(t))) {
-        // Hide the element and its closest container if it looks like a header part
         const container =
           el.closest(
             ".store-info, .header, .flex, .salla-header, .navbar-item",
@@ -98,26 +119,21 @@
 
   // Run immediately and set up observer
   hideNameBruteForce();
-  setInterval(hideNameBruteForce, 500); // Polling for fast removal
+  setInterval(hideNameBruteForce, 500);
   const observer = new MutationObserver(hideNameBruteForce);
   observer.observe(document.body || document.documentElement, {
     childList: true,
     subtree: true,
   });
 
-  // 3. Path Handling (Modified: Remove #root but DO NOT return early)
-  if (
-    path.includes("/payment") ||
-    path.includes("/checkout") ||
-    path.includes("/cart")
-  ) {
+  // 3. Path Handling
+  if (isSallaPage) {
     const existingRoot = document.getElementById("root");
     if (existingRoot) existingRoot.remove();
-    // Note: We used to return here, but now we continue to let the app load or name hiding work
-    if (path.includes("/checkout") || path.includes("/payment")) {
-      console.log("🛠️ In Checkout Path - Name removal active.");
-      return; // Still return on checkout to avoid loading the whole React app on Salla's checkout
-    }
+    console.log(
+      "🛠️ In Salla Native Path (Cart/Checkout) - React app disabled.",
+    );
+    return;
   }
 
   // 4. Inject Loader HTML - OUTSIDE of #root

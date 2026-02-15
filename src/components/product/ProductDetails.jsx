@@ -98,7 +98,7 @@ const ProductDetails = () => {
         theme={theme}
         action={{
           label: "عرض السلة >>",
-          onClick: () => navigate("/cart"),
+          onClick: () => (window.location.href = "/cart"),
         }}
       />
 

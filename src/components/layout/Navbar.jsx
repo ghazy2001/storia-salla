@@ -280,7 +280,7 @@ const Navbar = ({ theme, toggleTheme }) => {
           </button>
           <button
             className="relative group cursor-pointer flex items-center justify-center p-2 rounded-full hover:bg-black/5 transition-all duration-300"
-            onClick={() => navigate("/cart")}
+            onClick={() => (window.location.href = "/cart")}
             aria-label="عرض حقيبة التسوق"
           >
             <ShoppingBag
