@@ -79,12 +79,26 @@ const initialState = {
   total: 0,
   loading: false,
   appliedCoupon: null,
+  discount: 0,
 };
 
 const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
+    // Local coupon management (Salla handles this usually, but we keep local state for UI)
+    applyCoupon: (state, action) => {
+      state.appliedCoupon = action.payload;
+      // Simple percentage logic for demo - in real Salla, the total comes discounted
+      if (action.payload.code === "SAVE10") {
+        state.discount = state.total * 0.1;
+      }
+    },
+    removeCoupon: (state) => {
+      state.appliedCoupon = null;
+      state.discount = 0;
+    },
+
     // Optimistic Updates (optional, can be kept for instant UI feedback)
     addToCartOptimistic: (state, action) => {
       // We can keep this for UI speed, but real data comes from Salla
@@ -106,7 +120,6 @@ const cartSlice = createSlice({
         const data = action.payload;
 
         if (data) {
-          // Map Salla Items to Internal Structure
           state.count = data.count || data.items_count || 0;
           state.total = data.total
             ? typeof data.total === "object"
@@ -114,10 +127,13 @@ const cartSlice = createSlice({
               : data.total
             : 0;
 
+          // Helper to check if total changed significantly imply discount
+          // For now, we trust Salla's total is the final price
+
           if (Array.isArray(data.items)) {
             state.cartItems = data.items.map((item) => ({
-              id: item.product_id, // Internal ID usage
-              itemId: item.id, // Specific Item ID in cart (for removal)
+              id: item.product_id,
+              itemId: item.id,
               name: item.product_title || item.name,
               price: item.price
                 ? typeof item.price === "object"
@@ -127,7 +143,11 @@ const cartSlice = createSlice({
               image: item.product_image || item.image,
               quantity: item.quantity,
               sallaProductId: item.product_id,
-              options: item.options, // sizes etc
+              options: item.options,
+              selectedSize:
+                item.options && item.options.length > 0
+                  ? item.options[0].value
+                  : null,
             }));
           }
         }
@@ -138,12 +158,15 @@ const cartSlice = createSlice({
   },
 });
 
-export const { addToCartOptimistic } = cartSlice.actions;
+export const { addToCartOptimistic, applyCoupon, removeCoupon } =
+  cartSlice.actions;
 
 // Selectors
 export const selectCartItems = (state) => state.cart.cartItems;
-export const selectCartCount = (state) => state.cart.count; // Direct count from Salla
+export const selectCartCount = (state) => state.cart.count;
 export const selectCartTotal = (state) => state.cart.total;
 export const selectCartLoading = (state) => state.cart.loading;
+export const selectAppliedCoupon = (state) => state.cart.appliedCoupon;
+export const selectCartDiscount = (state) => state.cart.discount;
 
 export default cartSlice.reducer;

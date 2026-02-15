@@ -172,7 +172,6 @@ const ShoppingCart = () => {
                       <button
                         onClick={() =>
                           dispatch(
-                          dispatch(
                             updateCartItemQuantity({
                               itemId: item.itemId,
                               quantity: item.quantity - 1,
@@ -198,7 +197,6 @@ const ShoppingCart = () => {
                       </span>
                       <button
                         onClick={() =>
-                          dispatch(
                           dispatch(
                             updateCartItemQuantity({
                               itemId: item.itemId,
