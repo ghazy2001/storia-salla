@@ -185,7 +185,8 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                       {product.name}
                     </h4>
                     <p className="text-lg font-bold text-brand-gold mb-2">
-                      {product.price} ر.س
+                      {product.price}{" "}
+                      {!String(product.price).includes("ر.س") && "ر.س"}
                     </p>
                     <p
                       className={`text-sm font-light leading-relaxed line-clamp-2 pl-4 ${

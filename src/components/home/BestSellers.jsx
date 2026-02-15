@@ -202,7 +202,20 @@ const BestSellers = ({ onProductSelect }) => {
               <div className="w-full text-right">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="text-brand-gold text-3xl font-bold">
-                    {featuredConfig.price || 0} ر.س
+                    {/* Use Synced Price from Redux if available, otherwise fallback to config */}
+                    {(() => {
+                      const syncedProduct = products.find(
+                        (p) => p.id === featuredConfig.id,
+                      );
+                      return syncedProduct
+                        ? syncedProduct.price
+                        : featuredConfig.price;
+                    })()}
+                    {/* The price string presumably includes currency or we append it if it's just a number */}
+                    {!String(
+                      products.find((p) => p.id === featuredConfig.id)?.price ||
+                        featuredConfig.price,
+                    ).includes("ر.س") && " ر.س"}
                   </div>
                 </div>
                 <p
