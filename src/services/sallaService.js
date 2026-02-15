@@ -6,26 +6,28 @@
  */
 
 import { config, log } from "../config/config.js";
-import { products } from "../data/products.js";
+import { config, log } from "../config/config.js";
 
 class SallaService {
   constructor() {
-    this.salla =
-      typeof window !== "undefined" && window.salla ? window.salla : null;
     this.apiBaseUrl = `${config.apiUrl}/api`;
     this.isLocalForced = false; // Enabled real Salla fetching
 
+    // Logging only - status might change dynamically
     if (config.isSallaEnv && this.salla) {
-      log("Salla SDK initialized successfully");
-      // Debug SDK structure
-      if (config.enableLogging) {
-        console.group("[Storia] Salla SDK Inspection");
-        // ... (remaining logs already checked by config.enableLogging if needed)
-        console.groupEnd();
-      }
+      log("Salla SDK detected on init");
     } else if (config.useSallaBackend) {
-      console.warn("[Storia] Salla backend requested but SDK not available");
+      console.warn(
+        "[Storia] Salla backend requested but SDK not available yet",
+      );
     }
+  }
+
+  /**
+   * Dynamic getter to handle race conditions where Salla loads after React
+   */
+  get salla() {
+    return typeof window !== "undefined" && window.salla ? window.salla : null;
   }
 
   /**
@@ -64,7 +66,7 @@ class SallaService {
     // 1. Try Salla SDK first if available (for real IDs and sync)
     if (this.isAvailable()) {
       try {
-        log("Attempting to fetch products from Salla API...");
+        log("Attempting to fetch products from Salla API (SDK Detected)...");
 
         const productManager =
           this.salla.product ||

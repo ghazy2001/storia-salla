@@ -2,7 +2,7 @@ export const products = [
   {
     id: 1,
     name: "عباية سوداء رسمية - كريب ملكي",
-    price: 390,
+    price: 0, // Zeroed to test Salla Sync
     cost: 230,
     stock: 25,
     category: "official",
@@ -30,7 +30,7 @@ export const products = [
   {
     id: 2,
     name: "عباية كلوش - قماش إنترنت ناعم",
-    price: 350,
+    price: 0, // Zeroed to test Salla Sync
     cost: 200,
     stock: 18,
     category: "cloche",
