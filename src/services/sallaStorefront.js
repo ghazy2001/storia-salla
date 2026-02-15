@@ -18,31 +18,37 @@ class SallaStorefrontService {
    * Syncs the React cart with Salla and redirects to checkout
    * @param {Array} cartItems - Items from Redux cart
    */
-  /**
-   * Syncs the React cart with Salla via 'Payment Product' method
-   * @param {Array} cartItems - Items from Redux cart
-   * @param {Number} totalAmount - Total amount of the cart
-   */
   async syncAndCheckout(cartItems, totalAmount) {
-    log("Starting checkout via Payment Product...");
+    log("Starting natural Salla checkout sync...");
 
     try {
-      // Calculate integer quantity (Ceiling to ensure full coverage)
-      let finalAmount = totalAmount;
-      if (!finalAmount) {
-        finalAmount = cartItems.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0,
+      // 1. Check if we have Salla Product IDs for all items
+      const hasSallaIds = cartItems.every(
+        (item) =>
+          item.sallaProductId ||
+          (typeof item.id === "number" && item.id > 1000),
+      );
+
+      if (hasSallaIds) {
+        log("Using Natural Sync: Building deep link for all items");
+        const params = new URLSearchParams();
+        cartItems.forEach((item) => {
+          const id = item.sallaProductId || item.id;
+          params.append("id[]", id);
+          params.append("quantity[]", item.quantity);
+        });
+
+        // Redirect to Salla Cart with all items
+        const checkOutUrl = `https://storiasa.com/cart/add?${params.toString()}&checkout=1&t=${Date.now()}`;
+        window.location.href = checkOutUrl;
+      } else {
+        log(
+          "Fallback Mode: Using Payment Product (Some items missing Salla IDs)",
         );
+        const quantity = Math.ceil(totalAmount);
+        const checkOutUrl = `https://storiasa.com/payment/p432374980?quantity=${quantity}&t=${Date.now()}`;
+        window.location.href = checkOutUrl;
       }
-
-      const quantity = Math.ceil(finalAmount);
-      log(`Redirecting to Salla with ${quantity} units of Payment Product`);
-
-      // Using direct cart add link with cache busting
-      // This ensures Salla creates a fresh session for each unique request
-      const checkOutUrl = `https://storiasa.com/payment/p432374980?quantity=${quantity}&t=${Date.now()}`;
-      window.location.href = checkOutUrl;
 
       return { success: true };
     } catch (error) {
