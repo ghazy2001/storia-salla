@@ -128,6 +128,11 @@ const productSlice = createSlice({
       .addCase(fetchProductsFromSalla.fulfilled, (state, action) => {
         state.loading = false;
         if (Array.isArray(action.payload)) {
+          console.log(
+            "[Redux] Salla Products Fetched:",
+            action.payload.length,
+            action.payload,
+          );
           // HYBRID MERGE: Keep local UI (names/images), take Salla business data (price/stock)
           state.products = state.products.map((localProduct) => {
             const sallaMatch = action.payload.find(
@@ -137,6 +142,9 @@ const productSlice = createSlice({
             );
 
             if (sallaMatch) {
+              console.log(
+                `[Redux] Merging Price for ${localProduct.name}: ${sallaMatch.price}`,
+              );
               return {
                 ...localProduct,
                 price: sallaMatch.price, // Update price from Salla
