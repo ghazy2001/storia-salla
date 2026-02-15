@@ -41,7 +41,7 @@ class SallaStorefrontService {
 
       // Using direct cart add link with cache busting
       // This ensures Salla creates a fresh session for each unique request
-      const checkOutUrl = `https://storiasa.com/cart/add/432374980?quantity=${quantity}&checkout=1&t=${Date.now()}`;
+      const checkOutUrl = `https://storiasa.com/payment/p432374980?quantity=${quantity}&t=${Date.now()}`;
       window.location.href = checkOutUrl;
 
       return { success: true };
