@@ -428,6 +428,43 @@ class SallaService {
   }
 
   /**
+   * Sync local cart with Salla cart (Clear & Re-add)
+   * @param {Array} cartItems
+   */
+  async syncCart(cartItems) {
+    if (!this.isAvailable()) {
+      return { success: false, error: "SDK not ready" };
+    }
+
+    try {
+      log("Syncing cart with Salla...");
+
+      // 1. Clear Cart
+      try {
+        await this.salla.cart.clear();
+      } catch {
+        // Ignore clear error (cart might be empty)
+      }
+
+      // 2. Add Items Sequentially
+      for (const item of cartItems) {
+        await this.addToCart(item.sallaProductId || item.id, item.quantity, {
+          variantId:
+            item.size && item.sizeVariants
+              ? item.sizeVariants.find((v) => v.size === item.selectedSize)
+                  ?.sallaVariantId
+              : null,
+        });
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Sync failed:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Update cart item quantity
    */
   async updateCartItem(itemId, quantity) {
@@ -497,13 +534,13 @@ class SallaService {
       if (this.salla.cart && typeof this.salla.cart.submit === "function") {
         await this.salla.cart.submit();
       } else {
-        // Fallback to direct redirect
-        window.location.href = "/checkout";
+        // Fallback to direct redirect to Storefront
+        window.location.href = "https://storiasa.com/checkout";
       }
     } catch (error) {
       console.error("[Storia] Error navigating to checkout:", error);
       // Last resort fallback
-      window.location.href = "/checkout";
+      window.location.href = "https://storiasa.com/checkout";
     }
   }
 

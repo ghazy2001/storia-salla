@@ -11,7 +11,7 @@ import {
 import { selectTheme } from "../../store/slices/uiSlice";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
 import gsap from "gsap";
-import sallaStorefront from "../../services/sallaStorefront";
+import sallaService from "../../services/sallaService";
 import { config } from "../../config/config";
 import { resolveAsset } from "../../utils/assetUtils";
 
@@ -312,15 +312,25 @@ const ShoppingCart = () => {
                   btn.disabled = true;
 
                   if (config.useSallaBackend) {
-                    // Pass total amount to the new payment product logic
-                    const { success, error } =
-                      await sallaStorefront.syncAndCheckout(cartItems, total);
-                    if (!success) {
-                      alert(`عذراً، فشل التحويل للدفع: ${error}`);
+                    // 1. Sync Cart (Clear & Re-add to ensure quantities are correct)
+                    const syncResult = await sallaService.syncCart(cartItems);
+                    if (!syncResult.success) {
+                      console.error("Sync failed:", syncResult.error);
+                      // Continue anyway? converting logic suggests we should try to checkout even if sync claims failure,
+                      // but usually sync failure means empty cart.
+                      // Let's alert the user but try to proceed or just stop.
+                      // Better to stop and show error.
+                      throw new Error(syncResult.error || "فشل مزامنة السلة");
                     }
+
+                    // 2. Redirect to Checkout
+                    await sallaService.goToCheckout();
                   } else {
                     navigate("/checkout");
                   }
+                } catch (error) {
+                  console.error("Checkout error:", error);
+                  alert("عذراً، حدث خطأ أثناء الانتقال للدفع.");
                 } finally {
                   btn.innerText = originalText;
                   btn.disabled = false;
