@@ -1,4 +1,4 @@
-/* STORIA DESIGN LOADER v11 - GREEN MODE + SCROLL FIX + CART BYPASS */
+/* STORIA DESIGN LOADER v12 - GREEN MODE (NO SCROLL FIX) */
 (function () {
   const path = window.location.pathname.toLowerCase();
 
@@ -6,7 +6,7 @@
   const TIMESTAMP = Date.now();
 
   console.log(
-    "🚀 Storia Design Loader v11: Initializing (Green Mode + Fixes)...",
+    "🚀 Storia Design Loader v12: Initializing (Green Mode - Clean)...",
   );
   console.log("📍 Current Path:", path);
 
@@ -20,17 +20,10 @@
   style.id = "storia-preloader-style";
 
   let cssContent = `
-    /* AGGRESSIVE SCROLL FIX v2 */
-    html, body, #app, .app-container, .store-layout, .salla-app, main { 
+    /* Basic Green Background Only */
+    html, body { 
       background-color: #0e352f !important; /* Brand Green */
       margin: 0; padding: 0;
-      /* CRITICAL: Must be auto for scrolling */
-      overflow: auto !important;
-      overflow-y: auto !important;
-      height: auto !important;
-      position: static !important;
-      touch-action: auto !important;
-      -webkit-overflow-scrolling: touch !important;
     }
     #root { 
       display: block; width: 100%; height: 100%; 
@@ -81,25 +74,9 @@
   style.innerHTML = cssContent;
   document.head.appendChild(style);
 
-  // 2. Brute Force Name Removal (Mutation Sync) & SCROLL ENFORCER
-  const enforceScroll = () => {
-    document.body.style.setProperty("overflow", "auto", "important");
-    document.body.style.setProperty("overflow-y", "auto", "important");
-    document.documentElement.style.setProperty("overflow", "auto", "important");
-    document.documentElement.style.setProperty(
-      "overflow-y",
-      "auto",
-      "important",
-    );
-    document.documentElement.style.setProperty(
-      "position",
-      "static",
-      "important",
-    );
-  };
-
+  // 2. Brute Force Name Removal (Mutation Sync) - REDUCED AGGRESSION
   const hideNameBruteForce = () => {
-    enforceScroll(); // Run scroll fix with name hider
+    // Scroll fix removed as requested
     const targets = ["Mahmoud Ghazy", "محمود غازي", "MahmoudGhazy"];
     const selectors = "h1, h2, h3, h4, h5, span, p, div, a, .store-info__name";
 
@@ -119,12 +96,17 @@
 
   // Run immediately and set up observer
   hideNameBruteForce();
-  setInterval(hideNameBruteForce, 500);
-  const observer = new MutationObserver(hideNameBruteForce);
-  observer.observe(document.body || document.documentElement, {
-    childList: true,
-    subtree: true,
-  });
+  // Relaxed interval to avoid CPU spikes
+  setInterval(hideNameBruteForce, 1000);
+
+  // Only observe if we are NOT on a Salla page (to avoid messing with checkout DOM too much)
+  if (!isSallaPage) {
+    const observer = new MutationObserver(hideNameBruteForce);
+    observer.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true,
+    });
+  }
 
   // 3. Path Handling
   if (isSallaPage) {
