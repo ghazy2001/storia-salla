@@ -6,7 +6,6 @@
  */
 
 import { config, log } from "../config/config.js";
-import { config, log } from "../config/config.js";
 
 class SallaService {
   constructor() {
