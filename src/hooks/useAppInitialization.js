@@ -133,17 +133,57 @@ export const useAppInitialization = () => {
     init();
 
     // 4. Re-fetch cart on window focus (to sync with Salla tab changes)
+    // 4. Re-fetch cart on window focus (to sync with Salla tab changes)
     const handleFocus = () => {
       if (document.visibilityState === "visible") {
         dispatch(fetchCartFromSalla());
       }
     };
+
+    // 5. Safety Polling: Try to fetch cart a few times after load to ensure Salla SDK is caught
+    const safetyCheck1 = setTimeout(() => dispatch(fetchCartFromSalla()), 2000);
+    const safetyCheck2 = setTimeout(() => dispatch(fetchCartFromSalla()), 5000);
+    const safetyCheck3 = setTimeout(
+      () => dispatch(fetchCartFromSalla()),
+      10000,
+    );
+
+    // 6. Listen for Salla Events (if available via global salla object)
+    const handleSallaCartUpdate = (e) => {
+      console.log("Salla 'cart::updated' event detected!", e);
+      dispatch(fetchCartFromSalla());
+    };
+
+    if (window.salla && window.salla.event) {
+      // Attempt to subscribe to Salla events
+      try {
+        window.salla.event.on("cart::updated", handleSallaCartUpdate);
+        window.salla.event.on("cart::added", handleSallaCartUpdate);
+        window.salla.event.on("cart::deleted", handleSallaCartUpdate);
+      } catch (e) {
+        console.warn("Could not subscribe to Salla events", e);
+      }
+    }
+
     window.addEventListener("focus", handleFocus);
     window.addEventListener("visibilitychange", handleFocus);
+    document.addEventListener("salla-cart-updated", handleFocus); // Custom event if needed
 
     return () => {
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener("visibilitychange", handleFocus);
+      document.removeEventListener("salla-cart-updated", handleFocus);
+      clearTimeout(safetyCheck1);
+      clearTimeout(safetyCheck2);
+      clearTimeout(safetyCheck3);
+
+      if (window.salla && window.salla.event) {
+        try {
+          window.salla.event.off("cart::updated", handleSallaCartUpdate);
+          window.salla.event.off("cart::added", handleSallaCartUpdate);
+          window.salla.event.off("cart::deleted", handleSallaCartUpdate);
+        } catch (e) {}
+      }
     };
   }, [dispatch]);
 
