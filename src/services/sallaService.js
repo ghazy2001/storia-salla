@@ -13,7 +13,7 @@ class SallaService {
     this.salla =
       typeof window !== "undefined" && window.salla ? window.salla : null;
     this.apiBaseUrl = `${config.apiUrl}/api`;
-    this.isLocalForced = true; // Temporary flag to force local mode
+    this.isLocalForced = false; // Enabled real Salla fetching
 
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK initialized successfully");
@@ -61,10 +61,6 @@ class SallaService {
    * Alternative: Use Salla REST API with merchant token (backend integration)
    */
   async fetchProducts() {
-    log("Attempting to fetch products... (Forced Local Mode)");
-    // TODO: Revert this when Salla products are ready
-    return products;
-
     // 1. Try Salla SDK first if available (for real IDs and sync)
     if (this.isAvailable()) {
       try {

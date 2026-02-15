@@ -127,9 +127,24 @@ const productSlice = createSlice({
       })
       .addCase(fetchProductsFromSalla.fulfilled, (state, action) => {
         state.loading = false;
-        // Always replace with payload if it's an array, even if empty
         if (Array.isArray(action.payload)) {
-          state.products = action.payload;
+          // HYBRID MERGE: Keep local UI (names/images), take Salla business data (price/stock)
+          state.products = state.products.map((localProduct) => {
+            const sallaMatch = action.payload.find(
+              (sp) =>
+                sp.sallaProductId === localProduct.sallaProductId ||
+                sp.id === localProduct.sallaProductId,
+            );
+
+            if (sallaMatch) {
+              return {
+                ...localProduct,
+                price: sallaMatch.price, // Update price from Salla
+                // sallaProductId: sallaMatch.id, // Update ID if it was missing
+              };
+            }
+            return localProduct;
+          });
         }
       })
       .addCase(fetchProductsFromSalla.rejected, (state, action) => {
