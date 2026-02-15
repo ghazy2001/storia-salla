@@ -1,14 +1,14 @@
-/* STORIA DESIGN LOADER v10 - GREEN NATIVE PRELOADER (FIXED) */
+/* STORIA DESIGN LOADER v10 - AGGRESSIVE NAME REMOVAL */
 (function () {
   const path = window.location.pathname.toLowerCase();
 
   const VERCEL_URL = "https://storia-salla.vercel.app";
   const TIMESTAMP = Date.now();
 
-  console.log("🚀 Storia Design Loader v10: Initializing...");
+  console.log("🚀 Storia Design Loader v10: Initializing (Aggressive Mode)...");
   console.log("📍 Current Path:", path);
 
-  // 1. Immediate Style Injection (Green Background + White Spinner)
+  // 1. Immediate Style Injection (Green/Beige Background + Hide Salla Headers)
   const style = document.createElement("style");
   style.id = "storia-preloader-style";
   style.innerHTML = `
@@ -16,19 +16,20 @@
       background-color: #fdfcf8 !important; /* Brand Light Beige */
       margin: 0; padding: 0; 
       height: 100%; width: 100%;
-      overflow: hidden !important; 
+      overflow-x: hidden !important; 
     }
     #root { 
       display: block; width: 100%; height: 100%; 
     }
-    /* Hide Salla Elements */
-    .store-header, .site-header, .header, 
+    /* Hide Salla Elements Globally */
+    .store-header, .site-header, .header, .salla-header,
     .store-footer, .site-footer, .footer,
     .mobile-menu, .salla-navbar, .app-header,
     .store-info__detail h1,
     .store-info h1,
     header.store-info h1,
-    .store-info__detail > h1 {
+    .store-info__detail > h1,
+    .store-info__name, .merchant-info {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
@@ -45,7 +46,6 @@
     }
     .storia-logo-spinner {
         height: 4rem; width: auto;
-        /* Use original color for light background */
         animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     @keyframes pulse {
@@ -55,6 +55,36 @@
   `;
   document.head.appendChild(style);
 
+  // 2. Brute Force Name Removal (Mutation Sync)
+  const hideNameBruteForce = () => {
+    const targets = ["Mahmoud Ghazy", "محمود غازي", "MahmoudGhazy"];
+    const selectors = "h1, h2, h3, h4, h5, span, p, div, a, .store-info__name";
+
+    document.querySelectorAll(selectors).forEach((el) => {
+      const text = el.textContent || "";
+      if (targets.some((t) => text.includes(t))) {
+        // Hide the element and its closest container if it looks like a header part
+        const container =
+          el.closest(
+            ".store-info, .header, .flex, .salla-header, .navbar-item",
+          ) || el;
+        container.style.setProperty("display", "none", "important");
+        container.style.setProperty("visibility", "hidden", "important");
+        container.style.setProperty("opacity", "0", "important");
+      }
+    });
+  };
+
+  // Run immediately and set up observer
+  hideNameBruteForce();
+  setInterval(hideNameBruteForce, 500); // Polling for fast removal
+  const observer = new MutationObserver(hideNameBruteForce);
+  observer.observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true,
+  });
+
+  // 3. Path Handling (Modified: Remove #root but DO NOT return early)
   if (
     path.includes("/payment") ||
     path.includes("/checkout") ||
@@ -62,11 +92,14 @@
   ) {
     const existingRoot = document.getElementById("root");
     if (existingRoot) existingRoot.remove();
-    return;
+    // Note: We used to return here, but now we continue to let the app load or name hiding work
+    if (path.includes("/checkout") || path.includes("/payment")) {
+      console.log("🛠️ In Checkout Path - Name removal active.");
+      return; // Still return on checkout to avoid loading the whole React app on Salla's checkout
+    }
   }
 
-  // 2. Inject Loader HTML - OUTSIDE of #root
-  // This is the key fix: we append to body so React doesn't wipe it out when it mounts
+  // 4. Inject Loader HTML - OUTSIDE of #root
   let preloaderDiv = document.getElementById("native-preloader");
   if (!preloaderDiv) {
     preloaderDiv = document.createElement("div");
@@ -85,9 +118,7 @@
     document.body.appendChild(rootDiv);
   }
 
-  console.log("🚀 Storia Design: Loading App (Green Mode v10)...");
-
-  // 3. Load App
+  // 5. Load App
   const link = document.createElement("link");
   link.rel = "stylesheet";
   link.href = `${VERCEL_URL}/assets/app.css?v=${TIMESTAMP}`;
@@ -97,10 +128,5 @@
   script.type = "module";
   script.crossOrigin = "anonymous";
   script.src = `${VERCEL_URL}/assets/app.js?v=${TIMESTAMP}`;
-
-  script.onload = () => {
-    console.log("✅ Script Loaded.");
-  };
-
   document.body.appendChild(script);
 })();
