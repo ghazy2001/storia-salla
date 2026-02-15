@@ -22,6 +22,57 @@ export const fetchCartFromSalla = createAsyncThunk(
   },
 );
 
+export const removeItemFromCart = createAsyncThunk(
+  "cart/removeItem",
+  async ({ itemId }, { dispatch, rejectWithValue }) => {
+    try {
+      const result = await sallaService.removeFromCart(itemId);
+      if (result.success) {
+        dispatch(fetchCartFromSalla());
+        return result.data;
+      } else {
+        return rejectWithValue(result.error);
+      }
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const updateCartItemQuantity = createAsyncThunk(
+  "cart/updateItem",
+  async ({ itemId, quantity }, { dispatch, rejectWithValue }) => {
+    try {
+      const result = await sallaService.updateCartItem(itemId, quantity);
+      if (result.success) {
+        dispatch(fetchCartFromSalla());
+        return result.data;
+      } else {
+        return rejectWithValue(result.error);
+      }
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
+export const clearCartSalla = createAsyncThunk(
+  "cart/clear",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      // Optimistic clear
+      const result = await sallaService.clearCart();
+      if (result.success) {
+        dispatch(fetchCartFromSalla());
+        return result.data;
+      }
+      return rejectWithValue(result.error);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  },
+);
+
 const initialState = {
   cartItems: [],
   count: 0,

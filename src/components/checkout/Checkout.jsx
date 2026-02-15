@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import {
   selectCartItems,
   selectCartTotal,
-  clearCart,
+  clearCartSalla,
   selectAppliedCoupon,
   selectCartDiscount,
   removeCoupon,
@@ -170,7 +170,7 @@ ${discountAmount > 0 ? `الخصم: -${discountAmount.toFixed(2)} ر.س\n` : ""}
 
       // Set order data for summary if needed (though we clear cart immediately)
       // For now, clear cart as it was.
-      dispatch(clearCart());
+      dispatch(clearCartSalla());
       dispatch(removeCoupon());
       navigate("/");
     } catch (error) {

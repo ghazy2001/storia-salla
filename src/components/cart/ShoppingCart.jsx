@@ -4,9 +4,9 @@ import { useNavigate } from "react-router-dom";
 import {
   selectCartItems,
   selectCartTotal,
-  removeFromCart,
-  updateQuantity,
-  clearCart,
+  removeItemFromCart,
+  updateCartItemQuantity,
+  clearCartSalla,
 } from "../../store/slices/cartSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
 import { Trash2, Plus, Minus, ArrowRight } from "lucide-react";
@@ -146,9 +146,8 @@ const ShoppingCart = () => {
                     <button
                       onClick={() =>
                         dispatch(
-                          removeFromCart({
-                            productId: item.id,
-                            size: item.size,
+                          removeItemFromCart({
+                            itemId: item.itemId, // Use Salla Item ID
                           }),
                         )
                       }
@@ -173,10 +172,10 @@ const ShoppingCart = () => {
                       <button
                         onClick={() =>
                           dispatch(
-                            updateQuantity({
-                              productId: item.id,
+                          dispatch(
+                            updateCartItemQuantity({
+                              itemId: item.itemId,
                               quantity: item.quantity - 1,
-                              size: item.size,
                             }),
                           )
                         }
@@ -200,10 +199,10 @@ const ShoppingCart = () => {
                       <button
                         onClick={() =>
                           dispatch(
-                            updateQuantity({
-                              productId: item.id,
+                          dispatch(
+                            updateCartItemQuantity({
+                              itemId: item.itemId,
                               quantity: item.quantity + 1,
-                              size: item.size,
                             }),
                           )
                         }
@@ -353,7 +352,7 @@ const ShoppingCart = () => {
             </button>
 
             <button
-              onClick={() => dispatch(clearCart())}
+              onClick={() => dispatch(clearCartSalla())}
               className="w-full mt-4 py-3 uppercase tracking-widest font-medium text-red-500 text-sm hover:text-red-600 transition-colors"
             >
               حذف الكل
