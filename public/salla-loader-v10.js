@@ -15,8 +15,11 @@
     html, body { 
       background-color: #fdfcf8 !important; /* Brand Light Beige */
       margin: 0; padding: 0; 
-      height: 100%; width: 100%;
-      overflow-x: hidden !important; 
+      /* Ensure scrolling is ALWAYS enabled */
+      overflow-y: auto !important;
+      overflow-x: hidden;
+      height: auto !important;
+      min-height: 100%;
     }
     #root { 
       display: block; width: 100%; height: 100%; 
