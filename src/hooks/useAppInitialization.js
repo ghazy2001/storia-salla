@@ -6,6 +6,7 @@ import {
 } from "../store/slices/productSlice";
 import { fetchReviews, fetchFAQs } from "../store/slices/contentSlice";
 import { fetchCustomerFromSalla } from "../store/slices/userSlice";
+import { fetchCartFromSalla } from "../store/slices/cartSlice";
 import { setTheme, selectTheme } from "../store/slices/uiSlice";
 import { resolveAsset } from "../utils/assetUtils";
 
@@ -83,6 +84,8 @@ export const useAppInitialization = () => {
               ).unwrap();
               const faqPromise = dispatch(fetchFAQs()).unwrap();
               const reviewPromise = dispatch(fetchReviews()).unwrap();
+              // Fetch Cart Source of Truth
+              const cartPromise = dispatch(fetchCartFromSalla());
 
               const [products] = await Promise.all([
                 productPromise,
@@ -90,6 +93,7 @@ export const useAppInitialization = () => {
                 customerPromise,
                 faqPromise,
                 reviewPromise,
+                cartPromise,
               ]);
 
               const criticalImages = [resolveAsset("assets/logo.png")];
@@ -127,6 +131,20 @@ export const useAppInitialization = () => {
     };
 
     init();
+
+    // 4. Re-fetch cart on window focus (to sync with Salla tab changes)
+    const handleFocus = () => {
+      if (document.visibilityState === "visible") {
+        dispatch(fetchCartFromSalla());
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("visibilitychange", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("visibilitychange", handleFocus);
+    };
   }, [dispatch]);
 
   return { isReady, theme };
