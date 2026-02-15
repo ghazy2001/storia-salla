@@ -315,12 +315,11 @@ const ShoppingCart = () => {
                     // 1. Sync Cart (Clear & Re-add to ensure quantities are correct)
                     const syncResult = await sallaService.syncCart(cartItems);
                     if (!syncResult.success) {
-                      console.error("Sync failed:", syncResult.error);
-                      // Continue anyway? converting logic suggests we should try to checkout even if sync claims failure,
-                      // but usually sync failure means empty cart.
-                      // Let's alert the user but try to proceed or just stop.
-                      // Better to stop and show error.
-                      throw new Error(syncResult.error || "فشل مزامنة السلة");
+                      console.warn(
+                        "Sync failed, proceeding to checkout anyway:",
+                        syncResult.error,
+                      );
+                      // Don't block checkout, just warn. Salla might have the items anyway or user can add them there.
                     }
 
                     // 2. Redirect to Checkout

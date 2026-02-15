@@ -440,17 +440,15 @@ class SallaService {
       log("Syncing cart with Salla...");
 
       // 1. Clear Cart
-      try {
-        await this.salla.cart.clear();
-        log("Salla cart cleared.");
-      } catch (e) {
-        console.warn("Cart clear failed, retrying...", e);
+      if (this.salla.cart && typeof this.salla.cart.clear === "function") {
         try {
           await this.salla.cart.clear();
-        } catch (retryErr) {
-          console.error("Cart clear failed twice:", retryErr);
-          // Proceeding might cause duplicates, but we have no choice if clear fails
+          log("Salla cart cleared.");
+        } catch (e) {
+          console.warn("Cart clear logic failed:", e);
         }
+      } else {
+        log("salla.cart.clear not available, skipping clear.");
       }
 
       // 2. Add Items Sequentially
@@ -519,9 +517,10 @@ class SallaService {
   async goToCheckout() {
     if (!this.isAvailable()) {
       console.warn(
-        "[Storia] Salla SDK not available, cannot navigate to checkout",
+        "[Storia] Salla SDK not available, forcing redirect to checkout",
       );
-      return;
+      window.location.href = "https://storiasa.com/checkout";
+      return { success: true };
     }
 
     try {
