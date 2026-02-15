@@ -10,17 +10,13 @@ import {
   setTrackOrderOpen,
   showToast,
 } from "../../store/slices/uiSlice";
-import {
-  selectCategories,
-  selectProducts,
-} from "../../store/slices/productSlice";
+import { selectCategories } from "../../store/slices/productSlice";
 import { SOCIAL_URLS, CONTACT_INFO } from "../../utils/constants";
 
 const Footer = ({ theme }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const categories = useSelector(selectCategories);
-  const products = useSelector(selectProducts);
   const [showAll, setShowAll] = useState(false);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
@@ -195,16 +191,6 @@ const Footer = ({ theme }) => {
           className="text-center flex flex-col items-center gap-1"
         >
           <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
-          {/* DEBUG STATUS */}
-          <span className="text-[9px] opacity-40">
-            SDK: {typeof window !== "undefined" && window.salla ? "OK" : "NR"} |
-            Salla:{" "}
-            {
-              products.filter((p) => p.price && String(p.price).includes("ر.س"))
-                .length
-            }
-            /{products.length} | Items: {products.length}
-          </span>
         </span>
         <div className="hidden md:block"></div>
       </div>
