@@ -517,9 +517,9 @@ class SallaService {
   async goToCheckout() {
     if (!this.isAvailable()) {
       console.warn(
-        "[Storia] Salla SDK not available, forcing redirect to checkout",
+        "[Storia] Salla SDK not available, falling back to local checkout",
       );
-      window.location.href = "https://storiasa.com/checkout";
+      window.location.href = "/checkout";
       return { success: true };
     }
 
@@ -546,7 +546,7 @@ class SallaService {
     } catch (error) {
       console.error("[Storia] Error navigating to checkout:", error);
       // Last resort fallback
-      window.location.href = "https://storiasa.com/checkout";
+      window.location.href = "/checkout";
     }
   }
 
