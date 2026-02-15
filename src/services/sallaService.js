@@ -53,6 +53,28 @@ class SallaService {
   }
 
   /**
+   * Waits for Salla SDK to initialize
+   * @param {number} timeout - Max wait time in ms
+   */
+  async waitForSalla(timeout = 3000) {
+    if (this.salla) return true;
+
+    log(`Waiting for Salla SDK (timeout: ${timeout}ms)...`);
+    const start = Date.now();
+
+    while (Date.now() - start < timeout) {
+      if (this.salla) {
+        log("Salla SDK detected!");
+        return true;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+
+    log("Salla SDK wait timed out.");
+    return false;
+  }
+
+  /**
    * Fetch products from Salla store
    *
    * Note: Salla doesn't provide a direct "get all products" API in Twilight SDK.
@@ -62,6 +84,9 @@ class SallaService {
    * Alternative: Use Salla REST API with merchant token (backend integration)
    */
   async fetchProducts() {
+    // 0. Wait for SDK to be ready
+    await this.waitForSalla();
+
     // 1. Try Salla SDK first if available (for real IDs and sync)
     if (this.isAvailable()) {
       try {
@@ -139,7 +164,7 @@ class SallaService {
     }
 
     const mappedResults = await Promise.all(
-      productsData.map(async (p, index) => {
+      productsData.map(async (p) => {
         const translate = (val) => {
           if (!val) return "";
           if (typeof val === "string") return val;
