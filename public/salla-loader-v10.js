@@ -1,4 +1,4 @@
-/* STORIA DESIGN LOADER v10 - AGGRESSIVE NAME REMOVAL */
+/* STORIA DESIGN LOADER v11 - SCROLL FIX */
 (function () {
   const path = window.location.pathname.toLowerCase();
 
@@ -15,8 +15,10 @@
     html, body { 
       background-color: #fdfcf8 !important; /* Brand Light Beige */
       margin: 0; padding: 0; 
-      height: 100%; width: 100%;
-      overflow-x: hidden !important; 
+      margin: 0; padding: 0; 
+      /* height: 100%; width: 100%; REMOVED TO FIX SCROLLING */
+      /* overflow-x: hidden !important; REMOVED TO FIX SCROLLING */
+      overflow-y: auto !important; /* Force scroll */
     }
     #root { 
       display: block; width: 100%; height: 100%; 
