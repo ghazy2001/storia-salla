@@ -554,9 +554,10 @@ class SallaService {
       return { success: false, error: "Salla SDK not available" };
     }
 
+    const idToUse = options.sallaProductId || productId;
     const payload = {
-      id: options.sallaProductId || productId,
-      quantity: quantity,
+      id: Number(idToUse),
+      quantity: Number(quantity),
     };
 
     // Handle Variants vs Custom Options
