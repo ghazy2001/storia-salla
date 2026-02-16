@@ -220,17 +220,14 @@ const ShoppingCart = () => {
                       }`}
                     >
                       {(() => {
-                        let priceValue = 0;
-                        if (typeof item.price === "number") {
-                          priceValue = item.price;
-                        } else if (typeof item.price === "string") {
-                          priceValue = parseFloat(
-                            item.price.replace(/[^\d.-]/g, ""),
-                          );
-                        }
-                        return (
-                          (isNaN(priceValue) ? 0 : priceValue) * item.quantity
-                        ).toFixed(2);
+                        const price =
+                          typeof item.price === "number"
+                            ? item.price
+                            : parseFloat(
+                                String(item.price || 0).replace(/[^\d.-]/g, ""),
+                              );
+                        const validPrice = isNaN(price) ? 0 : price;
+                        return (validPrice * (item.quantity || 1)).toFixed(2);
                       })()}{" "}
                       ر.س
                     </p>
@@ -265,7 +262,9 @@ const ShoppingCart = () => {
                 }`}
               >
                 <span>المجموع الفرعي</span>
-                <span className="font-semibold">{subtotal.toFixed(2)} ر.س</span>
+                <span className="font-semibold">
+                  {(subtotal || 0).toFixed(2)} ر.س
+                </span>
               </div>
 
               <div
@@ -276,7 +275,9 @@ const ShoppingCart = () => {
                 }`}
               >
                 <span>الشحن</span>
-                <span className="font-semibold">{shipping.toFixed(2)} ر.س</span>
+                <span className="font-semibold">
+                  {(shipping || 0).toFixed(2)} ر.س
+                </span>
               </div>
 
               <div
@@ -287,7 +288,9 @@ const ShoppingCart = () => {
                 }`}
               >
                 <span>الضريبة (15%)</span>
-                <span className="font-semibold">{tax.toFixed(2)} ر.س</span>
+                <span className="font-semibold">
+                  {(tax || 0).toFixed(2)} ر.س
+                </span>
               </div>
 
               <div
@@ -296,7 +299,9 @@ const ShoppingCart = () => {
                 }`}
               >
                 <span>الإجمالي</span>
-                <span className="text-brand-gold">{total.toFixed(2)} ر.س</span>
+                <span className="text-brand-gold">
+                  {(total || 0).toFixed(2)} ر.س
+                </span>
               </div>
             </div>
 

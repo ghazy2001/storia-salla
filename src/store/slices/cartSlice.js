@@ -115,13 +115,13 @@ const cartSlice = createSlice({
     },
 
     // Optimistic Updates (optional, can be kept for instant UI feedback)
-    addToCartOptimistic: (state, action) => {
+    addToCartOptimistic: () => {
       // We can keep this for UI speed, but real data comes from Salla
       // For now, let's rely on the fetch to ensure truth
     },
 
     // Manual sync trigger if needed
-    setCartData: (state, action) => {
+    setCartData: () => {
       // Manual override
     },
   },
@@ -145,11 +145,19 @@ const cartSlice = createSlice({
 
           // Map Salla Items to Internal Structure
           state.count = count;
-          state.total = total
-            ? typeof total === "object"
-              ? total.amount
-              : total
-            : 0;
+
+          // Safe Total Parsing
+          let safeTotal = 0;
+          if (total) {
+            if (typeof total === "object" && total.amount !== undefined) {
+              safeTotal = parseFloat(total.amount);
+            } else if (typeof total === "number") {
+              safeTotal = total;
+            } else if (typeof total === "string") {
+              safeTotal = parseFloat(total.replace(/[^\d.-]/g, ""));
+            }
+          }
+          state.total = isNaN(safeTotal) ? 0 : safeTotal;
 
           if (Array.isArray(items)) {
             console.log("[Storia Cart] Mapping items:", items.length);
