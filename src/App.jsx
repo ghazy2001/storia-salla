@@ -19,7 +19,9 @@ function AppContent() {
   const dispatch = useDispatch();
 
   return (
-    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10">
+    <div
+      className={`${isReady ? "bg-brand-offwhite" : "bg-[#0e352f]"} text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10 transition-colors duration-500`}
+    >
       <GlobalOverlays />
 
       <div
