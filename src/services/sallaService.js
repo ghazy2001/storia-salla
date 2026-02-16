@@ -392,6 +392,17 @@ class SallaService {
           (targetProduct.image ? [targetProduct.image] : []) ||
           [];
 
+        // LOG: Show raw images from Salla
+        console.log(
+          `[Storia] Raw images from Salla for product ${targetProduct.id}:`,
+          {
+            "targetProduct.images": targetProduct.images,
+            "targetProduct.media": targetProduct.media,
+            "targetProduct.image": targetProduct.image,
+            "rawImages (final)": rawImages,
+          },
+        );
+
         const media = rawImages
           .map((img) => {
             // Handle different image formats
