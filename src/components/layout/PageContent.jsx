@@ -34,6 +34,23 @@ const HomePage = ({ handleGoToStore, handleProductSelect, theme }) => (
   </>
 );
 
+import { selectIsAdmin } from "../../store/slices/adminSlice";
+
+const ProtectedRoute = ({ children }) => {
+  const isAdmin = useSelector(selectIsAdmin);
+  const location = useLocation();
+
+  if (!isAdmin) {
+    // Redirect to home if not admin
+    return <Navigate to="/" state={{ from: location }} replace />;
+  }
+
+  return children;
+};
+
+// ... remaining imports ...
+import { Navigate } from "react-router-dom";
+
 const PageContent = () => {
   const theme = useSelector(selectTheme);
   const selectedCategory = useSelector(selectSelectedCategory);
@@ -87,7 +104,11 @@ const PageContent = () => {
       <Route path="/product/:id" element={<ProductDetails theme={theme} />} />
       <Route
         path="/admin-dashboard"
-        element={<AdminDashboard theme={theme} />}
+        element={
+          <ProtectedRoute>
+            <AdminDashboard theme={theme} />
+          </ProtectedRoute>
+        }
       />
     </Routes>
   );

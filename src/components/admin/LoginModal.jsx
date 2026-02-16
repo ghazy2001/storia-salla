@@ -5,6 +5,8 @@ import {
   selectShowLoginModal,
   setShowLoginModal,
   login,
+  selectLoginError,
+  setLoginError,
 } from "../../store/slices/adminSlice";
 import { useNavigate } from "react-router-dom";
 
@@ -14,28 +16,36 @@ const LoginModal = () => {
   const showLoginModal = useSelector(selectShowLoginModal);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const loginError = useSelector(selectLoginError);
+  const isAdmin = useSelector((state) => state.admin.isAdmin);
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Move hooks to top level, before any early returns
+  React.useEffect(() => {
+    if (isAdmin && showLoginModal) {
+      navigate("/admin-dashboard");
+    }
+  }, [isAdmin, navigate, showLoginModal]);
 
   if (!showLoginModal) return null;
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (email === CONTACT_INFO.EMAIL) {
-      dispatch(login(email));
-      setError("");
-      setEmail("");
-      navigate("/admin-dashboard"); // Navigate to admin dashboard
-    } else {
-      setError("البريد الإلكتروني غير صحيح");
-    }
+    dispatch(login({ email, password }));
+  };
+
+  // Clear errors when closing
+  const handleClose = () => {
+    dispatch(setShowLoginModal(false));
+    dispatch(setLoginError(null));
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-lg p-8 w-full max-w-md relative animate-fade-in shadow-2xl">
         <button
-          onClick={() => dispatch(setShowLoginModal(false))}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <X size={24} />
@@ -66,7 +76,24 @@ const LoginModal = () => {
             />
           </div>
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+          <div className="text-right">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              كلمة المرور
+            </label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition-all text-left text-gray-900 bg-white"
+              dir="ltr"
+              required
+            />
+          </div>
+
+          {loginError && (
+            <p className="text-red-500 text-sm text-center">{loginError}</p>
+          )}
 
           <button
             type="submit"

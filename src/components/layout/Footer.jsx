@@ -20,6 +20,7 @@ const Footer = ({ theme }) => {
   const categories = useSelector(selectCategories);
   const isAdmin = useSelector(selectIsAdmin);
   const [showAll, setShowAll] = useState(false);
+  const [logoClicks, setLogoClicks] = useState(0);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
   const handleNavigate = (category) => {
@@ -68,6 +69,20 @@ const Footer = ({ theme }) => {
     dispatch(showToast("تم الاشتراك في النشرة البريدية بنجاح"));
   };
 
+  const handleLogoClick = () => {
+    setLogoClicks((prev) => {
+      const newVal = prev + 1;
+      if (newVal >= 5) {
+        dispatch(toggleLoginModal());
+        return 0; // Reset
+      }
+      return newVal;
+    });
+
+    // Reset clicks after 2 seconds of inactivity
+    setTimeout(() => setLogoClicks(0), 2000);
+  };
+
   return (
     <footer className="bg-brand-footer text-brand-light py-20 px-12 text-right transition-colors duration-500 font-sans">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-12 border-b border-white/10 pb-20">
@@ -77,7 +92,8 @@ const Footer = ({ theme }) => {
               getThemeValue(theme, "/assets/logo.png", "/assets/logo.png"),
             )}
             alt="STORIA DESIGN"
-            className="h-16 mb-6 ml-auto brightness-0 invert"
+            onClick={handleLogoClick}
+            className="h-16 mb-6 ml-auto brightness-0 invert cursor-default active:scale-95 transition-transform"
           />
           <p className="text-xs md:text-sm font-light text-brand-light/50 leading-relaxed tracking-wide mb-8">
             عباية STORIA علامة تجارية فاخرة للعبايات، تستمد إلهامها من الأناقة
@@ -195,15 +211,14 @@ const Footer = ({ theme }) => {
           <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
         </span>
         <div className="flex justify-center md:justify-end gap-4">
-          <button
-            onClick={() => {
-              if (isAdmin) navigate("/admin-dashboard");
-              else dispatch(toggleLoginModal());
-            }}
-            className="hover:text-brand-gold transition-colors underline decoration-brand-light/10 underline-offset-4"
-          >
-            {isAdmin ? "لوحة الإدارة" : "إدارة النظام"}
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => navigate("/admin-dashboard")}
+              className="hover:text-brand-gold transition-colors underline decoration-brand-light/10 underline-offset-4"
+            >
+              لوحة الإدارة
+            </button>
+          )}
         </div>
       </div>
     </footer>

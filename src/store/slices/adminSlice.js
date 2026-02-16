@@ -15,21 +15,22 @@ const adminSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
-      const email = action.payload;
-      if (email === "sastoria60@gmail.com") {
+      const { email, password } = action.payload;
+      // Fixed Admin Credentials (could be moved to env vars)
+      const ADMIN_EMAIL = "sastoria60@gmail.com";
+      const ADMIN_PASS = "Storia@2026"; // Secure password
+
+      if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
         state.isAdmin = true;
         state.showLoginModal = false;
+        state.loginError = null;
         localStorage.setItem("storia_admin_logged_in", "true");
+      } else {
+        state.loginError = "بيانات الدخول غير صحيحة";
       }
-      // Note: If login/password validation fails, we might need to handle it in component or thunk
-      // Check return value logic in original context:
-      // return true/false. Reducers don't return values to the caller.
-      // So the validation logic should ideally be in the component or a thunk.
-      // However, for simplicity, we assume the component calls this ONLY if valid or we update state to reflect success/failure?
-      // The original context did: if (email === ...) { setIsAdmin(true); return true; } return false;
-      // We will just handle the state update here. The component can check the email before dispatching or we can add an error state.
-      // To keep it simple and closest to original: Component validates or we trust the payload?
-      // Actually, the email check IS the validation.
+    },
+    setLoginError: (state, action) => {
+      state.loginError = action.payload;
     },
     logout: (state) => {
       state.isAdmin = false;
@@ -46,10 +47,16 @@ const adminSlice = createSlice({
   },
 });
 
-export const { login, logout, setShowLoginModal, toggleLoginModal } =
-  adminSlice.actions;
+export const {
+  login,
+  logout,
+  setShowLoginModal,
+  toggleLoginModal,
+  setLoginError,
+} = adminSlice.actions;
 
 export const selectIsAdmin = (state) => state.admin.isAdmin;
 export const selectShowLoginModal = (state) => state.admin.showLoginModal;
+export const selectLoginError = (state) => state.admin.loginError;
 
 export default adminSlice.reducer;
