@@ -5,16 +5,12 @@ import {
   X,
   Sun,
   Moon,
-  User,
   ArrowRight,
   ChevronDown,
 } from "lucide-react";
 import gsap from "gsap";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
-import { selectCartCount } from "../../store/slices/cartSlice";
-import { selectIsAdmin, toggleLoginModal } from "../../store/slices/adminSlice";
-import { selectCustomer } from "../../store/slices/userSlice";
 import {
   setSelectedCategory,
   setContactFormOpen,
@@ -27,11 +23,8 @@ const Navbar = ({ theme, toggleTheme }) => {
   const navRef = useRef(null);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const cartCount = useSelector(selectCartCount);
   const navLinks = useSelector(selectCategories);
-  const customer = useSelector(selectCustomer);
   const dispatch = useDispatch();
-  const isAdmin = useSelector(selectIsAdmin);
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname === "/";
@@ -167,17 +160,9 @@ const Navbar = ({ theme, toggleTheme }) => {
             className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
             onClick={() => setIsMobileMenuOpen(true)}
           />
-          <User
-            size={20}
-            className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
-            onClick={() => {
-              if (isAdmin) {
-                navigate("/admin-dashboard");
-              } else {
-                dispatch(toggleLoginModal());
-              }
-            }}
-          />
+          <div className="lg:hidden flex items-center">
+            <salla-user-menu></salla-user-menu>
+          </div>
           <div className="hidden lg:flex items-center gap-10">
             {navLinks
               .filter((cat) => cat.isActive !== false)
@@ -278,61 +263,17 @@ const Navbar = ({ theme, toggleTheme }) => {
           >
             {getThemeValue(theme, <Moon size={20} />, <Sun size={20} />)}
           </button>
-          <button
-            className="relative group cursor-pointer flex items-center justify-center p-2 rounded-full hover:bg-black/5 transition-all duration-300"
-            onClick={() => (window.location.href = "/cart")}
-            aria-label="عرض حقيبة التسوق"
-          >
-            <ShoppingBag
-              size={22}
-              className={`group-hover:text-brand-gold transition-colors duration-300 ${effectiveTextColor}`}
-            />
-            <span
-              className={`absolute top-0 right-0 bg-brand-gold text-white text-[10px] min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center font-bold ring-2 ring-transparent transition-all duration-500 ${!isTransparent ? "scale-90" : "scale-100"}`}
-            >
-              {cartCount}
-            </span>
-          </button>
 
-          <button
-            onClick={() => {
-              if (isAdmin) {
-                navigate("/admin-dashboard");
-              } else if (customer) {
-                // If Salla SDK provides a profile page, we could redirect there
-                // For now, toggle login modal as a profile view or stay as is
-                dispatch(toggleLoginModal());
-              } else {
-                dispatch(toggleLoginModal());
-              }
-            }}
-            className={`hidden lg:flex px-4 h-10 rounded-full items-center justify-center transition-all duration-500 hover:scale-105 active:scale-95 gap-2 ${getButtonTheme(theme)}`}
-            title={
-              isAdmin ? "لوحة التحكم" : customer ? customer.name : "تسجيل دخول"
-            }
-          >
-            {isAdmin ? (
-              <User
-                size={20}
-                className={getThemeValue(
-                  theme,
-                  "text-brand-burgundy",
-                  "text-brand-gold",
-                )}
-                fill="currentColor"
-              />
-            ) : customer ? (
-              <span className="text-xs font-bold whitespace-nowrap">
-                {customer.first_name || customer.name.split(" ")[0]}
-              </span>
-            ) : (
-              <User size={20} />
-            )}
+          <div className="flex items-center gap-2 salla-components-container">
+            {/* Salla Search Component */}
+            <salla-search mode="modal" height="40"></salla-search>
 
-            {isAdmin && (
-              <span className="absolute top-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></span>
-            )}
-          </button>
+            {/* Salla User Menu Component */}
+            <salla-user-menu></salla-user-menu>
+
+            {/* Salla Cart Summary Component */}
+            <salla-cart-summary show-details="false"></salla-cart-summary>
+          </div>
         </div>
       </nav>
 
@@ -401,22 +342,9 @@ const Navbar = ({ theme, toggleTheme }) => {
               المتجر
             </button>
 
-            <button
-              onClick={() => {
-                if (isAdmin) {
-                  navigate("/admin-dashboard");
-                } else {
-                  dispatch(toggleLoginModal());
-                }
-                setIsMobileMenuOpen(false);
-              }}
-              className="text-3xl font-sans text-brand-gold hover:text-white transition-all duration-300 cursor-pointer text-right flex items-center justify-end gap-3"
-            >
-              <span>
-                {isAdmin ? "لوحة التحكم" : customer ? "حسابي" : "تسجيل دخول"}
-              </span>
-              <User size={28} />
-            </button>
+            <div className="flex justify-end pr-4 mt-4">
+              <salla-user-menu></salla-user-menu>
+            </div>
             <div className="mt-8 border-t border-white/10 pt-8 flex flex-col gap-4 text-sm font-light tracking-widest text-white/80">
               <span
                 onClick={() => {

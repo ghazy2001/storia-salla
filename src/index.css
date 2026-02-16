@@ -121,3 +121,49 @@ select,
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Salla Components Custom Styling */
+.salla-components-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Force Salla components to use our gold/burgundy theme */
+salla-cart-summary,
+salla-user-menu,
+salla-search {
+  --salla-primary-color: #d4af37 !important;
+  --salla-primary-color-dark: #b8962d !important;
+  color: inherit !important;
+}
+
+/* Ensure the icons and text inside Salla components are correctly sized/colored */
+salla-cart-summary::part(button),
+salla-user-menu::part(button),
+salla-search::part(button) {
+  padding: 8px !important;
+  border-radius: 9999px !important;
+  transition: all 0.3s ease !important;
+}
+
+salla-cart-summary::part(button):hover,
+salla-user-menu::part(button):hover,
+salla-search::part(button):hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Fix for dark background themes */
+[data-theme="burgundy"] salla-cart-summary,
+[data-theme="burgundy"] salla-user-menu,
+[data-theme="burgundy"] salla-search {
+  --salla-primary-color: #d4af37 !important;
+}
+
+/* Remove any default borders or backgrounds that conflict with our navbar */
+salla-cart-summary,
+salla-user-menu,
+salla-search {
+  background: transparent !important;
+  border: none !important;
+}
