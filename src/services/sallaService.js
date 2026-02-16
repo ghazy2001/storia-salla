@@ -267,8 +267,8 @@ class SallaService {
             Object.keys(p),
           );
           console.log(
-            "[Storia Debug] First few keys data:",
-            JSON.stringify(Object.fromEntries(Object.entries(p).slice(0, 10))),
+            "[Storia Debug] Initial Data Snippet:",
+            JSON.stringify(p).substring(0, 500),
           );
         }
 
@@ -282,31 +282,53 @@ class SallaService {
               this.salla.product ||
               (this.salla.api ? this.salla.api.product : null);
 
-            if (productManager && typeof productManager.get === "function") {
-              log(`Fetching full details for product ${p.id}...`);
-              const detailedRes = await productManager
-                .get(p.id)
-                .catch(() => null);
+            if (productManager) {
+              log(
+                `Attempting detail fetch for ${p.id} via ${typeof productManager.get === "function" ? "get" : "fetch"}...`,
+              );
+
+              let detailedRes = null;
+              if (typeof productManager.get === "function") {
+                detailedRes = await productManager.get(p.id).catch(() => null);
+                if (!detailedRes)
+                  detailedRes = await productManager
+                    .get({ id: p.id })
+                    .catch(() => null);
+              } else if (typeof productManager.fetch === "function") {
+                detailedRes = await productManager
+                  .fetch(p.id)
+                  .catch(() => null);
+              }
 
               if (detailedRes) {
-                console.log(
-                  "[Storia Debug] Detailed response keys for ID",
-                  p.id,
-                  ":",
-                  Object.keys(detailedRes),
-                );
-                // Salla SDK sometimes wraps in .data, sometimes returns the product directly
-                targetProduct =
+                // Salla SDK sometimes wraps in .data, .product, or returns directly
+                const resultBody =
                   detailedRes.data ||
                   detailedRes.product ||
                   (detailedRes.id ? detailedRes : null);
 
-                if (targetProduct) {
+                if (resultBody) {
+                  targetProduct = resultBody;
                   description = getDesc(targetProduct);
+
+                  if (productsData.indexOf(p) === 0) {
+                    console.log(
+                      `[Storia Debug] Detailed Data for ${p.id}:`,
+                      JSON.stringify(targetProduct).substring(0, 500),
+                    );
+                    console.log(
+                      `[Storia Debug] Extracted Description: "${description}"`,
+                    );
+                  }
+
                   if (description)
                     log(`Success fetching description for ${p.id}`);
                 }
+              } else {
+                log(`Detail fetch for ${p.id} returned nothing.`);
               }
+            } else {
+              log(`Product Manager not available for detail fetch of ${p.id}`);
             }
           } catch (err) {
             log(`Failed to fetch full details for ${p.id}: ${err.message}`);
