@@ -6,7 +6,7 @@ const getInitialState = () => {
       theme: "green",
       selectedProductId: null,
       selectedCategory: "all",
-      adminActiveTab: "analytics",
+      adminActiveTab: "products",
       contactFormOpen: false,
       trackOrderOpen: false,
       toast: { isVisible: false, message: "" },
@@ -18,7 +18,7 @@ const getInitialState = () => {
     selectedProductId: localStorage.getItem("storia_selected_product_id"),
     selectedCategory: localStorage.getItem("storia_selected_category") || "all",
     adminActiveTab:
-      localStorage.getItem("storia_admin_active_tab") || "analytics",
+      localStorage.getItem("storia_admin_active_tab") || "products",
     contactFormOpen: false,
     trackOrderOpen: false,
     toast: { isVisible: false, message: "" },

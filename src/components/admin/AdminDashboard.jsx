@@ -27,23 +27,12 @@ import {
   deleteBestSellers as deleteBestSellersAction,
 } from "../../store/slices/contentSlice";
 import {
-  fetchOrders,
-  fetchAnalytics,
-  selectOrders,
-  selectAnalytics,
-} from "../../store/slices/dashboardSlice";
-import {
-  BarChart3,
-  ShoppingBag,
   ExternalLink,
   Package,
   MessageSquare,
   HelpCircle,
   Plus,
   Star,
-  ClipboardList,
-  Users,
-  Ticket,
 } from "lucide-react";
 import {
   setAdminActiveTab,
@@ -52,24 +41,17 @@ import {
 import sallaService from "../../services/sallaService";
 
 // Components
-import AnalyticsTab from "./dashboard/AnalyticsTab";
-import OrdersTab from "./dashboard/OrdersTab";
 import ProductsTab from "./dashboard/ProductsTab";
 import ReviewsTab from "./dashboard/ReviewsTab";
 import FAQsTab from "./dashboard/FAQsTab";
 import BestSellersTab from "./dashboard/BestSellersTab";
 import CategoriesTab from "./dashboard/CategoriesTab";
-import InventoryTab from "./dashboard/InventoryTab";
-import CustomersTab from "./dashboard/CustomersTab";
-import CouponsTab from "./dashboard/CouponsTab";
 import ProductModal from "./dashboard/ProductModal";
 
 const AdminDashboard = () => {
   const products = useSelector(selectProducts);
   const reviews = useSelector(selectReviews);
   const faqs = useSelector(selectFAQs);
-  const orders = useSelector(selectOrders);
-  const analytics = useSelector(selectAnalytics);
   const bestSellers = useSelector(selectBestSellers);
   const activeTab = useSelector(selectAdminActiveTab);
   const categories = useSelector(selectCategories);
@@ -81,22 +63,16 @@ const AdminDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   React.useEffect(() => {
-    dispatch(fetchOrders());
-    dispatch(fetchAnalytics());
     dispatch(fetchBestSellers());
     dispatch(fetchCategoriesFromSalla());
   }, [dispatch]);
 
   const initialProductState = {
     name: "",
-    price: "",
     description: "",
     image: "assets/products/p01/p01_1.jpg",
     category: "official",
-    sizes: [],
-    sizeVariants: [],
     media: [],
-    originalPrice: "",
     bestSellerDescription: "",
     sallaProductId: "",
   };
@@ -240,28 +216,6 @@ const AdminDashboard = () => {
   const renderTabs = () => (
     <div className="flex gap-4 mb-8 border-b pb-4 overflow-x-auto">
       <button
-        onClick={() => dispatch(setAdminActiveTab("analytics"))}
-        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
-          activeTab === "analytics"
-            ? "bg-brand-burgundy text-white shadow-lg"
-            : "bg-white text-gray-500 hover:bg-gray-100"
-        }`}
-      >
-        <BarChart3 size={18} />
-        <span>التحليلات</span>
-      </button>
-      <button
-        onClick={() => dispatch(setAdminActiveTab("orders"))}
-        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
-          activeTab === "orders"
-            ? "bg-brand-burgundy text-white shadow-lg"
-            : "bg-white text-gray-500 hover:bg-gray-100"
-        }`}
-      >
-        <ShoppingBag size={18} />
-        <span>الطلبات</span>
-      </button>
-      <button
         onClick={() => dispatch(setAdminActiveTab("products"))}
         className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
           activeTab === "products"
@@ -271,17 +225,6 @@ const AdminDashboard = () => {
       >
         <Package size={18} />
         <span>المنتجات</span>
-      </button>
-      <button
-        onClick={() => dispatch(setAdminActiveTab("inventory"))}
-        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
-          activeTab === "inventory"
-            ? "bg-brand-burgundy text-white shadow-lg"
-            : "bg-white text-gray-500 hover:bg-gray-100"
-        }`}
-      >
-        <ClipboardList size={18} />
-        <span>المخزون والجرد</span>
       </button>
       <button
         onClick={() => dispatch(setAdminActiveTab("reviews"))}
@@ -326,28 +269,6 @@ const AdminDashboard = () => {
       >
         <Package size={18} />
         <span>الأقسام</span>
-      </button>
-      <button
-        onClick={() => dispatch(setAdminActiveTab("customers"))}
-        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
-          activeTab === "customers"
-            ? "bg-brand-burgundy text-white shadow-lg"
-            : "bg-white text-gray-500 hover:bg-gray-100"
-        }`}
-      >
-        <Users size={18} />
-        <span>العملاء</span>
-      </button>
-      <button
-        onClick={() => dispatch(setAdminActiveTab("coupons"))}
-        className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all whitespace-nowrap ${
-          activeTab === "coupons"
-            ? "bg-brand-burgundy text-white shadow-lg"
-            : "bg-white text-gray-500 hover:bg-gray-100"
-        }`}
-      >
-        <Ticket size={18} />
-        <span>كوبونات الخصم</span>
       </button>
     </div>
   );
@@ -406,8 +327,6 @@ const AdminDashboard = () => {
         )}
 
         {/* Content */}
-        {activeTab === "analytics" && <AnalyticsTab analytics={analytics} />}
-        {activeTab === "orders" && <OrdersTab orders={orders} />}
         {activeTab === "products" && (
           <ProductsTab
             products={products}
@@ -439,9 +358,6 @@ const AdminDashboard = () => {
             handleDelete={handleDelete}
           />
         )}
-        {activeTab === "inventory" && <InventoryTab products={products} />}
-        {activeTab === "customers" && <CustomersTab />}
-        {activeTab === "coupons" && <CouponsTab />}
 
         {/* Modal */}
         <ProductModal
