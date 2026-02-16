@@ -40,9 +40,12 @@ export const useAddToCart = () => {
           const debugInfo = result.debugPayload
             ? `\nPayload: ${JSON.stringify(result.debugPayload)}`
             : "";
+          const diagnosisInfo = result.diagnosis
+            ? `\nDiagnosis: ${result.diagnosis}`
+            : "";
           alert(
             `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
-              `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}`,
+              `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}${diagnosisInfo}`,
           );
         } else {
           console.log("[Storia] Successfully added to Salla cart");

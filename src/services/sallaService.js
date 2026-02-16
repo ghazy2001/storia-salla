@@ -691,6 +691,7 @@ class SallaService {
     );
 
     let lastAttemptedPayload = payload;
+    let diagnosis = "No repair attempted";
     const attemptAdd = async (currentPayload, isRetry = false) => {
       lastAttemptedPayload = currentPayload;
       try {
@@ -708,7 +709,7 @@ class SallaService {
           );
 
           try {
-            const pid = parseInt(String(productId).split("/")[0]) || productId;
+            const pid = Number(idToUse);
             const sm = window.salla || this.salla;
             let rb = null;
 
@@ -732,13 +733,17 @@ class SallaService {
             }
 
             if (rb) {
-              const pickedOptions = {};
               const ros =
                 (rb.options &&
                   (Array.isArray(rb.options)
                     ? rb.options
                     : Object.values(rb.options))) ||
                 [];
+              const vs = rb.variants || [];
+              diagnosis = `Repair: Found ${ros.length} options, ${vs.length} variants for Salla ID ${pid}.`;
+              console.log(`[Storia] ${diagnosis}`);
+
+              const pickedOptions = {};
               ros.forEach((opt) => {
                 const vals =
                   opt.values || (Array.isArray(opt.data) ? opt.data : []);
@@ -828,6 +833,7 @@ class SallaService {
         error: errorMsg,
         debugPayload: lastAttemptedPayload,
         isRetry: lastAttemptedPayload !== payload,
+        diagnosis: diagnosis,
       };
     }
   }
