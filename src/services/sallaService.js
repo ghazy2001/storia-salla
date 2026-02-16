@@ -229,6 +229,12 @@ class SallaService {
           return String(val);
         };
 
+        // LOG: Full Raw Product Object to inspect hidden image fields
+        if (p.id == 1252773325) {
+          // Log only for the specific product to reduce noise
+          console.log(`🔥 [Storia] RAW SALLA PRODUCT (${p.id}):`, p);
+        }
+
         // 1. Get fundamental details
         // 1. Description Extractor
         // 1. Description Extractor
