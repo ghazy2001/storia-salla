@@ -232,7 +232,20 @@ class SallaService {
         // 1. Get fundamental details
         const getDesc = (obj) => {
           if (!obj) return "";
+
+          // Check for nested translations/active translation
+          // Salla sometimes uses .translation or .translations or .translated
+          const translationObj =
+            obj.translation ||
+            (obj.translations
+              ? obj.translations.ar ||
+                obj.translations.en ||
+                Object.values(obj.translations)[0]
+              : null);
+
           const fields = [
+            translationObj?.description,
+            translationObj?.short_description,
             obj.description,
             obj.short_description,
             obj.detailed_description,
@@ -246,7 +259,6 @@ class SallaService {
             if (!f) continue;
             const t = translate(f);
             if (t && t.length > 2 && !t.includes("undefined") && t !== "null") {
-              // Strip HTML and decode entities if any
               const clean = t
                 .replace(/<[^>]*>?/gm, " ")
                 .replace(/&nbsp;/g, " ")
@@ -262,21 +274,16 @@ class SallaService {
         if (productsData.indexOf(p) === 0) {
           console.log("[Storia Debug] Mapping First Product ID:", p.id);
           console.log("[Storia Debug] Initial Object Keys:", Object.keys(p));
-          // Log all fields that might contain description
-          const descLikeFields = Object.keys(p).filter(
-            (k) =>
-              k.toLowerCase().includes("desc") ||
-              k.toLowerCase().includes("text") ||
-              k.toLowerCase().includes("content"),
-          );
-          if (descLikeFields.length > 0) {
-            console.log(
-              "[Storia Debug] Possible Description Fields:",
-              descLikeFields
-                .map((k) => `${k}: ${JSON.stringify(p[k])}`)
-                .join(", "),
-            );
-          }
+          // Log suspected fields directly to see their structure
+          [
+            "description",
+            "translations",
+            "translation",
+            "image",
+            "images",
+          ].forEach((k) => {
+            if (p[k]) console.log(`[Storia Debug] Found ${k}:`, p[k]);
+          });
         }
 
         let description = getDesc(p);
@@ -294,16 +301,20 @@ class SallaService {
                 `[Storia Debug] Attempting detail fetch for ${p.id}...`,
               );
 
-              let detailedRes = null;
-              if (typeof productManager.get === "function") {
-                detailedRes = await productManager.get(p.id).catch((err) => {
-                  console.log(`[Storia Debug] .get(${p.id}) failed:`, err);
-                  return null;
-                });
+              let detailedRes = await productManager
+                .get(p.id)
+                .catch(() => null);
+              if (!detailedRes) {
+                detailedRes = await productManager
+                  .get({ id: p.id })
+                  .catch(() => null);
               }
 
               if (detailedRes) {
-                // Salla SDK sometimes wraps in .data, .product, or returns directly
+                console.log(
+                  `[Storia Debug] Detailed response received for ${p.id}. Keys:`,
+                  Object.keys(detailedRes),
+                );
                 const resultBody =
                   detailedRes.data ||
                   detailedRes.product ||
@@ -312,23 +323,17 @@ class SallaService {
                 if (resultBody) {
                   targetProduct = resultBody;
                   description = getDesc(targetProduct);
-
                   if (productsData.indexOf(p) === 0) {
                     console.log(
-                      `[Storia Debug] Detailed Data Object for ${p.id} Keys:`,
-                      Object.keys(targetProduct),
-                    );
-                    const detailedDescFields = Object.keys(
-                      targetProduct,
-                    ).filter((k) => k.toLowerCase().includes("desc"));
-                    console.log(
-                      `[Storia Debug] Detailed Desc Fields for ${p.id}:`,
-                      detailedDescFields
-                        .map((k) => `${k}: ${JSON.stringify(targetProduct[k])}`)
-                        .join(", "),
+                      `[Storia Debug] Detailed Data Result for ${p.id}:`,
+                      description,
                     );
                   }
                 }
+              } else {
+                console.log(
+                  `[Storia Debug] Detail fetch for ${p.id} returned null.`,
+                );
               }
             }
           } catch (err) {
