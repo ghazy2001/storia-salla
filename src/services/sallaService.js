@@ -260,16 +260,23 @@ class SallaService {
 
         // Diagnostic log: what does the product object look like?
         if (productsData.indexOf(p) === 0) {
-          console.log(
-            "[Storia Debug] Mapping Product ID:",
-            p.id,
-            "Keys:",
-            Object.keys(p),
+          console.log("[Storia Debug] Mapping First Product ID:", p.id);
+          console.log("[Storia Debug] Initial Object Keys:", Object.keys(p));
+          // Log all fields that might contain description
+          const descLikeFields = Object.keys(p).filter(
+            (k) =>
+              k.toLowerCase().includes("desc") ||
+              k.toLowerCase().includes("text") ||
+              k.toLowerCase().includes("content"),
           );
-          console.log(
-            "[Storia Debug] Initial Data Snippet:",
-            JSON.stringify(p).substring(0, 500),
-          );
+          if (descLikeFields.length > 0) {
+            console.log(
+              "[Storia Debug] Possible Description Fields:",
+              descLikeFields
+                .map((k) => `${k}: ${JSON.stringify(p[k])}`)
+                .join(", "),
+            );
+          }
         }
 
         let description = getDesc(p);
@@ -283,21 +290,16 @@ class SallaService {
               (this.salla.api ? this.salla.api.product : null);
 
             if (productManager) {
-              log(
-                `Attempting detail fetch for ${p.id} via ${typeof productManager.get === "function" ? "get" : "fetch"}...`,
+              console.log(
+                `[Storia Debug] Attempting detail fetch for ${p.id}...`,
               );
 
               let detailedRes = null;
               if (typeof productManager.get === "function") {
-                detailedRes = await productManager.get(p.id).catch(() => null);
-                if (!detailedRes)
-                  detailedRes = await productManager
-                    .get({ id: p.id })
-                    .catch(() => null);
-              } else if (typeof productManager.fetch === "function") {
-                detailedRes = await productManager
-                  .fetch(p.id)
-                  .catch(() => null);
+                detailedRes = await productManager.get(p.id).catch((err) => {
+                  console.log(`[Storia Debug] .get(${p.id}) failed:`, err);
+                  return null;
+                });
               }
 
               if (detailedRes) {
@@ -313,25 +315,27 @@ class SallaService {
 
                   if (productsData.indexOf(p) === 0) {
                     console.log(
-                      `[Storia Debug] Detailed Data for ${p.id}:`,
-                      JSON.stringify(targetProduct).substring(0, 500),
+                      `[Storia Debug] Detailed Data Object for ${p.id} Keys:`,
+                      Object.keys(targetProduct),
                     );
+                    const detailedDescFields = Object.keys(
+                      targetProduct,
+                    ).filter((k) => k.toLowerCase().includes("desc"));
                     console.log(
-                      `[Storia Debug] Extracted Description: "${description}"`,
+                      `[Storia Debug] Detailed Desc Fields for ${p.id}:`,
+                      detailedDescFields
+                        .map((k) => `${k}: ${JSON.stringify(targetProduct[k])}`)
+                        .join(", "),
                     );
                   }
-
-                  if (description)
-                    log(`Success fetching description for ${p.id}`);
                 }
-              } else {
-                log(`Detail fetch for ${p.id} returned nothing.`);
               }
-            } else {
-              log(`Product Manager not available for detail fetch of ${p.id}`);
             }
           } catch (err) {
-            log(`Failed to fetch full details for ${p.id}: ${err.message}`);
+            console.log(
+              `[Storia Debug] Exception in detail fetch for ${p.id}:`,
+              err.message,
+            );
           }
         }
 
