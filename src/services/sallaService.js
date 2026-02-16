@@ -388,11 +388,13 @@ class SallaService {
         );
 
         // Try to get all images from multiple sources
-        const rawImages =
-          targetProduct.images ||
-          targetProduct.media ||
-          (targetProduct.image ? [targetProduct.image] : []) ||
-          [];
+        // Try to get all images from multiple sources
+        // MERGE all sources to capture every possible image
+        const allSources = [
+          ...(targetProduct.images || []),
+          ...(targetProduct.media || []),
+          ...(targetProduct.image ? [targetProduct.image] : []),
+        ];
 
         // LOG: Show raw images from Salla
         console.log(
@@ -401,11 +403,12 @@ class SallaService {
             "targetProduct.images": targetProduct.images,
             "targetProduct.media": targetProduct.media,
             "targetProduct.image": targetProduct.image,
-            "rawImages (final)": rawImages,
+            mergedSources: allSources.length,
           },
         );
 
-        const media = rawImages
+        const seenUrls = new Set();
+        const media = allSources
           .map((img) => {
             // Handle different image formats
             const imgUrl =
@@ -416,6 +419,10 @@ class SallaService {
               (typeof img === "string" ? img : null);
 
             if (!imgUrl) return null;
+
+            // Deduplicate
+            if (seenUrls.has(imgUrl)) return null;
+            seenUrls.add(imgUrl);
 
             return {
               type: "image",
