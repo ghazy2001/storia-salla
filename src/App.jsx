@@ -20,10 +20,10 @@ function AppContent() {
 
   return (
     <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10">
-      <GlobalOverlays isReady={isReady} />
+      <GlobalOverlays />
 
       <div
-        className={`flex flex-col min-h-screen transition-opacity duration-1000 ease-in-out ${
+        className={`flex flex-col min-h-screen transition-opacity duration-500 ease-in-out ${
           isReady ? "opacity-100" : "opacity-0"
         }`}
         aria-hidden={!isReady}

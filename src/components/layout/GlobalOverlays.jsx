@@ -11,14 +11,13 @@ import {
 } from "../../store/slices/uiSlice";
 
 import CustomCursor from "./CustomCursor";
-import Preloader from "./Preloader";
 import WhatsAppButton from "../common/WhatsAppButton";
 import LoginModal from "../admin/LoginModal";
 import Toast from "../common/Toast";
 import ContactForm from "../common/ContactForm";
 import TrackOrder from "../common/TrackOrder";
 
-const GlobalOverlays = ({ isReady }) => {
+const GlobalOverlays = () => {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
   const contactFormOpen = useSelector(selectContactFormOpen);
@@ -28,7 +27,6 @@ const GlobalOverlays = ({ isReady }) => {
   return (
     <>
       <CustomCursor />
-      <Preloader isReady={isReady} />
       <Toast
         isVisible={toast.isVisible}
         message={toast.message}

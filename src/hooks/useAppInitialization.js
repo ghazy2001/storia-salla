@@ -59,20 +59,21 @@ export const useAppInitialization = () => {
       // 3. Wait for everything to be ready
       try {
         await Promise.all([
-          // Timeout race: If fetching takes too long (e.g. 8s), give up and show app
-          new Promise((resolve) =>
-            setTimeout(() => {
-              console.warn(
-                "⚠️ Initialization timed out - forcing ready state.",
-              );
-              resolve();
-            }, 8000),
+          // Timeout race: If fetching takes too long (e.g. 5s), give up and show app
+          new Promise(
+            (resolve) =>
+              setTimeout(() => {
+                console.warn(
+                  "⚠️ Initialization timed out - forcing ready state.",
+                );
+                resolve();
+              }, 5000), // Reduced from 8s to 5s
           ),
 
           // Critical data fetching
           (async () => {
             try {
-              // Start fetching data
+              // Start fetching data (Concurrent)
               const productPromise = dispatch(
                 fetchProductsFromSalla(),
               ).unwrap();
@@ -84,10 +85,9 @@ export const useAppInitialization = () => {
               ).unwrap();
               const faqPromise = dispatch(fetchFAQs()).unwrap();
               const reviewPromise = dispatch(fetchReviews()).unwrap();
-              // Fetch Cart Source of Truth
               const cartPromise = dispatch(fetchCartFromSalla());
 
-              const [products] = await Promise.all([
+              await Promise.all([
                 productPromise,
                 categoryPromise,
                 customerPromise,
@@ -96,23 +96,12 @@ export const useAppInitialization = () => {
                 cartPromise,
               ]);
 
-              const criticalImages = [resolveAsset("assets/logo.png")];
-              if (products && products.length > 0) {
-                const heroImages = products
-                  .slice(0, 4)
-                  .map((p) => p.image)
-                  .filter(Boolean);
-                criticalImages.push(...heroImages);
-              }
-
-              await preloadImages(criticalImages);
+              // MINIMAL image preloading: Just the Logo
+              await preloadImages([resolveAsset("assets/logo.png")]);
             } catch (err) {
               console.error("Data fetch failed in init", err);
             }
           })(),
-
-          // Wait for minimum time
-          new Promise((resolve) => setTimeout(resolve, 1000)),
 
           // Wait for window load
           new Promise((resolve) => {
@@ -127,6 +116,8 @@ export const useAppInitialization = () => {
         console.error("[Storia] Initialization error:", error);
       } finally {
         setIsReady(true);
+        // SIGNAL READY TO NATIVE LOADER
+        document.documentElement.classList.add("storia-ready");
       }
     };
 
@@ -182,7 +173,9 @@ export const useAppInitialization = () => {
           window.salla.event.off("cart::updated", handleSallaCartUpdate);
           window.salla.event.off("cart::added", handleSallaCartUpdate);
           window.salla.event.off("cart::deleted", handleSallaCartUpdate);
-        } catch (e) {}
+        } catch {
+          /* ignore */
+        }
       }
     };
   }, [dispatch]);
