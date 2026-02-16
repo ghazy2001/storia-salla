@@ -702,10 +702,19 @@ class SallaService {
         const response = await this.salla.cart.addItem(currentPayload);
         return { success: true, data: response };
       } catch (error) {
-        // If 422 and not already retrying, try to NUCLEAR REPAIR the payload
-        if (error.response?.status === 422 && !isRetry) {
+        const statusCode = error.response?.status || error.status;
+        const errorData = error.response?.data;
+        const isValidation =
+          statusCode == 422 ||
+          statusCode == 400 ||
+          JSON.stringify(errorData || {}).includes("invalid_fields");
+
+        const isAbaya2 = Number(idToUse) === 1314742571;
+        diagnosis = `Detected: status=${statusCode}, validation=${isValidation}, abaya2=${isAbaya2}, retry=${isRetry}`;
+
+        if ((isValidation || isAbaya2) && !isRetry) {
           console.warn(
-            "[Storia] 422 detected. Attempting Nuclear Reconstruction...",
+            `[Storia] ${statusCode} Trigger detected. Attempting Reconstruction (V38)...`,
           );
 
           try {
