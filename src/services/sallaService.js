@@ -230,33 +230,56 @@ class SallaService {
         };
 
         // 1. Get fundamental details
-        let description = translate(
-          p.description || p.short_description || p.subtitle,
-        );
+        const getDesc = (obj) => {
+          if (!obj) return "";
+          const fields = [
+            obj.description,
+            obj.short_description,
+            obj.detailed_description,
+            obj.subtitle,
+            obj.summary,
+            obj.meta_description,
+          ];
+          for (const f of fields) {
+            const t = translate(f);
+            // Some APIs return HTML tags or just whitespace, or "null" as string
+            if (t && t.length > 3 && !t.includes("undefined") && t !== "null") {
+              // Strip HTML for the listing view if it's very short/summary
+              return t.replace(/<[^>]*>?/gm, "").trim();
+            }
+          }
+          return "";
+        };
+
+        let description = getDesc(p);
         let targetProduct = p;
 
         // 2. Fetch full details if description is missing and we have an ID
         // (Only do this if absolutely necessary to avoid API rate limits)
-        if ((!description || description.length < 10) && p.id) {
+        if ((!description || description.length < 5) && p.id) {
           try {
+            // Wait a tiny bit to avoid hammering if there are many products
+            // await new Promise(r => setTimeout(r, 100));
+
             const productManager =
               this.salla.product ||
               (this.salla.api ? this.salla.api.product : null);
-            if (productManager) {
+
+            if (productManager && typeof productManager.get === "function") {
+              log(
+                `Fetching full details for product ${p.id} to get description...`,
+              );
               const detailedRes = await productManager
                 .get(p.id)
                 .catch(() => null);
+
               if (detailedRes && detailedRes.data) {
                 targetProduct = detailedRes.data;
-                description = translate(
-                  targetProduct.description ||
-                    targetProduct.short_description ||
-                    targetProduct.subtitle,
-                );
+                description = getDesc(targetProduct);
               }
             }
-          } catch {
-            log(`Failed to fetch full details for ${p.id}`);
+          } catch (err) {
+            log(`Failed to fetch full details for ${p.id}: ${err.message}`);
           }
         }
 
