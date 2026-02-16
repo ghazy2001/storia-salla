@@ -554,167 +554,259 @@ class SallaService {
       return { success: false, error: "Salla SDK not available" };
     }
 
-    try {
-      const payload = {
-        id: options.sallaProductId || productId,
-        quantity: quantity,
-      };
+    const payload = {
+      id: options.sallaProductId || productId,
+      quantity: quantity,
+    };
 
-      // Handle Variants vs Custom Options
-      if (options.variantId) {
-        payload.variant_id = options.variantId;
-      }
-      if (options.options) {
-        payload.options = options.options;
+    // Handle Variants vs Custom Options
+    if (options.variantId) {
+      payload.variant_id = options.variantId;
+    }
+    if (options.options) {
+      payload.options = options.options;
+    }
+
+    // AUTO-FALLBACK: If product has required options but none provided, pick first available
+    if (
+      !payload.variant_id &&
+      (!payload.options || Object.keys(payload.options).length === 0)
+    ) {
+      let prod =
+        window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[productId];
+
+      // JIT FETCH: If we still don't have variants, try a last-second detail fetch
+      if (
+        !prod ||
+        !prod.mapped ||
+        !prod.mapped.sizeVariants ||
+        prod.mapped.sizeVariants.length === 0
+      ) {
+        console.warn(
+          "[Storia] No variants found in registry. Attempting JIT fetch for product:",
+          productId,
+        );
+        try {
+          const sm = window.salla || this.salla;
+          const pid = parseInt(String(productId).split("/")[0]) || productId;
+          let rb = null;
+
+          // SDK JIT
+          if (sm && sm.api?.fetch) {
+            const res = await sm.api
+              .fetch("product.details", { id: pid })
+              .catch(() => null);
+            rb = res?.data || res?.product || (res?.id ? res : null);
+          }
+
+          // REST JIT
+          if (!rb) {
+            const paths = [
+              `/api/v1/products/${pid}`,
+              `/products/${pid}.json`,
+            ].filter(Boolean);
+            for (const u of paths) {
+              const r = await fetch(u).catch(() => null);
+              if (r && r.ok) {
+                const d = await r.json();
+                rb = d?.data || d?.product || d;
+                if (rb) break;
+              }
+            }
+          }
+
+          if (rb) {
+            // Temporary mapping for failsafe
+            const rawOptions =
+              (rb.options &&
+                (Array.isArray(rb.options)
+                  ? rb.options
+                  : Object.values(rb.options))) ||
+              [];
+
+            // 1. Try Size Option
+            let sizeOpt = rawOptions.find((o) => {
+              const n = String(o.name || o.label || "").toLowerCase();
+              return (
+                n.includes("مقاس") || n.includes("size") || n.includes("قياس")
+              );
+            });
+
+            // 2. Fallback to FIRST available option if ANY exist
+            if (!sizeOpt && rawOptions.length > 0) {
+              sizeOpt = rawOptions.find(
+                (o) =>
+                  o.values?.length > 0 || (o.data && Array.isArray(o.data)),
+              );
+            }
+
+            if (sizeOpt) {
+              const vals =
+                sizeOpt.values ||
+                (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+              if (vals.length > 0) {
+                const first = vals[0];
+                payload.options = { [sizeOpt.id]: first.id };
+                console.log(
+                  "[Storia] JIT Failsafe Success (Options):",
+                  payload.options,
+                );
+              }
+            } else if (rb.variants && rb.variants.length > 0) {
+              payload.variant_id = rb.variants[0].id;
+              console.log(
+                "[Storia] JIT Failsafe Success (Variant):",
+                payload.variant_id,
+              );
+            }
+          }
+        } catch (e) {
+          console.error("[Storia] JIT Fetch failed", e);
+        }
       }
 
-      // AUTO-FALLBACK: If product has required options but none provided, pick first available
+      // Standard failsafe if JIT didn't set payload yet
       if (
         !payload.variant_id &&
-        (!payload.options || Object.keys(payload.options).length === 0)
+        (!payload.options || Object.keys(payload.options).length === 0) &&
+        prod?.mapped?.sizeVariants?.length > 0
       ) {
-        let prod =
-          window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[productId];
+        const def = prod.mapped.sizeVariants[0];
+        console.warn(
+          "[Storia] Failsafe activated: No selection provided, using:",
+          def,
+        );
+        if (def.variantId) {
+          payload.variant_id = def.variantId;
+        } else if (def.optionId && def.valueId) {
+          payload.options = { [def.optionId]: def.valueId };
+        }
+      }
+    }
 
-        // JIT FETCH: If we still don't have variants, try a last-second detail fetch
-        if (
-          !prod ||
-          !prod.mapped ||
-          !prod.mapped.sizeVariants ||
-          prod.mapped.sizeVariants.length === 0
-        ) {
+    console.log(
+      "[Storia] cart.addItem payload:",
+      JSON.stringify(payload, null, 2),
+    );
+
+    const attemptAdd = async (currentPayload, isRetry = false) => {
+      try {
+        console.log(
+          `[Storia] Cart attempt (Retry: ${isRetry}):`,
+          currentPayload,
+        );
+        const response = await this.salla.cart.addItem(currentPayload);
+        return { success: true, data: response };
+      } catch (error) {
+        // If 422 and not already retrying, try to NUCLEAR REPAIR the payload
+        if (error.response?.status === 422 && !isRetry) {
           console.warn(
-            "[Storia] No variants found in registry. Attempting JIT fetch for product:",
-            productId,
+            "[Storia] 422 detected. Attempting Nuclear Reconstruction...",
           );
+
           try {
-            const sm = window.salla || this.salla;
             const pid = parseInt(String(productId).split("/")[0]) || productId;
+            const sm = window.salla || this.salla;
             let rb = null;
 
-            // SDK JIT
-            if (sm && sm.api?.fetch) {
+            // 1. Fresh SDK Fetch
+            if (sm.api?.fetch) {
               const res = await sm.api
                 .fetch("product.details", { id: pid })
                 .catch(() => null);
               rb = res?.data || res?.product || (res?.id ? res : null);
             }
 
-            // REST JIT
+            // 2. Fresh REST Fetch
             if (!rb) {
-              const paths = [
-                `/api/v1/products/${pid}`,
-                `/products/${pid}.json`,
-              ].filter(Boolean);
-              for (const u of paths) {
-                const r = await fetch(u).catch(() => null);
-                if (r && r.ok) {
-                  const d = await r.json();
-                  rb = d?.data || d?.product || d;
-                  if (rb) break;
-                }
+              const r = await fetch(`/api/v1/products/${pid}`).catch(
+                () => null,
+              );
+              if (r && r.ok) {
+                const d = await r.json();
+                rb = d?.data || d?.product || d;
               }
             }
 
             if (rb) {
-              // Temporary mapping for failsafe
               const rawOptions =
                 (rb.options &&
                   (Array.isArray(rb.options)
                     ? rb.options
                     : Object.values(rb.options))) ||
                 [];
-
-              // 1. Try Size Option
-              let sizeOpt = rawOptions.find((o) => {
-                const n = String(o.name || o.label || "").toLowerCase();
-                return (
-                  n.includes("مقاس") || n.includes("size") || n.includes("قياس")
-                );
-              });
-
-              // 2. Fallback to FIRST available option if ANY exist
-              if (!sizeOpt && rawOptions.length > 0) {
-                sizeOpt = rawOptions.find(
-                  (o) =>
-                    o.values?.length > 0 || (o.data && Array.isArray(o.data)),
-                );
-              }
-
-              if (sizeOpt) {
+              if (rawOptions.length > 0) {
+                const opt = rawOptions[0];
                 const vals =
-                  sizeOpt.values ||
-                  (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+                  opt.values || (Array.isArray(opt.data) ? opt.data : []);
                 if (vals.length > 0) {
-                  const first = vals[0];
-                  payload.options = { [sizeOpt.id]: first.id };
+                  const repairedPayload = {
+                    id: String(pid),
+                    quantity: currentPayload.quantity,
+                    options: { [opt.id]: vals[0].id },
+                  };
                   console.log(
-                    "[Storia] JIT Failsafe Success (Options):",
-                    payload.options,
+                    "[Storia] Retrying with repaired payload:",
+                    repairedPayload,
                   );
+                  return await attemptAdd(repairedPayload, true);
                 }
               } else if (rb.variants && rb.variants.length > 0) {
-                payload.variant_id = rb.variants[0].id;
+                const repairedPayload = {
+                  id: String(pid),
+                  quantity: currentPayload.quantity,
+                  variant_id: rb.variants[0].id,
+                };
                 console.log(
-                  "[Storia] JIT Failsafe Success (Variant):",
-                  payload.variant_id,
+                  "[Storia] Retrying with repaired variant:",
+                  repairedPayload,
                 );
+                return await attemptAdd(repairedPayload, true);
               }
             }
-          } catch (e) {
-            console.error("[Storia] JIT Fetch failed", e);
+          } catch (repairErr) {
+            console.error("[Storia] Nuclear reconstruction failed:", repairErr);
           }
         }
-
-        // Standard failsafe if JIT didn't set payload yet
-        if (
-          !payload.variant_id &&
-          (!payload.options || Object.keys(payload.options).length === 0) &&
-          prod?.mapped?.sizeVariants?.length > 0
-        ) {
-          const def = prod.mapped.sizeVariants[0];
-          console.warn(
-            "[Storia] Failsafe activated: No selection provided, using:",
-            def,
-          );
-          if (def.variantId) {
-            payload.variant_id = def.variantId;
-          } else if (def.optionId && def.valueId) {
-            payload.options = { [def.optionId]: def.valueId };
-          }
-        }
+        throw error; // Rethrow to main catch
       }
+    };
 
-      console.log(
-        "[Storia] cart.addItem payload:",
-        JSON.stringify(payload, null, 2),
-      );
-
-      log("Adding to Salla cart (Full Payload):", payload);
-
-      // Use Salla's cart.addItem method
-      const response = await this.salla.cart.addItem(payload);
-
-      log("Added to Salla cart successfully:", response);
-
-      return {
-        success: true,
-        data: response,
-      };
+    try {
+      return await attemptAdd(payload);
     } catch (error) {
       console.error("[Storia] Error adding to Salla cart:", error);
 
-      // Extract detailed error message from Salla response
       let errorMsg = error.message || "Failed to add to cart";
 
-      const res = error.response;
-      if (res && res.data) {
-        const d = res.data;
-        // Salla usually returns errors in d.error or d.message or d.errors
-        errorMsg =
-          d.error ||
-          d.message ||
-          (d.errors ? Object.values(d.errors).flat().join(", ") : errorMsg);
+      try {
+        const res = error.response;
+        if (res && res.data) {
+          const d = res.data;
+          console.log("[Storia] Raw Salla error data:", d);
+
+          const extractMessage = (obj) => {
+            if (!obj) return null;
+            if (typeof obj === "string") return obj;
+            if (Array.isArray(obj)) return obj.map(extractMessage).join(", ");
+            if (typeof obj === "object") {
+              return (
+                obj.message ||
+                obj.error ||
+                obj.msg ||
+                (obj.errors
+                  ? Object.values(obj.errors).flat().join(", ")
+                  : JSON.stringify(obj))
+              );
+            }
+            return String(obj);
+          };
+
+          const sallaMsg = extractMessage(d);
+          if (sallaMsg) errorMsg = sallaMsg;
+        }
+      } catch (e) {
+        console.warn("[Storia] Error parsing Salla error:", e);
       }
 
       return {
