@@ -423,16 +423,6 @@ class SallaService {
               }
             }
 
-            // METHOD 2: Legacy SDK Call (Fallback)
-            if (!b && sm.api?.product?.get) {
-              try {
-                const res = await sm.api.product.get(pid);
-                b = res?.data || res;
-              } catch (e) {
-                // ignore
-              }
-            }
-
             // METHOD 3: HTML Scraping (The Nuclear Option) ☢️
             // If we are on the product page, the images MUST be in the DOM or Page Source
             if (!b && window.location.pathname.includes(pid)) {
