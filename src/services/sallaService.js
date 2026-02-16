@@ -229,9 +229,45 @@ class SallaService {
           return String(val);
         };
 
+        // 🔍 DEEP SCAN: Find where images are hiding!
+        const deepScanForImages = (obj, path = "product") => {
+          if (!obj || typeof obj !== "object") return;
+
+          // Check if this is an array of potential images
+          if (Array.isArray(obj) && obj.length > 0) {
+            // Check first item to see if it looks like an image
+            const first = obj[0];
+            const isImage =
+              (typeof first === "string" &&
+                (first.includes("http") || first.includes("cdn"))) ||
+              (typeof first === "object" &&
+                (first.url || first.src || first.image));
+
+            if (isImage) {
+              console.log(
+                `📸 FOUND IMAGES at [${path}]: found ${obj.length} items`,
+              );
+              console.log("   Sample:", first);
+            }
+          }
+
+          // Recursively scan keys
+          Object.keys(obj).forEach((key) => {
+            // Avoid circular or huge objects to prevent crash
+            if (key === "parent" || key === "context" || path.length > 100)
+              return;
+            deepScanForImages(obj[key], `${path}.${key}`);
+          });
+        };
+
         // LOG: Full Raw Product Object to inspect hidden image fields
         if (p.id == 1252773325) {
           // Log only for the specific product to reduce noise
+          console.log(
+            `🔥 [Storia] Starting Deep Scan for images in product ${p.id}...`,
+          );
+          deepScanForImages(p);
+          console.log(`🔥 [Storia] Deep Scan Complete.`);
           console.log(`🔥 [Storia] RAW SALLA PRODUCT (${p.id}):`, p);
         }
 
