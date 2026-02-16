@@ -334,24 +334,31 @@ class SallaService {
             };
 
             let b = null;
-            // SDK METHOD A: salla.api.fetch (Most reliable for details in Twilight)
-            if (sm.api?.fetch) {
-              const res = await sm.api
-                .fetch("product.details", { id: pid })
-                .catch(() => null);
-              b = res?.data || res?.product || (res?.id ? res : null);
+
+            // METHOD 1: Storefront Public AJAX API (Most Reliable for Images)
+            try {
+              const ajaxUrl = `${window.location.origin}/api/v1/products/${pid}`;
+              const res = await fetch(ajaxUrl, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+              });
+              if (res.ok) {
+                const json = await res.json();
+                b = json.data || json;
+                if (config.enableLogging)
+                  log(`AJAX enrichment success for ${pid}`, b);
+              }
+            } catch (err) {
+              console.warn(`AJAX enrichment failed for ${pid}`, err);
             }
 
-            // SDK METHOD B: salla.product.getDetails
-            if (!b) {
-              const sdkMethod =
-                (sm.product || sm.api?.product)?.getDetails ||
-                (sm.product || sm.api?.product)?.get;
-              const res =
-                typeof sdkMethod === "function"
-                  ? await sdkMethod(pid).catch(() => null)
-                  : null;
-              b = res?.data || res?.product || (res?.id ? res : null);
+            // METHOD 2: Legacy SDK Call (Fallback)
+            if (!b && sm.api?.product?.get) {
+              try {
+                const res = await sm.api.product.get(pid);
+                b = res?.data || res;
+              } catch (e) {
+                // ignore
+              }
             }
 
             if (b) {
