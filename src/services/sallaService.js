@@ -231,14 +231,15 @@ class SallaService {
 
         // 1. Get fundamental details
         // 1. Description Extractor
+        // 1. Description Extractor
         const getDesc = (obj) => {
           if (!obj) return "";
           const scan = (t, d = 0) => {
-            if (!t || d > 2) return "";
-            if (typeof t === "string" && (t.includes("<") || t.length > 50))
+            if (!t || d > 3) return "";
+            if (typeof t === "string" && (t.includes("<") || t.length > 5))
               return t;
             if (typeof t === "object") {
-              for (const k of [
+              const keys = [
                 "description",
                 "short_description",
                 "content",
@@ -246,11 +247,14 @@ class SallaService {
                 "ar",
                 "en",
                 "value",
-              ]) {
+                "text",
+              ];
+              for (const k of keys) {
                 const f = scan(t[k], d + 1);
                 if (f) return f;
               }
               for (const k in t) {
+                if (keys.includes(k)) continue;
                 const f = scan(t[k], d + 1);
                 if (f) return f;
               }
@@ -268,8 +272,25 @@ class SallaService {
             .replace(/&nbsp;/g, " ")
             .replace(/\s+/g, " ")
             .trim();
-          return clean.length > 5 ? clean : "";
+          return clean.length > 2 ? clean : "";
         };
+
+        // Deep Debugging
+        if (productsData.indexOf(p) === 0) {
+          const d = getDesc(p);
+          if (!d)
+            console.log(
+              "[Storia Debug] Failed to find desc for",
+              p.id,
+              "Keys:",
+              Object.keys(p),
+            );
+          else
+            console.log(
+              "[Storia Debug] Initial desc found:",
+              d.substring(0, 50),
+            );
+        }
 
         let description = getDesc(p);
         let targetProduct = p;
