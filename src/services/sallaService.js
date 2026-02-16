@@ -234,8 +234,7 @@ class SallaService {
           if (!obj) return "";
 
           // Check for nested translations/active translation
-          // Salla sometimes uses .translation or .translations or .translated
-          const translationObj =
+          const trans =
             obj.translation ||
             (obj.translations
               ? obj.translations.ar ||
@@ -243,9 +242,21 @@ class SallaService {
                 Object.values(obj.translations)[0]
               : null);
 
+          // Check features array/object
+          let featureDesc = "";
+          if (Array.isArray(obj.features)) {
+            const f = obj.features.find(
+              (item) =>
+                item.name?.toLowerCase().includes("desc") ||
+                item.type === "description",
+            );
+            if (f) featureDesc = f.value || f.content || "";
+          }
+
           const fields = [
-            translationObj?.description,
-            translationObj?.short_description,
+            featureDesc,
+            trans?.description,
+            trans?.short_description,
             obj.description,
             obj.short_description,
             obj.detailed_description,
@@ -274,7 +285,7 @@ class SallaService {
         if (productsData.indexOf(p) === 0) {
           console.log("[Storia Debug] Mapping Product ID:", p.id);
           console.log("[Storia Debug] Keys:", Object.keys(p));
-          ["description", "translations", "translation", "image"].forEach(
+          ["description", "translations", "translation", "features"].forEach(
             (k) => {
               console.log(`[Storia Debug] Value ${k}:`, p[k]);
             },
@@ -292,7 +303,7 @@ class SallaService {
 
             if (pm) {
               console.log(
-                `[Storia Debug] Detail fetch for ${p.id}... methods:`,
+                `[Storia Debug] detail fetch for ${p.id}... methods:`,
                 pm
                   ? Object.keys(pm).filter((k) => typeof pm[k] === "function")
                   : "none",
@@ -304,6 +315,15 @@ class SallaService {
               }
               if (!res && pm && typeof pm.fetch === "function") {
                 res = await pm.fetch({ id: p.id }).catch(() => null);
+              }
+              // Potential Salla storefront logic: salla.api.fetch('product.get', ...)
+              if (!res && sm.api && typeof sm.api.fetch === "function") {
+                console.log(
+                  `[Storia Debug] Trying salla.api.fetch('product.get')...`,
+                );
+                res = await sm.api
+                  .fetch("product.get", { id: p.id })
+                  .catch(() => null);
               }
 
               if (res) {
@@ -320,21 +340,39 @@ class SallaService {
               }
             }
 
-            // 2.1 AJAX Fallback
+            // 2.1 AJAX Fallback (Multi-attempt)
             if (!description || description.length < 5) {
               console.log(
-                `[Storia Debug] SDK failed for ${p.id}. Trying AJAX...`,
+                `[Storia Debug] SDK failed for ${p.id}. Trying AJAX fallbacks...`,
               );
-              const ajaxRes = await fetch(`/api/v1/products/${p.id}`).catch(
-                () => null,
-              );
-              if (ajaxRes && ajaxRes.ok) {
-                const ajaxData = await ajaxRes.json();
-                if (ajaxData?.data) {
-                  targetProduct = ajaxData.data;
-                  description = getDesc(targetProduct);
-                  if (description)
-                    console.log(`[Storia Debug] AJAX success for ${p.id}`);
+              const endpoints = [
+                `/api/v1/product/${p.id}`,
+                `/api/v1/products/${p.id}`,
+                `/api/v1/storefront/product/${p.id}`,
+                `/api/v1/storefront/products/${p.id}`,
+              ];
+              for (const url of endpoints) {
+                try {
+                  const ajaxRes = await fetch(url).catch(() => null);
+                  if (ajaxRes && ajaxRes.ok) {
+                    const ajaxData = await ajaxRes.json();
+                    const body =
+                      ajaxData?.data ||
+                      ajaxData?.product ||
+                      (ajaxData?.id ? ajaxData : null);
+                    if (body) {
+                      targetProduct = body;
+                      description = getDesc(targetProduct);
+                      if (description.length > 5) {
+                        console.log(
+                          `[Storia Debug] AJAX success for ${p.id} via ${url}`,
+                        );
+                        break;
+                      }
+                    }
+                  }
+                } catch (e) {
+                  /* ignore */
                 }
               }
             }
