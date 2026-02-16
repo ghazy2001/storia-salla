@@ -184,7 +184,7 @@ select,
 .salla-components-container {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 /* Force Salla components to use our gold/burgundy theme */

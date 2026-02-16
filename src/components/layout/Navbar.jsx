@@ -160,9 +160,6 @@ const Navbar = ({ theme, toggleTheme }) => {
             className={`cursor-pointer hover:text-brand-gold transition-colors duration-300 lg:hidden ${effectiveTextColor}`}
             onClick={() => setIsMobileMenuOpen(true)}
           />
-          <div className="lg:hidden flex items-center">
-            <salla-user-menu></salla-user-menu>
-          </div>
           <div className="hidden lg:flex items-center gap-10">
             {navLinks
               .filter((cat) => cat.isActive !== false)
@@ -253,6 +250,7 @@ const Navbar = ({ theme, toggleTheme }) => {
 
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-1 salla-components-container">
+            <salla-search mode="modal" height="40"></salla-search>
             <button
               onClick={toggleTheme}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
@@ -264,7 +262,6 @@ const Navbar = ({ theme, toggleTheme }) => {
             >
               {getThemeValue(theme, <Moon size={20} />, <Sun size={20} />)}
             </button>
-            <salla-search mode="modal" height="40"></salla-search>
             <salla-user-menu></salla-user-menu>
             <salla-cart-summary show-details="false"></salla-cart-summary>
           </div>
