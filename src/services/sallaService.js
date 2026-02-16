@@ -230,188 +230,100 @@ class SallaService {
         };
 
         // 1. Get fundamental details
+        // 1. Description Extractor
         const getDesc = (obj) => {
           if (!obj) return "";
-
-          // Check for nested translations/active translation
-          const trans =
-            obj.translation ||
-            (obj.translations
-              ? obj.translations.ar ||
-                obj.translations.en ||
-                Object.values(obj.translations)[0]
-              : null);
-
-          // Check features
-          let featureDesc = "";
-          if (Array.isArray(obj.features)) {
-            const f = obj.features.find(
-              (item) =>
-                item.name?.toLowerCase().includes("desc") ||
-                item.type === "description",
-            );
-            if (f) featureDesc = f.value || f.content || "";
-          } else if (obj.features && typeof obj.features === "object") {
-            // Handle features as object (common in some Salla responses)
-            featureDesc =
-              obj.features.description ||
-              obj.features.short_description ||
-              obj.features.detailed_description ||
-              "";
-            if (!featureDesc) {
-              const dKey = Object.keys(obj.features).find((k) =>
-                k.toLowerCase().includes("desc"),
-              );
-              if (dKey) featureDesc = obj.features[dKey];
+          const scan = (t, d = 0) => {
+            if (!t || d > 2) return "";
+            if (typeof t === "string" && (t.includes("<") || t.length > 50))
+              return t;
+            if (typeof t === "object") {
+              for (const k of [
+                "description",
+                "short_description",
+                "content",
+                "summary",
+                "ar",
+                "en",
+                "value",
+              ]) {
+                const f = scan(t[k], d + 1);
+                if (f) return f;
+              }
+              for (const k in t) {
+                const f = scan(t[k], d + 1);
+                if (f) return f;
+              }
             }
-          }
-
-          const fields = [
-            featureDesc,
-            trans?.description,
-            trans?.short_description,
-            obj.description,
-            obj.short_description,
-            obj.detailed_description,
-            obj.subtitle,
-            obj.summary,
-            obj.meta_description,
-            obj.content,
-            obj.body,
-          ];
-          for (const f of fields) {
-            if (!f) continue;
-            const t = translate(f);
-            if (t && t.length > 2 && !t.includes("undefined") && t !== "null") {
-              const clean = t
-                .replace(/<[^>]*>?/gm, " ")
-                .replace(/&nbsp;/g, " ")
-                .replace(/\s+/g, " ")
-                .trim();
-              if (clean.length > 2) return clean;
-            }
-          }
-          return "";
+            return "";
+          };
+          const raw =
+            scan(obj.translation) ||
+            scan(obj.translations) ||
+            scan(obj.features) ||
+            scan(obj);
+          if (!raw) return "";
+          const clean = translate(raw)
+            .replace(/<[^>]*>?/gm, " ")
+            .replace(/&nbsp;/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+          return clean.length > 5 ? clean : "";
         };
-
-        // Diagnostic log: what does the product object look like?
-        if (productsData.indexOf(p) === 0) {
-          console.log("[Storia Debug] Mapping Product ID:", p.id);
-          console.log("[Storia Debug] Keys:", Object.keys(p));
-          ["description", "translations", "translation", "features"].forEach(
-            (k) => {
-              console.log(`[Storia Debug] Value ${k}:`, p[k]);
-            },
-          );
-          if (!getDesc(p)) {
-            console.log("[Storia Debug] NO DESCRIPTION FOUND. FULL OBJECT:", p);
-          }
-        }
 
         let description = getDesc(p);
         let targetProduct = p;
 
-        // 2. Fetch full details if description is missing and we have an ID
+        // 2. Resilient Detail Fetch
         if ((!description || description.length < 5) && p.id) {
           try {
-            const sm = this.salla;
-            const pm = (sm.api && sm.api.product) || sm.product;
-
-            if (pm && Object.keys(pm).length > 0) {
-              console.log(
-                `[Storia Debug] SDK Detail fetch for ${p.id}... methods:`,
-                Object.keys(pm).filter((k) => typeof pm[k] === "function"),
-              );
-              let res = null;
-              if (typeof pm.get === "function") {
-                res = await pm.get(p.id).catch(() => null);
-                if (!res) res = await pm.get({ id: p.id }).catch(() => null);
-              }
-              if (!res && typeof pm.fetch === "function") {
-                res = await pm.fetch({ id: p.id }).catch(() => null);
-              }
-
-              if (res) {
-                const body = res.data || res.product || (res.id ? res : null);
-                if (body) {
-                  targetProduct = body;
-                  description = getDesc(targetProduct);
-                  if (productsData.indexOf(p) === 0)
-                    console.log(
-                      `[Storia Debug] SDK Success for ${p.id}:`,
-                      description,
-                    );
-                }
-              }
-            } else if (sm && sm.api) {
-              console.log(
-                `[Storia Debug] Product SDK empty. Probing salla.api directly:`,
-                Object.keys(sm.api).filter(
-                  (k) => typeof sm.api[k] === "function",
-                ),
-              );
-              // Try generic fetch if available
-              if (typeof sm.api.fetch === "function") {
-                const res = await sm.api
-                  .fetch("product.details", { id: p.id })
-                  .catch(() => null);
-                if (res && res.data) {
-                  targetProduct = res.data;
-                  description = getDesc(targetProduct);
-                  if (description)
-                    console.log(
-                      `[Storia Debug] SDK salla.api.fetch success for ${p.id}`,
-                    );
-                }
+            const sm = window.salla || this.salla;
+            const sdk = [
+              (sm.product || sm.api?.product)?.getDetails,
+              (sm.product || sm.api?.product)?.get,
+              sm.api?.fetch,
+            ];
+            for (const f of sdk.filter((x) => typeof x === "function")) {
+              const res = await (
+                f.name === "fetch"
+                  ? f("product.details", { id: p.id })
+                  : f(p.id)
+              ).catch(() => null);
+              const b = res?.data || res?.product || (res?.id ? res : null);
+              if (getDesc(b)) {
+                description = getDesc(b);
+                targetProduct = b;
+                console.log("[Storia Debug] SDK Success");
+                break;
               }
             }
-
-            // 2.1 AJAX Fallback (Multi-attempt)
-            if (!description || description.length < 5) {
-              console.log(
-                `[Storia Debug] SDK failed for ${p.id}. Trying AJAX...`,
-              );
-              const endpoints = [
-                p.url ? `${p.url}.json` : null, // Best bet for Salla themes
-                `/api/v1/product/${p.id}`,
-                `/api/v1/storefront/product/${p.id}`,
-                `/products/${p.id}`,
+            if (!description) {
+              const paths = [
+                p.url ? `${p.url}?format=json` : null,
+                `/api/v1/products/${p.id}`,
+                `/products/${p.id}.json`,
               ].filter(Boolean);
-
-              for (const url of endpoints) {
-                try {
-                  const ajaxRes = await fetch(url).catch(() => null);
-                  if (ajaxRes && ajaxRes.ok) {
-                    const ajaxData = await ajaxRes.json();
-                    const body =
-                      ajaxData?.data ||
-                      ajaxData?.product ||
-                      (ajaxData?.id
-                        ? ajaxData
-                        : ajaxData?.product_details
-                          ? ajaxData.product_details
-                          : null);
-                    if (body) {
-                      targetProduct = body;
-                      description = getDesc(targetProduct);
-                      if (description.length > 5) {
-                        console.log(`[Storia Debug] AJAX Success via ${url}`);
-                        break;
-                      }
-                    }
+              for (const u of paths) {
+                const r = await fetch(u).catch(() => null);
+                if (r && r.ok) {
+                  const d = await r.json();
+                  const b = d?.data || d?.product || d;
+                  if (getDesc(b)) {
+                    description = getDesc(b);
+                    targetProduct = b;
+                    console.log("[Storia Debug] AJAX Success", u);
+                    break;
                   }
-                } catch (e) {
-                  /* ignore */
                 }
               }
             }
-          } catch (err) {
-            console.log(
-              `[Storia Debug] Detail fetch exception for ${p.id}:`,
-              err.message,
-            );
+          } catch (e) {
+            /* ignore */
           }
         }
+
+        if (!description && productsData.indexOf(p) === 0)
+          console.log("[Storia Debug] NO DESC found for", p.id);
 
         // 3. Map Price
         let amount = 0;
