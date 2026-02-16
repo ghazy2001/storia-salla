@@ -323,7 +323,6 @@ class SallaService {
         // 2. Resilient Detail Fetch (Enrichment)
         if (p.id) {
           try {
-            const sm = window.salla || this.salla;
             // Use parseInt to handle IDs like "123456/1"
             const pid = parseInt(String(p.id).split("/")[0]) || p.id;
 
@@ -411,7 +410,7 @@ class SallaService {
                           }
                         }, 1000);
                       }
-                    } catch (e) {
+                    } catch (err) {
                       resolve(null);
                     }
                   }
@@ -460,7 +459,9 @@ class SallaService {
                           domImages.push(...images);
                         }
                       }
-                    } catch (e) {}
+                    } catch (err) {
+                      /* ignore script read error */
+                    }
                   }
 
                   // Sub-Strategy A2: Legacy unique string match
@@ -479,7 +480,9 @@ class SallaService {
                         );
                         if (urls) domImages.push(...urls);
                       }
-                    } catch (e) {}
+                    } catch (err) {
+                      /* ignore */
+                    }
                   }
 
                   // Sub-Strategy A3: Deep Regex Scan on ALL scripts (The "Magnet" Approach) 🧲
@@ -487,90 +490,101 @@ class SallaService {
                   // We just look for ANY array of images in any script.
                   try {
                     const content = s.textContent;
-                    if (
-                      content.length > 100 &&
-                      content.includes("cdn.salla.sa")
-                    ) {
-                      // Look for array of strings looking like Salla Images
-                      const imageArrayMatch = content.match(
-                        /\[\s*"https:\/\/cdn\.salla\.sa\/[^\]]+\]/g,
+                    if (content.includes("cdn.salla.sa")) {
+                      // Look for ANY string looking like a Salla Image URL
+                      const urls = content.match(
+                        /https:\/\/cdn\.salla\.sa\/[^\s"']+/g,
                       );
-                      if (imageArrayMatch) {
-                        imageArrayMatch.forEach((arrStr) => {
-                          const urls = arrStr.match(
-                            /https:\/\/cdn\.salla\.sa\/[^"']+/g,
-                          );
-                          if (urls) domImages.push(...urls);
-                        });
-                      }
+                      if (urls) domImages.push(...urls);
                     }
-                  } catch (e) {}
+                  } catch (err) {
+                    /* ignore */
+                  }
                 });
 
-                // Strategy C: Global Variable Scan (The "Hacker" Approach) 🕵️‍♂️
-                // Look for salla.config.product.images or similar
                 try {
-                  if (window.salla) {
-                    if (
-                      window.salla.config &&
-                      window.salla.config.product &&
-                      window.salla.config.product.images
-                    ) {
-                      domImages.push(
+                  const checkGlobals = () => {
+                    const found = [];
+                    // Check window.salla.config
+                    if (window.salla?.config?.product?.images) {
+                      found.push(
                         ...window.salla.config.product.images.map(
                           (i) => i.url || i,
                         ),
                       );
                     }
-                  }
+                    // Check global products array (common in themes)
+                    if (window.products && Array.isArray(window.products)) {
+                      const p = window.products.find((p) => p.id == pid);
+                      if (p && p.images)
+                        found.push(...p.images.map((i) => i.url || i));
+                    }
+                    return found;
+                  };
+                  domImages.push(...checkGlobals());
+                } catch (err) {
+                  /* ignore */
+                }
 
-                  // Also check for the variable that product-card.js might be using
-                  // Often it's in a global `products` array
-                } catch (e) {}
-
-                // Strategy B: Scrape <img> tags from common Salla sliders
-                const potentialSelectors = [
-                  ".product-detials__slider img",
-                  ".product-slider img",
-                  ".swiper-slide img",
-                  ".salla-product-card img",
-                  '[data-fancybox="product-images"] img',
-                  'img[src*="cdn.salla.sa"]', // Catch-all
-                ];
-
-                potentialSelectors.forEach((sel) => {
-                  document.querySelectorAll(sel).forEach((img) => {
-                    if (
-                      img.src &&
-                      img.src.includes("cdn.salla.sa") &&
-                      !img.src.includes("avatar") &&
-                      !img.src.includes("logo")
-                    ) {
-                      // Filter out small thumbnails if possible (naturalWidth check)
-                      if (img.naturalWidth > 100 || !img.naturalWidth) {
-                        domImages.push(img.src);
+                // Strategy B: Scrape <img> tags & Meta Tags
+                const scrapeDOM = () => {
+                  const found = [];
+                  // 1. Sliders & Images
+                  const potentialSelectors = [
+                    ".product-detials__slider img",
+                    ".product-slider img",
+                    ".swiper-slide img",
+                    ".salla-product-card img",
+                    '[data-fancybox="product-images"] img',
+                    'img[src*="cdn.salla.sa"]',
+                  ];
+                  potentialSelectors.forEach((sel) => {
+                    document.querySelectorAll(sel).forEach((img) => {
+                      if (
+                        img.src &&
+                        img.src.includes("cdn.salla.sa") &&
+                        !img.src.includes("avatar") &&
+                        !img.src.includes("logo")
+                      ) {
+                        if (img.naturalWidth > 50 || !img.naturalWidth)
+                          found.push(img.src);
                       }
+                    });
+                  });
+                  // 2. Meta Tags
+                  const metaSelectors = [
+                    'meta[property="og:image"]',
+                    'meta[name="twitter:image"]',
+                    'link[rel="image_src"]',
+                    'meta[itemprop="image"]',
+                  ];
+                  metaSelectors.forEach((sel) => {
+                    document.querySelectorAll(sel).forEach((el) => {
+                      const url = el.content || el.href;
+                      if (url && url.includes("cdn.salla.sa")) found.push(url);
+                    });
+                  });
+                  return found;
+                };
+
+                // Initial scrape
+                domImages.push(...scrapeDOM());
+
+                // Optional: Short delay retry if we found nothing (Lazy Load wait)
+                if (domImages.length < 2) {
+                  await new Promise((r) => setTimeout(r, 1500));
+                  domImages.push(...scrapeDOM());
+                  // Also re-run regex on any NEWLY loaded scripts
+                  document.querySelectorAll("script").forEach((s) => {
+                    const content = s.textContent;
+                    if (content.includes("cdn.salla.sa")) {
+                      const urls = content.match(
+                        /https:\/\/cdn\.salla\.sa\/[^\s"']+/g,
+                      );
+                      if (urls) domImages.push(...urls);
                     }
                   });
-                });
-
-                // Strategy D: Meta Tags (Social Sharing Images) 🌐
-                // Often the main image is defined here for Facebook/Twitter
-                const metaSelectors = [
-                  'meta[property="og:image"]',
-                  'meta[name="twitter:image"]',
-                  'link[rel="image_src"]',
-                  'meta[itemprop="image"]',
-                ];
-
-                metaSelectors.forEach((sel) => {
-                  document.querySelectorAll(sel).forEach((el) => {
-                    const url = el.content || el.href;
-                    if (url && url.includes("cdn.salla.sa")) {
-                      domImages.push(url);
-                    }
-                  });
-                });
+                }
 
                 if (domImages.length > 0) {
                   const uniqueDomImages = [...new Set(domImages)].map(
@@ -578,9 +592,10 @@ class SallaService {
                   );
                   // Only use if we found valid images
                   if (uniqueDomImages.length > 0) {
-                    log(
-                      `DOM Scraping success: found ${uniqueDomImages.length} images`,
-                    );
+                    if (config.enableLogging)
+                      log(
+                        `DOM Scraping success: found ${uniqueDomImages.length} images`,
+                      );
                     b = {
                       id: pid,
                       images: uniqueDomImages,
@@ -613,23 +628,35 @@ class SallaService {
             ) {
               const paths = [
                 `/api/v1/products/${pid}`,
+                `https://api.salla.dev/store/v1/products/${pid}?clean=true`,
                 `/products/${pid}.json`,
                 p.url ? `${p.url}?format=json` : null,
               ].filter(Boolean);
 
               for (const u of paths) {
-                const r = await fetch(u).catch(() => null);
-                if (r && r.ok) {
-                  const d = await r.json();
-                  const rb = d?.data || d?.product || d;
-                  if (rb) {
-                    if (isEnriched(rb.options))
-                      targetProduct.options = rb.options;
-                    if (isEnriched(rb.variants))
-                      targetProduct.variants = rb.variants;
-                    if (!description) description = getDesc(rb);
-                    if (isEnriched(targetProduct.options)) break;
+                try {
+                  const r = await fetch(u).catch(() => null);
+                  if (r && r.ok) {
+                    const d = await r.json();
+                    const rb = d?.data || d?.product || d;
+                    if (rb) {
+                      if (isEnriched(rb.options))
+                        targetProduct.options = rb.options;
+                      if (isEnriched(rb.variants))
+                        targetProduct.variants = rb.variants;
+                      if (!description) description = getDesc(rb);
+
+                      // Force update images if we missed them earlier
+                      if (!isEnriched(targetProduct.images) && rb.images) {
+                        targetProduct.images = rb.images;
+                        targetProduct.media = rb.images;
+                      }
+
+                      if (isEnriched(targetProduct.options)) break;
+                    }
                   }
+                } catch (err) {
+                  /* ignore */
                 }
               }
             }

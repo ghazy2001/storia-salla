@@ -29,11 +29,15 @@ export const useAddToCart = () => {
           options: cartOptions,
         });
 
-        const result = await sallaService.addToCart(product.id, quantity, {
-          variantId,
-          options: cartOptions,
-          sallaProductId: product.sallaProductId,
-        });
+        const result = await sallaService.addToCart(
+          product.sallaProductId || product.id,
+          quantity,
+          {
+            variantId,
+            options: cartOptions,
+            sallaProductId: product.sallaProductId || product.id,
+          },
+        );
 
         if (!result.success) {
           console.error("[Storia] Cart sync failed:", result.error);

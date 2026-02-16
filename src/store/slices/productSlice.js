@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-// import { products as initialProducts } from "../../data/products"; // Deprecated
+import { products as initialProducts } from "../../data/products";
 import { NAV_LINKS as initialCategories } from "../../utils/constants";
 import sallaService from "../../services/sallaService";
 
@@ -9,7 +9,7 @@ export const fetchProductsFromSalla = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const products = await sallaService.fetchProducts();
-      return products; // Can return null, extraReducers handles it
+      return products; // Can return null
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -103,7 +103,7 @@ export const deleteProductAsync = createAsyncThunk(
 );
 
 const initialState = {
-  products: [], // Start empty, load from Salla
+  products: initialProducts, // Start with local products as templates
   categories: initialCategories,
   loading: false,
   error: null,
@@ -126,13 +126,56 @@ const productSlice = createSlice({
       .addCase(fetchProductsFromSalla.fulfilled, (state, action) => {
         state.loading = false;
         if (Array.isArray(action.payload)) {
+          const sallaProducts = action.payload;
           console.log(
-            "[Redux] Salla Products Fetched & Replaced:",
-            action.payload.length,
-            action.payload,
+            `[Redux] Hybrid Sync - Merging ${sallaProducts.length} Salla products into local templates`,
           );
-          // DIRECT REPLACEMENT: Salla is now the Source of Truth
-          state.products = action.payload;
+
+          // 1. Update existing local products with Salla data
+          state.products = state.products.map((localP) => {
+            if (!localP.sallaProductId) return localP;
+
+            const remoteP = sallaProducts.find(
+              (rp) => String(rp.id) === String(localP.sallaProductId),
+            );
+
+            if (remoteP) {
+              return {
+                ...localP,
+                // Commerce data from Salla
+                price: remoteP.price || localP.price,
+                originalPrice:
+                  remoteP.regularPrice ||
+                  remoteP.originalPrice ||
+                  localP.originalPrice,
+                stock:
+                  remoteP.stock !== undefined ? remoteP.stock : localP.stock,
+                sizes: remoteP.sizes || [], // Sync sizes from Salla
+                sizeVariants: remoteP.sizeVariants || [], // Sync variants from Salla
+                options: remoteP.options || localP.options,
+                variants: remoteP.variants || localP.variants,
+                skus: remoteP.skus || localP.skus,
+                // UI data: Keep local names/media unless we explicitly want Salla's
+                media: localP.media,
+                image: localP.image,
+                description:
+                  localP.description && localP.description.length > 10
+                    ? localP.description
+                    : remoteP.description,
+              };
+            }
+            return localP;
+          });
+
+          // 2. Add Salla products that aren't mapped to a local template yet
+          sallaProducts.forEach((remoteP) => {
+            const isMapped = state.products.some(
+              (lp) => String(lp.sallaProductId) === String(remoteP.id),
+            );
+            if (!isMapped) {
+              state.products.push(remoteP);
+            }
+          });
         }
       })
       .addCase(fetchProductsFromSalla.rejected, (state, action) => {

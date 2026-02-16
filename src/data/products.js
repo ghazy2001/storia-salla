@@ -13,7 +13,7 @@ export const products = [
     ],
     description:
       "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
-    sallaProductId: 1252773325, // Updated to match working product/new creation
+    sallaProductId: 205379656, // عبايه 1
     image: "/assets/products/p01/p01_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p01/p01_1.jpg" },
@@ -39,7 +39,7 @@ export const products = [
     ],
     description:
       "عباية بقصة كلوش واسعة تمنحك حرية الحركة وأناقة استثنائية. مصممة من قماش الإنترنت الناعم الذي يتميز ببرودة ونعومة فائقة، مثالية للاستخدام اليومي.",
-    sallaProductId: 1252773325, // Linked to "عبايه"
+    sallaProductId: 421404226, // عبايه 2
     image: "/assets/products/p02/p02_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p02/p02_1.jpg" },
@@ -66,6 +66,7 @@ export const products = [
     ],
     description:
       "تحفة فنية بتصميم البشت التقليدي مع لمسات عصرية، مزينة بشك يدوي دقيق يضيف بريقاً هادئاً وفخامة لا تضاهى. الخيار الأمثل للمناسبات الخاصة.",
+    sallaProductId: 596619591, // عبايه 3
     image: "/assets/products/p03/p03_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p03/p03_1.jpg" },
@@ -98,6 +99,7 @@ export const products = [
       "البساطة هي عنوان الأناقة.، تصميم نواعم الكلاسيكي يبرز جمالك الطبيعي بتفاصيل هادئة وخامة عملية مريحة تدوم طويلاً.",
     bestSellerDescription:
       "تجسيد للأناقة الخالدة مع عباية نواعم الكلاسيكية. تصميم يجمع بين الفخامة والعملية، منسوجة من أجود الخامات لتمنحك إطلالة راقية وراحة تدوم طوال اليوم.",
+    sallaProductId: 130315077, // عبايه 4
     image: "/assets/products/p04/p04_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p04/p04_1.jpg" },
@@ -126,6 +128,7 @@ export const products = [
     ],
     description:
       "توازن مثالي بين الرسمية والأنوثة. تتميز بتطريزات ناعمة على الأكمام والياقة، تضفي لمسة جمالية دون مبالغة.",
+    sallaProductId: 818746647, // عبايه 5
     image: "/assets/products/p05/p05_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p05/p05_1.jpg" },
@@ -152,6 +155,7 @@ export const products = [
     ],
     description:
       "الرفيق المثالي لروتينك اليومي. مصممة لتكون عملية ومريحة، مع جيوب مخفية وقماش يتحمل الاستخدام المتكرر دون فقدان رونقه.",
+    sallaProductId: 1252773325, // عبايه 6
     image: "/assets/products/p06/p06_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p06/p06_1.jpg" },
@@ -178,6 +182,7 @@ export const products = [
     ],
     description:
       "قمة الفخامة والنعومة. عباية منسوجة من مزيج الحرير طبيعي، تمنحك ملمساً لا يضاهى ومظهراً يفيض بالرقي والجاذبية.",
+    sallaProductId: 810644068, // عبايه 7
     image: "/assets/products/p07/p07_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p07/p07_1.jpg" },
@@ -185,7 +190,6 @@ export const products = [
       { type: "image", src: "/assets/products/p07/p07_3.jpg" },
       { type: "image", src: "/assets/products/p07/p07_4.jpg" },
       { type: "image", src: "/assets/products/p07/p07_5.jpg" },
-      { type: "image", src: "/assets/products/p07/p07_6.jpg" },
     ],
   },
 ];
