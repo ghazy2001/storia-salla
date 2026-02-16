@@ -272,18 +272,13 @@ class SallaService {
 
         // Diagnostic log: what does the product object look like?
         if (productsData.indexOf(p) === 0) {
-          console.log("[Storia Debug] Mapping First Product ID:", p.id);
-          console.log("[Storia Debug] Initial Object Keys:", Object.keys(p));
-          // Log suspected fields directly to see their structure
-          [
-            "description",
-            "translations",
-            "translation",
-            "image",
-            "images",
-          ].forEach((k) => {
-            if (p[k]) console.log(`[Storia Debug] Found ${k}:`, p[k]);
-          });
+          console.log("[Storia Debug] Mapping Product ID:", p.id);
+          console.log("[Storia Debug] Keys:", Object.keys(p));
+          ["description", "translations", "translation", "image"].forEach(
+            (k) => {
+              console.log(`[Storia Debug] Value ${k}:`, p[k]);
+            },
+          );
         }
 
         let description = getDesc(p);
@@ -292,53 +287,60 @@ class SallaService {
         // 2. Fetch full details if description is missing and we have an ID
         if ((!description || description.length < 5) && p.id) {
           try {
-            const productManager =
-              this.salla.product ||
-              (this.salla.api ? this.salla.api.product : null);
+            const sm = this.salla;
+            const pm = (sm.api && sm.api.product) || sm.product;
 
-            if (productManager) {
+            if (pm) {
               console.log(
-                `[Storia Debug] Attempting detail fetch for ${p.id}...`,
+                `[Storia Debug] Detail fetch for ${p.id}... methods:`,
+                pm
+                  ? Object.keys(pm).filter((k) => typeof pm[k] === "function")
+                  : "none",
               );
-
-              let detailedRes = await productManager
-                .get(p.id)
-                .catch(() => null);
-              if (!detailedRes) {
-                detailedRes = await productManager
-                  .get({ id: p.id })
-                  .catch(() => null);
+              let res = null;
+              if (pm && typeof pm.get === "function") {
+                res = await pm.get(p.id).catch(() => null);
+                if (!res) res = await pm.get({ id: p.id }).catch(() => null);
+              }
+              if (!res && pm && typeof pm.fetch === "function") {
+                res = await pm.fetch({ id: p.id }).catch(() => null);
               }
 
-              if (detailedRes) {
-                console.log(
-                  `[Storia Debug] Detailed response received for ${p.id}. Keys:`,
-                  Object.keys(detailedRes),
-                );
-                const resultBody =
-                  detailedRes.data ||
-                  detailedRes.product ||
-                  (detailedRes.id ? detailedRes : null);
-
-                if (resultBody) {
-                  targetProduct = resultBody;
+              if (res) {
+                const body = res.data || res.product || (res.id ? res : null);
+                if (body) {
+                  targetProduct = body;
                   description = getDesc(targetProduct);
-                  if (productsData.indexOf(p) === 0) {
+                  if (productsData.indexOf(p) === 0)
                     console.log(
-                      `[Storia Debug] Detailed Data Result for ${p.id}:`,
+                      `[Storia Debug] Detail found for ${p.id}:`,
                       description,
                     );
-                  }
                 }
-              } else {
-                console.log(
-                  `[Storia Debug] Detail fetch for ${p.id} returned null.`,
-                );
+              }
+            }
+
+            // 2.1 AJAX Fallback
+            if (!description || description.length < 5) {
+              console.log(
+                `[Storia Debug] SDK failed for ${p.id}. Trying AJAX...`,
+              );
+              const ajaxRes = await fetch(`/api/v1/products/${p.id}`).catch(
+                () => null,
+              );
+              if (ajaxRes && ajaxRes.ok) {
+                const ajaxData = await ajaxRes.json();
+                if (ajaxData?.data) {
+                  targetProduct = ajaxData.data;
+                  description = getDesc(targetProduct);
+                  if (description)
+                    console.log(`[Storia Debug] AJAX success for ${p.id}`);
+                }
               }
             }
           } catch (err) {
             console.log(
-              `[Storia Debug] Exception in detail fetch for ${p.id}:`,
+              `[Storia Debug] Detail fetch exception for ${p.id}:`,
               err.message,
             );
           }
