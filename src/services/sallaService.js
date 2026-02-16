@@ -729,36 +729,39 @@ class SallaService {
             }
 
             if (rb) {
-              const rawOptions =
+              const pickedOptions = {};
+              const ros =
                 (rb.options &&
                   (Array.isArray(rb.options)
                     ? rb.options
                     : Object.values(rb.options))) ||
                 [];
-              if (rawOptions.length > 0) {
-                const opt = rawOptions[0];
+              ros.forEach((opt) => {
                 const vals =
                   opt.values || (Array.isArray(opt.data) ? opt.data : []);
                 if (vals.length > 0) {
-                  const repairedPayload = {
-                    id: String(pid),
-                    quantity: currentPayload.quantity,
-                    options: { [opt.id]: vals[0].id },
-                  };
-                  console.log(
-                    "[Storia] Retrying with repaired payload:",
-                    repairedPayload,
-                  );
-                  return await attemptAdd(repairedPayload, true);
+                  pickedOptions[Number(opt.id)] = Number(vals[0].id);
                 }
-              } else if (rb.variants && rb.variants.length > 0) {
+              });
+              if (Object.keys(pickedOptions).length > 0) {
                 const repairedPayload = {
-                  id: String(pid),
-                  quantity: currentPayload.quantity,
-                  variant_id: rb.variants[0].id,
+                  id: Number(pid),
+                  quantity: Number(currentPayload.quantity),
+                  options: pickedOptions,
                 };
                 console.log(
-                  "[Storia] Retrying with repaired variant:",
+                  "[Storia] Retrying with exhaustive options:",
+                  repairedPayload,
+                );
+                return await attemptAdd(repairedPayload, true);
+              } else if (rb.variants && rb.variants.length > 0) {
+                const repairedPayload = {
+                  id: Number(pid),
+                  quantity: Number(currentPayload.quantity),
+                  variant_id: Number(rb.variants[0].id),
+                };
+                console.log(
+                  "[Storia] Retrying with variant ID:",
                   repairedPayload,
                 );
                 return await attemptAdd(repairedPayload, true);
