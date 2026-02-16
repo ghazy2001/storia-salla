@@ -689,7 +689,9 @@ class SallaService {
       JSON.stringify(payload, null, 2),
     );
 
+    let lastAttemptedPayload = payload;
     const attemptAdd = async (currentPayload, isRetry = false) => {
+      lastAttemptedPayload = currentPayload;
       try {
         console.log(
           `[Storia] Cart attempt (Retry: ${isRetry}):`,
@@ -741,6 +743,9 @@ class SallaService {
                   opt.values || (Array.isArray(opt.data) ? opt.data : []);
                 if (vals.length > 0) {
                   pickedOptions[Number(opt.id)] = Number(vals[0].id);
+                } else if (opt.required) {
+                  // V35 Addition: Fallback for text/input options
+                  pickedOptions[Number(opt.id)] = "Option Auto-Filled";
                 }
               });
               if (Object.keys(pickedOptions).length > 0) {
@@ -820,7 +825,8 @@ class SallaService {
       return {
         success: false,
         error: errorMsg,
-        debugPayload: payload,
+        debugPayload: lastAttemptedPayload,
+        isRetry: lastAttemptedPayload !== payload,
       };
     }
   }
