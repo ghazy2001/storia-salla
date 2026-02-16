@@ -373,26 +373,71 @@ class SallaService {
           priceStr = `${amount} ر.س`;
         }
 
-        // 4. Map Images
-        // Try to get all images from 'images' array, fallback to 'image' object
-        const rawImages = targetProduct.images || [];
-        const media = rawImages.map((img) => ({
-          type: "image",
-          src: img.url || img.src,
-          alt: img.alt || targetProduct.name,
-        }));
+        // 4. Map Images (Enhanced with Multiple Fallbacks)
+        console.log(
+          `[Storia] Mapping images for product ${targetProduct.id}:`,
+          {
+            hasImages: !!targetProduct.images,
+            imagesLength: targetProduct.images?.length || 0,
+            hasImage: !!targetProduct.image,
+            hasThumbnail: !!targetProduct.thumbnail,
+            hasMainImage: !!targetProduct.main_image,
+          },
+        );
 
-        // Ensure main image is present
+        // Try to get all images from multiple sources
+        const rawImages =
+          targetProduct.images ||
+          targetProduct.media ||
+          (targetProduct.image ? [targetProduct.image] : []) ||
+          [];
+
+        const media = rawImages
+          .map((img) => {
+            // Handle different image formats
+            const imgUrl =
+              img?.url ||
+              img?.src ||
+              img?.path ||
+              img?.original ||
+              (typeof img === "string" ? img : null);
+
+            if (!imgUrl) return null;
+
+            return {
+              type: "image",
+              src: imgUrl,
+              alt: img.alt || targetProduct.name,
+            };
+          })
+          .filter(Boolean); // Remove null entries
+
+        // Ensure main image is present (check multiple fields)
         const mainImage =
           targetProduct.image?.url ||
           targetProduct.image?.src ||
-          targetProduct.main_image;
+          targetProduct.thumbnail?.url ||
+          targetProduct.thumbnail?.src ||
+          targetProduct.main_image ||
+          targetProduct.featured_image;
+
         if (mainImage && !media.find((m) => m.src === mainImage)) {
-          media.unshift({ type: "image", src: mainImage });
+          media.unshift({
+            type: "image",
+            src: mainImage,
+            alt: targetProduct.name,
+          });
         }
+
+        console.log(
+          `[Storia] Extracted ${media.length} images for product ${targetProduct.id}`,
+        );
 
         // If no images, use logo
         if (media.length === 0) {
+          console.warn(
+            `[Storia] No images found for product ${targetProduct.id}, using logo fallback`,
+          );
           media.push({ type: "image", src: "/assets/logo.png" });
         }
 
