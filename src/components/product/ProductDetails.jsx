@@ -78,22 +78,20 @@ const ProductDetails = () => {
       return;
     }
 
-    // Get price and variantId for selected size if available
+    // Get price and options for selected size if available
     let price = product.price;
-    let variantId = null;
+    let cartOptions = {};
     if (selectedSize && product.sizeVariants?.length > 0) {
       const variant = product.sizeVariants.find((v) => v.size === selectedSize);
       if (variant) {
         price = variant.price;
-        variantId = variant.sallaVariantId;
+        if (variant.optionId && variant.valueId) {
+          cartOptions[variant.optionId] = variant.valueId;
+        }
       }
     }
 
-    await addToCartWithSync(
-      { ...product, price },
-      1,
-      variantId || selectedSize,
-    );
+    await addToCartWithSync({ ...product, price }, 1, cartOptions);
     setShowToast(true);
   };
 

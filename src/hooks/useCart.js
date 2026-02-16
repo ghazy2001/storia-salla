@@ -14,13 +14,19 @@ export const useAddToCart = () => {
     // If on Salla platform, try to sync with Salla backend
     if (config.useSallaBackend && sallaService.isAvailable()) {
       try {
+        const isOptions = size && typeof size === "object";
+        const variantId = isOptions ? null : size;
+        const cartOptions = isOptions ? size : null;
+
         console.log(`[Storia] Adding to Salla: ${product.name}`, {
           productId: product.id,
-          variantId: size,
+          variantId,
+          options: cartOptions,
         });
 
         const result = await sallaService.addToCart(product.id, quantity, {
-          variantId: size,
+          variantId,
+          options: cartOptions,
           sallaProductId: product.sallaProductId,
         });
 

@@ -63,16 +63,18 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
 
         <button
           onClick={() => {
-            // Get price and variantId for selected size if available
+            // Get price and options for selected size if available
             let price = product.price;
-            let variantId = null;
+            let cartOptions = {};
             if (selectedSize && product.sizeVariants?.length > 0) {
               const variant = product.sizeVariants.find(
                 (v) => v.size === selectedSize,
               );
               if (variant) {
                 price = variant.price;
-                variantId = variant.sallaVariantId;
+                if (variant.optionId && variant.valueId) {
+                  cartOptions[variant.optionId] = variant.valueId;
+                }
               }
             }
 
@@ -80,7 +82,7 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
               onAddToCart({
                 product: { ...product, price },
                 quantity: 1,
-                size: variantId || selectedSize,
+                size: cartOptions,
               });
           }}
           className="px-8 py-3 border border-brand-charcoal text-brand-charcoal hover:bg-brand-gold hover:border-brand-gold hover:text-white transition-all duration-300 text-lg font-medium rounded-sm"

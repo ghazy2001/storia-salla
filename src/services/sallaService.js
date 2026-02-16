@@ -387,8 +387,10 @@ class SallaService {
           sizeVariants = sizeOption.values.map((v) => ({
             size: translate(v.name || v.label),
             price: v.price ? v.price.amount : amount,
-            stock: 10, // Salla doesn't always return stock per variant in list view
-            sallaVariantId: v.id,
+            stock: 10,
+            optionId: sizeOption.id,
+            valueId: v.id,
+            sallaVariantId: v.id, // Keep for backward compatibility
           }));
         }
 
@@ -420,6 +422,7 @@ class SallaService {
           promotionTitle: targetProduct.promotion?.title,
           rating: 5.0,
           reviews: 0,
+          rawSallaData: p, // Keep for debugging if needed
         };
 
         return mappedProduct;
@@ -448,12 +451,18 @@ class SallaService {
         quantity: quantity,
       };
 
-      // Add options if provided
+      // Handle Variants vs Custom Options
+      // Salla uses 'variant_id' for SKU-managed variants
+      // and 'options' object for custom options: { [option_id]: value_id }
       if (options.variantId) {
         payload.variant_id = options.variantId;
       }
 
-      log("Adding to Salla cart:", payload);
+      if (options.options) {
+        payload.options = options.options;
+      }
+
+      log("Adding to Salla cart (Full Payload):", payload);
 
       // Use Salla's cart.addItem method
       const response = await this.salla.cart.addItem(payload);
@@ -466,9 +475,7 @@ class SallaService {
       };
     } catch (error) {
       // Don't log expected errors (like 410 for mock products) in production
-      if (import.meta.env.DEV) {
-        console.error("[Storia] Error adding to Salla cart:", error);
-      }
+      console.error("[Storia] Error adding to Salla cart:", error);
       return {
         success: false,
         error: error.message || "Failed to add to cart",
