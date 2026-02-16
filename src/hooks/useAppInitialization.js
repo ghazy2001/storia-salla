@@ -59,44 +59,36 @@ export const useAppInitialization = () => {
       // 3. Wait for everything to be ready
       try {
         await Promise.all([
-          // Timeout race: If fetching takes too long (e.g. 5s), give up and show app
-          new Promise(
-            (resolve) =>
-              setTimeout(() => {
-                console.warn(
-                  "⚠️ Initialization timed out - forcing ready state.",
-                );
-                resolve();
-              }, 5000), // Reduced from 8s to 5s
+          // Timeout race: Shorten to 3s for extreme speed
+          new Promise((resolve) =>
+            setTimeout(() => {
+              console.warn(
+                "⚠️ Initialization timed out - forcing ready state.",
+              );
+              resolve();
+            }, 3000),
           ),
 
           // Critical data fetching
           (async () => {
             try {
-              // Start fetching data (Concurrent)
+              // 1. Critical Base Data (MUST WAIT)
               const productPromise = dispatch(
                 fetchProductsFromSalla(),
               ).unwrap();
               const categoryPromise = dispatch(
                 fetchCategoriesFromSalla(),
               ).unwrap();
-              const customerPromise = dispatch(
-                fetchCustomerFromSalla(),
-              ).unwrap();
-              const faqPromise = dispatch(fetchFAQs()).unwrap();
-              const reviewPromise = dispatch(fetchReviews()).unwrap();
               const cartPromise = dispatch(fetchCartFromSalla());
 
-              await Promise.all([
-                productPromise,
-                categoryPromise,
-                customerPromise,
-                faqPromise,
-                reviewPromise,
-                cartPromise,
-              ]);
+              // 2. Secondary Data (DONT BLOCK INITIALIZATION)
+              dispatch(fetchCustomerFromSalla());
+              dispatch(fetchFAQs());
+              dispatch(fetchReviews());
 
-              // MINIMAL image preloading: Just the Logo
+              await Promise.all([productPromise, categoryPromise, cartPromise]);
+
+              // MINIMAL image preloading
               await preloadImages([resolveAsset("assets/logo.png")]);
             } catch (err) {
               console.error("Data fetch failed in init", err);
