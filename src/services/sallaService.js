@@ -278,11 +278,12 @@ class SallaService {
         let description = getDesc(p);
         let targetProduct = p;
 
-        // 2. Resilient Detail Fetch (SDK First, fallback to REST)
+        // 2. Resilient Detail Fetch (Enrichment)
         if (p.id) {
           try {
             const sm = window.salla || this.salla;
-            const pid = Number(p.id);
+            // Use parseInt to handle IDs like "123456/1"
+            const pid = parseInt(String(p.id).split("/")[0]) || p.id;
 
             const isEnriched = (val) => {
               if (!val) return false;
@@ -304,15 +305,15 @@ class SallaService {
               const sdkMethod =
                 (sm.product || sm.api?.product)?.getDetails ||
                 (sm.product || sm.api?.product)?.get;
-              if (typeof sdkMethod === "function") {
-                const res = await sdkMethod(pid).catch(() => null);
-                b = res?.data || res?.product || (res?.id ? res : null);
-              }
+              const res =
+                typeof sdkMethod === "function"
+                  ? await sdkMethod(pid).catch(() => null)
+                  : null;
+              b = res?.data || res?.product || (res?.id ? res : null);
             }
 
             if (b) {
-              if (config.enableLogging)
-                log(`SDK enrichment success for ${pid}`, b);
+              if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
               if (isEnriched(b.options)) targetProduct.options = b.options;
               if (isEnriched(b.variants)) targetProduct.variants = b.variants;
               if (isEnriched(b.skus)) targetProduct.skus = b.skus;
@@ -588,7 +589,7 @@ class SallaService {
           );
           try {
             const sm = window.salla || this.salla;
-            const pid = Number(productId);
+            const pid = parseInt(String(productId).split("/")[0]) || productId;
             let rb = null;
 
             // SDK JIT
@@ -623,20 +624,35 @@ class SallaService {
                     ? rb.options
                     : Object.values(rb.options))) ||
                 [];
-              const sizeOpt = rawOptions.find((o) => {
+
+              // 1. Try Size Option
+              let sizeOpt = rawOptions.find((o) => {
                 const n = String(o.name || o.label || "").toLowerCase();
                 return (
                   n.includes("مقاس") || n.includes("size") || n.includes("قياس")
                 );
               });
 
-              if (sizeOpt && sizeOpt.values && sizeOpt.values.length > 0) {
-                const first = sizeOpt.values[0];
-                payload.options = { [sizeOpt.id]: first.id };
-                console.log(
-                  "[Storia] JIT Failsafe Success (Options):",
-                  payload.options,
+              // 2. Fallback to FIRST available option if ANY exist
+              if (!sizeOpt && rawOptions.length > 0) {
+                sizeOpt = rawOptions.find(
+                  (o) =>
+                    o.values?.length > 0 || (o.data && Array.isArray(o.data)),
                 );
+              }
+
+              if (sizeOpt) {
+                const vals =
+                  sizeOpt.values ||
+                  (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+                if (vals.length > 0) {
+                  const first = vals[0];
+                  payload.options = { [sizeOpt.id]: first.id };
+                  console.log(
+                    "[Storia] JIT Failsafe Success (Options):",
+                    payload.options,
+                  );
+                }
               } else if (rb.variants && rb.variants.length > 0) {
                 payload.variant_id = rb.variants[0].id;
                 console.log(

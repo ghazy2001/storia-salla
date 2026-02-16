@@ -27,14 +27,14 @@ const ProductDetails = () => {
     product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
   );
 
-  // Reset selected size when product changes
+  // Reset selected size when product changes or sizes are enriched
   useEffect(() => {
     if (product?.sizes && product.sizes.length > 0) {
       setSelectedSize(product.sizes[0]);
     } else {
       setSelectedSize("");
     }
-  }, [product?.id]);
+  }, [product?.id, product?.sizes?.length]);
 
   const { addToCart: addToCartWithSync } = useAddToCart();
 
