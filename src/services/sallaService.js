@@ -239,43 +239,63 @@ class SallaService {
             obj.subtitle,
             obj.summary,
             obj.meta_description,
+            obj.content,
+            obj.body,
           ];
           for (const f of fields) {
+            if (!f) continue;
             const t = translate(f);
-            // Some APIs return HTML tags or just whitespace, or "null" as string
-            if (t && t.length > 3 && !t.includes("undefined") && t !== "null") {
-              // Strip HTML for the listing view if it's very short/summary
-              return t.replace(/<[^>]*>?/gm, "").trim();
+            if (t && t.length > 2 && !t.includes("undefined") && t !== "null") {
+              // Strip HTML and decode entities if any
+              const clean = t
+                .replace(/<[^>]*>?/gm, " ")
+                .replace(/&nbsp;/g, " ")
+                .replace(/\s+/g, " ")
+                .trim();
+              if (clean.length > 2) return clean;
             }
           }
           return "";
         };
 
+        // Diagnostic log: what does the product object look like?
+        if (productsData.indexOf(p) === 0) {
+          console.log(
+            "[Storia Debug] Mapping Product ID:",
+            p.id,
+            "Keys:",
+            Object.keys(p),
+          );
+        }
+
         let description = getDesc(p);
         let targetProduct = p;
 
         // 2. Fetch full details if description is missing and we have an ID
-        // (Only do this if absolutely necessary to avoid API rate limits)
         if ((!description || description.length < 5) && p.id) {
           try {
-            // Wait a tiny bit to avoid hammering if there are many products
-            // await new Promise(r => setTimeout(r, 100));
-
             const productManager =
               this.salla.product ||
               (this.salla.api ? this.salla.api.product : null);
 
             if (productManager && typeof productManager.get === "function") {
-              log(
-                `Fetching full details for product ${p.id} to get description...`,
-              );
+              log(`Fetching full details for product ${p.id}...`);
               const detailedRes = await productManager
                 .get(p.id)
                 .catch(() => null);
 
-              if (detailedRes && detailedRes.data) {
-                targetProduct = detailedRes.data;
-                description = getDesc(targetProduct);
+              if (detailedRes) {
+                // Salla SDK sometimes wraps in .data, sometimes returns the product directly
+                targetProduct =
+                  detailedRes.data ||
+                  detailedRes.product ||
+                  (detailedRes.id ? detailedRes : null);
+
+                if (targetProduct) {
+                  description = getDesc(targetProduct);
+                  if (description)
+                    log(`Success fetching description for ${p.id}`);
+                }
               }
             }
           } catch (err) {
