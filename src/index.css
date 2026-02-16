@@ -42,22 +42,80 @@ body {
   overflow-x: hidden;
 }
 
-/* Ensure React root takes full control */
+/* Ensure React root stays below Salla's native overlays */
 #root {
   position: relative !important;
-  z-index: 9999 !important;
+  z-index: 10 !important; /* Lowered from 9999 to allow Salla drawers to appear on top */
   min-height: 100vh !important;
   width: 100% !important;
   display: block !important;
   visibility: visible !important;
   opacity: 1 !important;
-  /* background-color: var(--bg-site);  <-- REMOVED: This was covering the green body */
   background-color: transparent;
   overflow-x: hidden !important;
 }
 
-/* Hide Salla's default theme elements that appear behind our app */
-body > *:not(#root):not(script):not(style):not(link) {
+/* Salla Components Custom Styling - Premium Refinement */
+.salla-components-container {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Force Salla components to use our gold/burgundy theme */
+salla-cart-summary,
+salla-user-menu,
+salla-search {
+  --salla-primary-color: #d4af37 !important;
+  --salla-primary-color-dark: #b8962d !important;
+  color: inherit !important;
+}
+
+/* Premium Button Styling for Salla Components */
+salla-cart-summary::part(button),
+salla-user-menu::part(button),
+salla-search::part(button) {
+  padding: 10px !important;
+  border-radius: 9999px !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+salla-cart-summary::part(button):hover,
+salla-user-menu::part(button):hover,
+salla-search::part(button):hover {
+  background-color: rgba(212, 175, 55, 0.08) !important;
+  transform: translateY(-1px);
+}
+
+/* Specific scaling and alignment for icons */
+salla-cart-summary::part(icon),
+salla-user-menu::part(icon),
+salla-search::part(icon) {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Match the badge color to our gold */
+salla-cart-summary::part(badge) {
+  background-color: #d4af37 !important;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  border: 2px solid white !important;
+}
+
+/* Fix for dark background themes */
+[data-theme="burgundy"] salla-cart-summary::part(badge) {
+  border-color: #4d1330 !important;
+}
+
+/* Hide Salla default theme elements except the root app */
+body
+  > *:not(#root):not(script):not(style):not(link):not([class*="salla-"]):not(
+    salla-login-modal
+  ):not(salla-cart-summary-modal) {
   display: none !important;
   visibility: hidden !important;
 }
