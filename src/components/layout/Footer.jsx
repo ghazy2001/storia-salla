@@ -20,7 +20,7 @@ const Footer = ({ theme }) => {
   const categories = useSelector(selectCategories);
   const isAdmin = useSelector(selectIsAdmin);
   const [showAll, setShowAll] = useState(false);
-  const [logoClicks, setLogoClicks] = useState(0);
+  const [, setLogoClicks] = useState(0);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
   const handleNavigate = (category) => {

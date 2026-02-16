@@ -36,20 +36,17 @@ const HomePage = ({ handleGoToStore, handleProductSelect, theme }) => (
 
 import { selectIsAdmin } from "../../store/slices/adminSlice";
 
+// Route Protection Component
 const ProtectedRoute = ({ children }) => {
   const isAdmin = useSelector(selectIsAdmin);
   const location = useLocation();
 
   if (!isAdmin) {
-    // Redirect to home if not admin
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return children;
 };
-
-// ... remaining imports ...
-import { Navigate } from "react-router-dom";
 
 const PageContent = () => {
   const theme = useSelector(selectTheme);
