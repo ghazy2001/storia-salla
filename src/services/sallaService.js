@@ -425,14 +425,6 @@ class SallaService {
           rawSallaData: p, // Keep for debugging if needed
         };
 
-        if (mappedProduct.name.includes("عباية 2")) {
-          console.log("[Storia DEBUG] Mapping Abaya 2:", {
-            options: targetProduct.options,
-            variants: targetProduct.variants,
-            mappedVariants: sizeVariants,
-          });
-        }
-
         return mappedProduct;
       }),
     );
@@ -469,11 +461,6 @@ class SallaService {
       if (options.options) {
         payload.options = options.options;
       }
-
-      console.log(
-        "[Storia] cart.addItem payload:",
-        JSON.stringify(payload, null, 2),
-      );
 
       log("Adding to Salla cart (Full Payload):", payload);
 
