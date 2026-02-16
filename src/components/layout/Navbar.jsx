@@ -248,12 +248,12 @@ const Navbar = ({ theme, toggleTheme }) => {
           />
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
-          <div className="flex items-center gap-1 salla-components-container">
+        <div className="flex items-center md:gap-4">
+          <div className="flex items-center salla-components-container">
             <salla-search mode="modal" height="40"></salla-search>
             <button
               onClick={toggleTheme}
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
+              className={`p-2 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
               title={getThemeValue(
                 theme,
                 "Switch to Dark Mode",
