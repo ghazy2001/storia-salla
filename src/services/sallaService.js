@@ -351,6 +351,78 @@ class SallaService {
               console.warn(`AJAX enrichment failed for ${pid}`, err);
             }
 
+            // METHOD 2: Robust SDK Call (Wrapped in onReady)
+            if (!b && IS_SALLA_ENV) {
+              try {
+                b = await new Promise((resolve) => {
+                  const pidStr = String(pid);
+                  // Check if Salla is already ready
+                  if (
+                    window.salla &&
+                    window.salla.api &&
+                    window.salla.api.product
+                  ) {
+                    window.salla.api.product
+                      .getDetails(pidStr)
+                      .then((res) => resolve(res.data || res))
+                      .catch((err) => {
+                        console.warn("SDK getDetails failed:", err);
+                        resolve(null);
+                      });
+                  } else {
+                    // Wait for ready event
+                    try {
+                      const sallaObj = window.salla || {};
+                      if (sallaObj.onReady) {
+                        sallaObj.onReady(() => {
+                          if (
+                            window.salla &&
+                            window.salla.api &&
+                            window.salla.api.product
+                          ) {
+                            window.salla.api.product
+                              .getDetails(pidStr)
+                              .then((res) => resolve(res.data || res))
+                              .catch((err) => {
+                                console.warn(
+                                  "SDK getDetails failed in onReady:",
+                                  err,
+                                );
+                                resolve(null);
+                              });
+                          } else {
+                            resolve(null);
+                          }
+                        });
+                      } else {
+                        // Last resort: simple timeout check
+                        setTimeout(() => {
+                          if (
+                            window.salla &&
+                            window.salla.api &&
+                            window.salla.api.product
+                          ) {
+                            window.salla.api.product
+                              .getDetails(pidStr)
+                              .then((res) => resolve(res.data || res))
+                              .catch(() => resolve(null));
+                          } else {
+                            resolve(null);
+                          }
+                        }, 1000);
+                      }
+                    } catch (e) {
+                      resolve(null);
+                    }
+                  }
+                  // Timeout after 3 seconds
+                  setTimeout(() => resolve(null), 3500);
+                });
+              } catch (e) {
+                console.warn("SDK Promise Wrapper failed", e);
+              }
+            }
+
             // METHOD 2: Legacy SDK Call (Fallback)
             if (!b && sm.api?.product?.get) {
               try {
