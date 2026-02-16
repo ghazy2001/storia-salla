@@ -91,6 +91,13 @@ const ProductDetails = () => {
       }
     }
 
+    // Validation: If no options resolved but size was selected, warn the dev
+    if (selectedSize && Object.keys(cartOptions).length === 0) {
+      console.warn(
+        `[Storia] No Salla Option IDs resolved for size: ${selectedSize}. This might cause a 422.`,
+      );
+    }
+
     await addToCartWithSync({ ...product, price }, 1, cartOptions);
     setShowToast(true);
   };

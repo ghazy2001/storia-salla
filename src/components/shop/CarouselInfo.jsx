@@ -78,6 +78,13 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
               }
             }
 
+            // Validation: Warn if no IDs resolved
+            if (selectedSize && Object.keys(cartOptions).length === 0) {
+              console.warn(
+                `[Storia] No Salla Option IDs resolved for size: ${selectedSize}`,
+              );
+            }
+
             onAddToCart &&
               onAddToCart({
                 product: { ...product, price },
