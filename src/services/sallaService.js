@@ -318,6 +318,8 @@ class SallaService {
               if (isEnriched(b.variants)) targetProduct.variants = b.variants;
               if (isEnriched(b.skus)) targetProduct.skus = b.skus;
               if (isEnriched(b.images)) targetProduct.images = b.images;
+              if (isEnriched(b.media)) targetProduct.media = b.media; // Capture media as well
+              if (isEnriched(b.urls)) targetProduct.urls = b.urls; // Capture URLs just in case
               if (getDesc(b)) description = getDesc(b);
             }
 
