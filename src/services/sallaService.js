@@ -279,60 +279,79 @@ class SallaService {
         let targetProduct = p;
 
         // 2. Resilient Detail Fetch
-        if ((!description || description.length < 5) && p.id) {
+        if (p.id) {
           try {
+            const hasSizeData = (obj) => {
+              if (!obj) return false;
+              if (Array.isArray(obj)) return obj.length > 0;
+              return Object.keys(obj).length > 0;
+            };
+
             const sm = window.salla || this.salla;
             const sdk = [
               (sm.product || sm.api?.product)?.getDetails,
               (sm.product || sm.api?.product)?.get,
               sm.api?.fetch,
             ];
+
             for (const f of sdk.filter((x) => typeof x === "function")) {
               const res = await (
                 f.name === "fetch"
                   ? f("product.details", { id: p.id })
                   : f(p.id)
               ).catch(() => null);
+
               const b = res?.data || res?.product || (res?.id ? res : null);
-              if (getDesc(b)) {
-                description = getDesc(b);
-                targetProduct = b;
-                break;
+              if (b) {
+                // Merge critical fields even if description is missing
+                if (hasSizeData(b.options)) targetProduct.options = b.options;
+                if (hasSizeData(b.variants))
+                  targetProduct.variants = b.variants;
+                if (hasSizeData(b.skus)) targetProduct.skus = b.skus;
+                if (hasSizeData(b.images)) targetProduct.images = b.images;
+
+                if (getDesc(b)) {
+                  description = getDesc(b);
+                  break; // Found description, can stop SDK loop
+                }
               }
             }
-            if (!description) {
+
+            // Fallback to fetch if description is still missing
+            if (!description || description.length < 5) {
               const paths = [
                 p.url ? `${p.url}?format=json` : null,
                 `/api/v1/products/${p.id}`,
                 `/products/${p.id}.json`,
               ].filter(Boolean);
+
               for (const u of paths) {
                 const r = await fetch(u).catch(() => null);
                 if (r && r.ok) {
                   const d = await r.json();
                   const b = d?.data || d?.product || d;
-                  if (getDesc(b)) {
-                    description = getDesc(b);
-                    // Merge fields safely without replacing top-level data with empty ones
-                    const hasSizeData = (obj) => {
-                      if (!obj) return false;
-                      if (Array.isArray(obj)) return obj.length > 0;
-                      return Object.keys(obj).length > 0;
-                    };
-
+                  if (b) {
                     if (hasSizeData(b.options))
                       targetProduct.options = b.options;
                     if (hasSizeData(b.variants))
                       targetProduct.variants = b.variants;
                     if (hasSizeData(b.skus)) targetProduct.skus = b.skus;
                     if (hasSizeData(b.images)) targetProduct.images = b.images;
-                    break;
+
+                    if (getDesc(b)) {
+                      description = getDesc(b);
+                      break;
+                    }
                   }
                 }
               }
             }
           } catch (e) {
-            console.warn("[Storia] Detail fetch error for variant:", e.message);
+            console.warn(
+              "[Storia] Detail fetch error for product:",
+              p.id,
+              e.message,
+            );
           }
         }
 
