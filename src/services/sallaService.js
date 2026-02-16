@@ -426,12 +426,19 @@ class SallaService {
         };
 
         if (mappedProduct.name.includes("عباية 2") || true) {
-          // Log everything for now
-          console.log("[Storia DEBUG] Mapping Product:", mappedProduct.name, {
-            options: targetProduct.options,
-            variants: targetProduct.variants,
-            mappedVariants: sizeVariants,
-          });
+          console.log(`[Storia DEBUG] Mapping Product: ${mappedProduct.name}`);
+          console.log(
+            "[Storia DEBUG] Options:",
+            JSON.stringify(targetProduct.options || [], null, 2),
+          );
+          console.log(
+            "[Storia DEBUG] Variants:",
+            JSON.stringify(targetProduct.variants || [], null, 2),
+          );
+          console.log(
+            "[Storia DEBUG] Mapped sizeVariants:",
+            JSON.stringify(sizeVariants, null, 2),
+          );
         }
 
         return mappedProduct;
