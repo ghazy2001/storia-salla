@@ -721,27 +721,56 @@ class SallaService {
             const pid = Number(idToUse);
             const sm = window.salla || this.salla;
             let rb = null;
+            let log = [];
 
-            // 1. Fresh SDK Fetch
+            // 1. SDK Attempt
+            log.push("SDK:Attempting...");
             if (sm.api?.fetch) {
               const res = await sm.api
                 .fetch("product.details", { id: pid })
-                .catch(() => null);
+                .catch((e) => {
+                  log.push(`SDK:Err=${e.message}`);
+                  return null;
+                });
               rb = res?.data || res?.product || (res?.id ? res : null);
+              if (rb) log.push("SDK:Found!");
             }
 
-            // 2. Fresh REST Fetch
+            // 2. REST Attempt (Local Proxy)
             if (!rb) {
-              const r = await fetch(`/api/v1/products/${pid}`).catch(
-                () => null,
-              );
+              log.push("REST:Attempting...");
+              const r = await fetch(`/api/v1/products/${pid}`).catch((e) => {
+                log.push(`REST:Err=${e.message}`);
+                return null;
+              });
               if (r && r.ok) {
                 const d = await r.json();
                 rb = d?.data || d?.product || d;
+                log.push("REST:Found!");
               }
             }
 
+            // 3. Direct Salla Attempt (V39 Addition)
+            if (!rb) {
+              log.push("Direct:Attempting...");
+              // Public storefront endpoint
+              const r = await fetch(
+                `https://api.salla.dev/store/v1/products/${pid}`,
+              ).catch((e) => {
+                log.push(`Direct:Err=${e.message}`);
+                return null;
+              });
+              if (r && r.ok) {
+                const d = await r.json();
+                rb = d?.data || d?.product || d;
+                log.push("Direct:Found!");
+              }
+            }
+
+            diagnosis = `Trigger: ${diagnosis}. Logic: ${log.join(" | ")}`;
+
             if (rb) {
+              const pickedOptions = {};
               const ros =
                 (rb.options &&
                   (Array.isArray(rb.options)
@@ -749,45 +778,42 @@ class SallaService {
                     : Object.values(rb.options))) ||
                 [];
               const vs = rb.variants || [];
-              diagnosis = `Repair: Found ${ros.length} options, ${vs.length} variants for Salla ID ${pid}.`;
-              console.log(`[Storia] ${diagnosis}`);
+              diagnosis += ` | Found ${ros.length} opts, ${vs.length} vars.`;
 
-              const pickedOptions = {};
               ros.forEach((opt) => {
                 const vals =
                   opt.values || (Array.isArray(opt.data) ? opt.data : []);
                 if (vals.length > 0) {
                   pickedOptions[Number(opt.id)] = Number(vals[0].id);
                 } else if (opt.required) {
-                  // V35 Addition: Fallback for text/input options
-                  pickedOptions[Number(opt.id)] = "Option Auto-Filled";
+                  pickedOptions[Number(opt.id)] = "Auto-Filled";
                 }
               });
+
               if (Object.keys(pickedOptions).length > 0) {
                 const repairedPayload = {
-                  id: Number(pid),
+                  id: pid,
                   quantity: Number(currentPayload.quantity),
                   options: pickedOptions,
                 };
-                console.log(
-                  "[Storia] Retrying with exhaustive options:",
-                  repairedPayload,
-                );
+                diagnosis += " | Retrying with Options.";
                 return await attemptAdd(repairedPayload, true);
-              } else if (rb.variants && rb.variants.length > 0) {
+              } else if (vs.length > 0) {
                 const repairedPayload = {
-                  id: Number(pid),
+                  id: pid,
                   quantity: Number(currentPayload.quantity),
-                  variant_id: Number(rb.variants[0].id),
+                  variant_id: Number(vs[0].id),
                 };
-                console.log(
-                  "[Storia] Retrying with variant ID:",
-                  repairedPayload,
-                );
+                diagnosis += " | Retrying with Variant.";
                 return await attemptAdd(repairedPayload, true);
+              } else {
+                diagnosis += " | No actionable options found.";
               }
+            } else {
+              diagnosis += " | All fetches failed.";
             }
           } catch (repairErr) {
+            diagnosis += ` | Fatal Error: ${repairErr.message}`;
             console.error("[Storia] Nuclear reconstruction failed:", repairErr);
           }
         }
