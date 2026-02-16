@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Force Refetch Products - Storia</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        max-width: 700px;
+        width: 100%;
+        text-align: center;
+      }
+      h1 {
+        color: #667eea;
+        margin-bottom: 10px;
+        font-size: 2em;
+      }
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 1.1em;
+      }
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 18px 45px;
+        font-size: 18px;
+        border-radius: 50px;
+        cursor: pointer;
+        margin: 10px;
+        transition: all 0.3s;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+      }
+      button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(102, 126, 234, 0.6);
+      }
+      button:active {
+        transform: translateY(0);
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .status {
+        margin-top: 25px;
+        padding: 20px;
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 1.1em;
+        display: none;
+      }
+      .status.show {
+        display: block;
+      }
+      .success {
+        background: #d4edda;
+        color: #155724;
+      }
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .info {
+        background: #d1ecf1;
+        color: #0c5460;
+      }
+      .loading {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .steps {
+        text-align: right;
+        margin-top: 35px;
+        padding: 25px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border-right: 4px solid #667eea;
+      }
+      .steps h3 {
+        margin-bottom: 15px;
+        color: #667eea;
+      }
+      .steps ol {
+        padding-right: 25px;
+      }
+      .steps li {
+        margin: 12px 0;
+        line-height: 1.8;
+      }
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+        display: none;
+      }
+      .spinner.show {
+        display: block;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔄 Force Refetch Products</h1>
+      <p class="subtitle">إعادة تحميل المنتجات من سلة مباشرة</p>
+
+      <button id="refetchBtn" onclick="forceRefetch()">
+        🚀 إعادة تحميل المنتجات الآن
+      </button>
+
+      <div class="spinner" id="spinner"></div>
+      <div id="status" class="status"></div>
+
+      <div class="steps">
+        <h3>📝 كيف تستخدم الأداة:</h3>
+        <ol>
+          <li><strong>اضغط الزر "إعادة تحميل المنتجات الآن"</strong></li>
+          <li><strong>استنى لحد ما تشوف "تم التحديث بنجاح"</strong></li>
+          <li><strong>ارجع للموقع واعمل Refresh</strong></li>
+          <li><strong>الصور المفروض تظهر دلوقتى!</strong></li>
+        </ol>
+      </div>
+    </div>
+
+    <script>
+      function showStatus(message, type) {
+        const status = document.getElementById("status");
+        status.className = `status ${type} show`;
+        status.innerHTML = message;
+      }
+
+      function hideStatus() {
+        const status = document.getElementById("status");
+        status.className = "status";
+      }
+
+      async function forceRefetch() {
+        const btn = document.getElementById("refetchBtn");
+        const spinner = document.getElementById("spinner");
+
+        try {
+          // Disable button
+          btn.disabled = true;
+          spinner.className = "spinner show";
+          showStatus("⏳ جاري إعادة التحميل...", "loading");
+
+          // Step 1: Clear all cache
+          console.log("[Storia] Clearing cache...");
+          localStorage.clear();
+          sessionStorage.clear();
+          showStatus(
+            "⏳ تم مسح الكاش... جاري إعادة التحميل من سلة...",
+            "loading",
+          );
+
+          // Step 2: Force refetch by opening site with cache-busting
+          const timestamp = Date.now();
+          const siteUrl = `${window.location.origin}/?force_refresh=${timestamp}`;
+
+          showStatus("✅ تم التحديث بنجاح! جاري فتح الموقع...", "success");
+
+          // Wait a bit then redirect
+          setTimeout(() => {
+            window.location.href = siteUrl;
+          }, 1500);
+        } catch (error) {
+          console.error("[Storia] Refetch error:", error);
+          showStatus("❌ حدث خطأ: " + error.message, "error");
+          btn.disabled = false;
+          spinner.className = "spinner";
+        }
+      }
+
+      // Auto-run on load if requested
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("auto") === "true") {
+        setTimeout(forceRefetch, 500);
+      }
+    </script>
+  </body>
+</html>
