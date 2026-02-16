@@ -481,6 +481,66 @@ class SallaService {
                       }
                     } catch (e) {}
                   }
+                  
+                  // Sub-Strategy A3: Deep Regex Scan on ALL scripts (The "Magnet" Approach) 🧲
+                  // Sometimes data is in a variable we don't know the name of.
+                  // We just look for ANY array of images in any script.
+                  try {
+                      const content = s.textContent;
+                      if (content.length > 100 && content.includes('cdn.salla.sa')) {
+                          // Look for array of strings looking like Salla Images
+                          const imageArrayMatch = content.match(/\[\s*"https:\/\/cdn\.salla\.sa\/[^\]]+\]/g);
+                          if (imageArrayMatch) {
+                              imageArrayMatch.forEach(arrStr => {
+                                  const urls = arrStr.match(/https:\/\/cdn\.salla\.sa\/[^"']+/g);
+                                  if (urls) domImages.push(...urls);
+                              });
+                          }
+                      }
+                  } catch(e) {}
+                });
+
+                // Strategy C: Global Variable Scan (The "Hacker" Approach) 🕵️‍♂️
+                // Look for salla.config.product.images or similar
+                try {
+                    const findImagesInObject = (obj, depth = 0) => {
+                        if (depth > 3 || !obj) return [];
+                        let found = [];
+                        
+                        // Check if this object IS the image list
+                        if (Array.isArray(obj) && obj.length > 0 && typeof obj[0] === 'string' && obj[0].includes('cdn.salla.sa')) {
+                            return obj;
+                        }
+                        
+                        // Search children keys
+                        const keys = Object.keys(obj);
+                        for(const k of keys) {
+                            if (k === 'images' || k === 'gallery' || k === 'media') {
+                                if (Array.isArray(obj[k])) {
+                                    const imgs = obj[k].map(i => (typeof i === 'string' ? i : i.url || i.src || i.image));
+                                    if (imgs.length > 0 && typeof imgs[0] === 'string' && imgs[0].includes('cdn.salla.sa')) {
+                                        found.push(...imgs);
+                                    }
+                                }
+                            } else if (typeof obj[k] === 'object') {
+                                // removing recursion for now to be safe on performance, just 1 level deep check
+                                // found.push(...findImagesInObject(obj[k], depth + 1));
+                            }
+                        }
+                        return found;
+                    };
+                    
+                    if (window.salla) {
+                        if (window.salla.config && window.salla.config.product && window.salla.config.product.images) {
+                             domImages.push(...window.salla.config.product.images.map(i => i.url || i));
+                        }
+                    }
+                    
+                    // Also check for the variable that product-card.js might be using
+                    // Often it's in a global `products` array
+                } catch(e) {}                      }
+                    } catch (e) {}
+                  }
                 });
 
                 // Strategy B: Scrape <img> tags from common Salla sliders
