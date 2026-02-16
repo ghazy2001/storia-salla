@@ -20,7 +20,7 @@ import { config } from "../../config/config";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const BestSellers = ({ onProductSelect }) => {
+const BestSellers = () => {
   const sectionRef = useRef(null);
   const products = useSelector(selectProducts);
   const theme = useSelector(selectTheme);
@@ -172,14 +172,13 @@ const BestSellers = ({ onProductSelect }) => {
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
 
-                        {/* Add to Cart Button (Absolute) */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onProductSelect(featuredConfig.id);
+                            navigate(`/product/${featuredConfig.id}`);
                           }}
                           className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden transition-all duration-300 hover:w-32 w-10 shadow-lg z-10"
-                          title="View Details"
+                          title="عرض التفاصيل"
                         >
                           <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover/btn:text-brand-gold transition-colors">
                             <ArrowRight size={20} className="-rotate-45" />
@@ -249,6 +248,16 @@ const BestSellers = ({ onProductSelect }) => {
         currentIndex={lightbox.currentIndex}
         totalImages={carouselImages.length}
         altText={`${featuredConfig.name} - ${lightbox.currentIndex + 1}`}
+        title={featuredConfig.name}
+        description={
+          featuredConfig.bestSellerDescription || featuredConfig.description
+        }
+        price={(() => {
+          const syncedProduct = products.find(
+            (p) => p.id === featuredConfig.id,
+          );
+          return syncedProduct ? syncedProduct.price : featuredConfig.price;
+        })()}
       />
     </>
   );
