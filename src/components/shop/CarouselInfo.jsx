@@ -65,15 +65,21 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
           onClick={() => {
             // Get price and options for selected size if available
             let price = product.price;
-            let cartOptions = {};
+            let syncData = {}; // Can contain variant_id or options object
+
             if (selectedSize && product.sizeVariants?.length > 0) {
               const variant = product.sizeVariants.find(
                 (v) => v.size === selectedSize,
               );
               if (variant) {
                 price = variant.price;
-                if (variant.optionId && variant.valueId) {
-                  cartOptions[variant.optionId] = variant.valueId;
+                // Priority 1: SKU-based variant_id
+                if (variant.variantId) {
+                  syncData.variantId = variant.variantId;
+                }
+                // Priority 2: Custom Options (e.g. { [optionId]: valueId })
+                else if (variant.optionId && variant.valueId) {
+                  syncData.options = { [variant.optionId]: variant.valueId };
                 }
               }
             }
@@ -82,7 +88,7 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
               onAddToCart({
                 product: { ...product, price },
                 quantity: 1,
-                size: cartOptions,
+                size: syncData,
               });
           }}
           className="px-8 py-3 border border-brand-charcoal text-brand-charcoal hover:bg-brand-gold hover:border-brand-gold hover:text-white transition-all duration-300 text-lg font-medium rounded-sm"

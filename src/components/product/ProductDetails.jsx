@@ -80,42 +80,25 @@ const ProductDetails = () => {
 
     // Get price and options for selected size if available
     let price = product.price;
-    let cartOptions = {};
-
-    console.log("[Storia ProductDetails] Adding to cart. State:", {
-      selectedSize,
-      sizeVariantsCount: product.sizeVariants?.length,
-      productName: product.name,
-      productId: product.id,
-    });
+    let syncData = {}; // Can contain variant_id or options object
 
     if (selectedSize && product.sizeVariants?.length > 0) {
       const variant = product.sizeVariants.find((v) => v.size === selectedSize);
       if (variant) {
         price = variant.price;
-        if (variant.optionId && variant.valueId) {
-          cartOptions[variant.optionId] = variant.valueId;
-        } else {
-          console.warn(
-            "[Storia ProductDetails] Variant found but missing IDs:",
-            variant,
-          );
+        // Priority 1: SKU-based variant_id
+        if (variant.variantId) {
+          syncData.variantId = variant.variantId;
         }
-      } else {
-        console.warn(
-          "[Storia ProductDetails] Selected size not found in sizeVariants:",
-          selectedSize,
-        );
+        // Priority 2: Custom Options (e.g. { [optionId]: valueId })
+        else if (variant.optionId && variant.valueId) {
+          syncData.options = { [variant.optionId]: variant.valueId };
+        }
       }
-    } else {
-      console.warn(
-        "[Storia ProductDetails] sizeVariants missing or empty. Using fallback.",
-      );
     }
 
-    console.log("[Storia ProductDetails] Resolved cartOptions:", cartOptions);
-
-    await addToCartWithSync({ ...product, price }, 1, cartOptions);
+    // Sync with Salla backend
+    await addToCartWithSync({ ...product, price }, 1, syncData);
     setShowToast(true);
   };
 

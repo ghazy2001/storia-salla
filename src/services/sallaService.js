@@ -367,31 +367,52 @@ class SallaService {
         }
 
         // 5. Map Options (Sizes)
-        // Look for options that seem to be "Size" or "المقاس"
-        let sizes = ["S", "M", "L", "XL"]; // Default fallback
+        let sizes = [];
         let sizeVariants = [];
 
         const options = targetProduct.options || [];
-        const sizeOption = options.find((opt) => {
+
+        // Try to find ANY option that looks like a size, or just the first option if it has values
+        let sizeOption = options.find((opt) => {
           const name = translate(opt.name).toLowerCase();
           return (
             name.includes("size") ||
             name.includes("مقاس") ||
-            name.includes("قياس")
+            name.includes("قياس") ||
+            name.includes("اللون")
           );
         });
 
+        // Fallback: Use the first option that has multiple values
+        if (!sizeOption && options.length > 0) {
+          sizeOption = options.find(
+            (opt) => opt.values && opt.values.length > 0,
+          );
+        }
+
         if (sizeOption && sizeOption.values) {
           sizes = sizeOption.values.map((v) => translate(v.name || v.label));
-          // Map values to sizeVariants structure
           sizeVariants = sizeOption.values.map((v) => ({
             size: translate(v.name || v.label),
             price: v.price ? v.price.amount : amount,
-            stock: 10,
+            stock: v.quantity !== undefined ? v.quantity : 10,
             optionId: sizeOption.id,
             valueId: v.id,
-            sallaVariantId: v.id, // Keep for backward compatibility
+            sallaVariantId: v.id,
           }));
+        } else if (
+          targetProduct.variants &&
+          targetProduct.variants.length > 0
+        ) {
+          // Fallback to SKU variants if no options found
+          sizeVariants = targetProduct.variants.map((v) => ({
+            size: translate(v.name || v.label || v.sku),
+            price: v.price ? v.price.amount : amount,
+            stock: v.quantity !== undefined ? v.quantity : 10,
+            variantId: v.id,
+            sallaVariantId: v.id,
+          }));
+          sizes = sizeVariants.map((v) => v.size);
         }
 
         // 6. Map Category
@@ -413,7 +434,7 @@ class SallaService {
           regularPrice: targetProduct.regular_price?.amount || 0,
           currency: currency,
           category: categoryName,
-          sizes: sizes,
+          sizes: sizes.length > 0 ? sizes : ["S", "M", "L", "XL"],
           sizeVariants: sizeVariants,
           description: description || "No description available",
           stock: targetProduct.quantity || 10,
@@ -422,8 +443,17 @@ class SallaService {
           promotionTitle: targetProduct.promotion?.title,
           rating: 5.0,
           reviews: 0,
-          rawSallaData: p, // Keep for debugging if needed
+          rawSallaData: p,
         };
+
+        // GLOBAL DEBUG: Attach to window for easy inspection
+        if (typeof window !== "undefined") {
+          if (!window.__STORIA_PRODUCTS__) window.__STORIA_PRODUCTS__ = {};
+          window.__STORIA_PRODUCTS__[mappedProduct.id] = {
+            mapped: mappedProduct,
+            raw: targetProduct,
+          };
+        }
 
         if (
           mappedProduct.id == 1314742571 ||
