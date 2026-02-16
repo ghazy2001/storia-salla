@@ -423,13 +423,67 @@ class SallaService {
               }
             }
 
-            // METHOD 3: HTML Scraping (The Nuclear Option) ☢️
-            // If we are on the product page, the images MUST be in the DOM or Page Source
-            if (!b && window.location.pathname.includes(pid)) {
-              try {
-                if (config.enableLogging)
-                  log(`Attempting HTML Scraping for ${pid}...`);
-                const response = await fetch(window.location.href);
+            // METHOD 3: Live DOM Scraping (The Intelligent Fix) 🧠
+            // The user is on the product page, so the images are PROBABLY loaded in the DOM (even if hidden).
+            // We scan the document for common Salla slider structures.
+            if (!b && typeof document !== 'undefined' && window.location.pathname.includes(pid)) {
+                try {
+                   if (config.enableLogging) log(`Attempting Live DOM Scraping for ${pid}...`);
+                   
+                   const domImages = [];
+                   
+                   // Strategy A: Look for Salla's global product object in scripts
+                   const scripts = document.querySelectorAll('script');
+                   scripts.forEach(s => {
+                      if (s.textContent.includes('product_id') && s.textContent.includes('images') && s.textContent.includes(pid)) {
+                         try {
+                            const matches = s.textContent.match(/"images":\s*\[(.*?)\]/s);
+                            if (matches && matches[1]) {
+                               const urls = matches[1].match(/https:\/\/cdn\.salla\.sa\/[^"']+/g);
+                               if (urls) domImages.push(...urls);
+                            }
+                         } catch(e) {}
+                      }
+                   });
+
+                   // Strategy B: Scrape <img> tags from common Salla sliders
+                   const potentialSelectors = [
+                      '.product-detials__slider img', 
+                      '.product-slider img',
+                      '.swiper-slide img',
+                      '.salla-product-card img',
+                      '[data-fancybox="product-images"] img',
+                      'img[src*="cdn.salla.sa"]' // Catch-all
+                   ];
+
+                   potentialSelectors.forEach(sel => {
+                      document.querySelectorAll(sel).forEach(img => {
+                         if (img.src && img.src.includes('cdn.salla.sa') && !img.src.includes('avatar') && !img.src.includes('logo')) {
+                            // Filter out small thumbnails if possible (naturalWidth check)
+                            if (img.naturalWidth > 100 || !img.naturalWidth) {
+                                domImages.push(img.src);
+                            }
+                         }
+                      });
+                   });
+
+                   if (domImages.length > 0) {
+                      const uniqueDomImages = [...new Set(domImages)].map(url => ({ type: 'image', src: url }));
+                      // Only use if we found valid images
+                      if (uniqueDomImages.length > 0) {
+                           log(`DOM Scraping success: found ${uniqueDomImages.length} images`);
+                           b = { 
+                               id: pid, 
+                               images: uniqueDomImages,
+                               media: uniqueDomImages,
+                               name: document.title // Best effort name
+                           };
+                      }
+                   }
+                } catch (err) {
+                    console.warn(`DOM Scraping failed`, err);
+                }
+            }
                 const html = await response.text();
 
                 // Look for standard Salla image patterns in HTML
