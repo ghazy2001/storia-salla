@@ -275,23 +275,6 @@ class SallaService {
           return clean.length > 2 ? clean : "";
         };
 
-        // Deep Debugging
-        if (productsData.indexOf(p) === 0) {
-          const d = getDesc(p);
-          if (!d)
-            console.log(
-              "[Storia Debug] Failed to find desc for",
-              p.id,
-              "Keys:",
-              Object.keys(p),
-            );
-          else
-            console.log(
-              "[Storia Debug] Initial desc found:",
-              d.substring(0, 50),
-            );
-        }
-
         let description = getDesc(p);
         let targetProduct = p;
 
@@ -314,7 +297,6 @@ class SallaService {
               if (getDesc(b)) {
                 description = getDesc(b);
                 targetProduct = b;
-                console.log("[Storia Debug] SDK Success");
                 break;
               }
             }
@@ -332,7 +314,6 @@ class SallaService {
                   if (getDesc(b)) {
                     description = getDesc(b);
                     targetProduct = b;
-                    console.log("[Storia Debug] AJAX Success", u);
                     break;
                   }
                 }
@@ -342,9 +323,6 @@ class SallaService {
             /* ignore */
           }
         }
-
-        if (!description && productsData.indexOf(p) === 0)
-          console.log("[Storia Debug] NO DESC found for", p.id);
 
         // 3. Map Price
         let amount = 0;
