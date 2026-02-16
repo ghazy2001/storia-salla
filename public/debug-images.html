@@ -43,6 +43,10 @@
       button:hover {
         background: #1177bb;
       }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
       .log-container {
         background: #1e1e1e;
         border: 1px solid #3c3c3c;
@@ -79,6 +83,7 @@
         overflow-x: auto;
         margin: 8px 0;
         border: 1px solid #3c3c3c;
+        font-size: 11px;
       }
       .product-card {
         background: #2d2d30;
@@ -94,42 +99,68 @@
         margin-top: 10px;
       }
       .product-images img {
-        width: 80px;
-        height: 80px;
+        width: 100px;
+        height: 100px;
         object-fit: cover;
         border-radius: 4px;
         border: 2px solid #3c3c3c;
+      }
+      .spinner {
+        border: 4px solid #3c3c3c;
+        border-top: 4px solid #4ec9b0;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+        display: none;
+      }
+      .spinner.show {
+        display: block;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>🔍 Debug Salla Product Images</h1>
+      <h1>🔍 Debug Salla Product Images (Standalone)</h1>
       <p style="margin-bottom: 20px; color: #858585">
-        أداة تشخيص لمعرفة إيه بالظبط اللي Salla بيبعته من صور
+        أداة تشخيص standalone - تجيب البيانات من Salla مباشرة
       </p>
 
-      <button onclick="debugProducts()">🚀 فحص المنتجات</button>
+      <button id="debugBtn" onclick="debugProducts()">
+        🚀 فحص المنتجات من Salla
+      </button>
       <button onclick="clearLogs()">🗑️ مسح السجل</button>
       <button onclick="copyToClipboard()">📋 نسخ النتائج</button>
 
+      <div id="spinner" class="spinner"></div>
       <div id="logContainer" class="log-container">
-        <div class="log-entry">اضغط "فحص المنتجات" للبدء...</div>
+        <div class="log-entry">اضغط "فحص المنتجات من Salla" للبدء...</div>
       </div>
     </div>
 
     <script>
       const logContainer = document.getElementById("logContainer");
+      const spinner = document.getElementById("spinner");
+      const debugBtn = document.getElementById("debugBtn");
 
       function addLog(message, type = "info") {
         const entry = document.createElement("div");
         entry.className = `log-entry log-${type}`;
-        entry.textContent = message;
+        entry.innerHTML = message;
         logContainer.appendChild(entry);
         logContainer.scrollTop = logContainer.scrollHeight;
       }
 
-      function addProductCard(product) {
+      function addProductCard(product, rawData) {
         const card = document.createElement("div");
         card.className = "product-card";
 
@@ -138,14 +169,13 @@
 
         card.innerHTML = `
                 <h3 style="color: ${hasImages ? "#4ec9b0" : "#f48771"}; margin-bottom: 10px;">
-                    ${product.name || "Unknown Product"}
+                    ${product.name || "Unknown Product"} ${hasImages ? "✅" : "❌"}
                 </h3>
                 <div style="margin: 8px 0;">
-                    <strong>ID:</strong> ${product.id || "N/A"} | 
-                    <strong>Salla ID:</strong> ${product.sallaProductId || "N/A"}
+                    <strong>Salla ID:</strong> ${product.id || "N/A"}
                 </div>
                 <div style="margin: 8px 0;">
-                    <strong>عدد الصور:</strong> ${imageCount} ${hasImages ? "✅" : "❌"}
+                    <strong>عدد الصور:</strong> ${imageCount}
                 </div>
                 ${
                   hasImages
@@ -155,17 +185,24 @@
                           .map(
                             (img) => `
                             <img src="${img.src}" alt="${img.alt || "Product"}" 
-                                 onerror="this.style.border='2px solid #f48771'">
+                                 onerror="this.style.border='2px solid #f48771'; this.title='Failed to load'">
                         `,
                           )
                           .join("")}
                     </div>
-                    <pre style="margin-top: 10px; font-size: 11px;">${JSON.stringify(product.media, null, 2)}</pre>
+                    <details style="margin-top: 10px;">
+                        <summary style="cursor: pointer; color: #4ec9b0;">📸 Media Array</summary>
+                        <pre>${JSON.stringify(product.media, null, 2)}</pre>
+                    </details>
                 `
                     : `
-                    <div style="color: #f48771; margin-top: 10px;">⚠️ لا توجد صور لهذا المنتج</div>
+                    <div style="color: #f48771; margin-top: 10px;">⚠️ لا توجد صور لهذا المنتج في Salla</div>
                 `
                 }
+                <details style="margin-top: 10px;">
+                    <summary style="cursor: pointer; color: #858585;">🔍 Raw Salla Data</summary>
+                    <pre>${JSON.stringify(rawData, null, 2)}</pre>
+                </details>
             `;
 
         logContainer.appendChild(card);
@@ -173,57 +210,163 @@
 
       async function debugProducts() {
         clearLogs();
-        addLog("🔄 جاري فحص المنتجات من Redux Store...", "info");
+        debugBtn.disabled = true;
+        spinner.className = "spinner show";
+
+        addLog("🔄 جاري الاتصال بـ Salla API...", "info");
 
         try {
-          // Get Redux store from window
-          const store = window.__REDUX_DEVTOOLS_EXTENSION__
-            ? window.__REDUX_DEVTOOLS_EXTENSION__.store
-            : null;
-
-          if (!store) {
-            addLog("❌ Redux store غير متوفر - تأكد إن الموقع شغال", "error");
-            addLog(
-              "💡 جرب تفتح الموقع الأساسي أولاً: " + window.location.origin,
-              "warn",
-            );
-            return;
+          // Check if Salla SDK is available
+          if (typeof window.salla === "undefined") {
+            addLog("⚠️ Salla SDK غير متوفر - تشغيل في وضع REST API", "warn");
           }
 
-          const state = store.getState();
-          const products = state.product?.products || [];
+          // Try to fetch products
+          const targetIds = [1252773325]; // The working product ID
 
-          addLog(`✅ تم العثور على ${products.length} منتج`, "success");
+          addLog(`🎯 جاري فحص المنتج ${targetIds[0]}...`, "info");
+
+          let products = [];
+
+          // Method 1: Try Salla SDK
+          if (window.salla?.api?.fetch) {
+            addLog("📡 محاولة 1: Salla SDK...", "info");
+            try {
+              const res = await window.salla.api.fetch("product.details", {
+                id: targetIds[0],
+              });
+              const productData = res?.data || res?.product || res;
+              if (productData) {
+                products.push(productData);
+                addLog("✅ تم جلب البيانات من Salla SDK", "success");
+              }
+            } catch (e) {
+              addLog(`❌ SDK فشل: ${e.message}`, "warn");
+            }
+          }
+
+          // Method 2: Try direct API
+          if (products.length === 0) {
+            addLog("📡 محاولة 2: Direct Salla API...", "info");
+            try {
+              const res = await fetch(
+                `https://api.salla.dev/store/v1/products/${targetIds[0]}`,
+              );
+              if (res.ok) {
+                const data = await res.json();
+                const productData = data?.data || data;
+                if (productData) {
+                  products.push(productData);
+                  addLog("✅ تم جلب البيانات من Salla REST API", "success");
+                }
+              } else {
+                addLog(`❌ API returned ${res.status}`, "error");
+              }
+            } catch (e) {
+              addLog(`❌ Direct API فشل: ${e.message}`, "error");
+            }
+          }
 
           if (products.length === 0) {
-            addLog("⚠️ لا توجد منتجات في Store", "warn");
-            addLog("💡 الموقع قد لا يكون حمل المنتجات من Salla بعد", "warn");
+            addLog("❌ فشل جلب المنتجات من جميع الطرق", "error");
+            addLog("💡 تأكد من:", "warn");
+            addLog("   1. وجود اتصال بالإنترنت", "warn");
+            addLog("   2. المنتج ID صحيح في Salla", "warn");
+            addLog("   3. الصفحة مفتوحة من نفس نطاق الموقع", "warn");
             return;
           }
 
-          products.forEach((product, index) => {
-            addLog(`\n--- المنتج ${index + 1}: ${product.name} ---`, "info");
-            addProductCard(product);
+          // Process products
+          addLog(`\n✅ تم العثور على ${products.length} منتج\n`, "success");
+
+          products.forEach((rawProduct, index) => {
+            addLog(`--- المنتج ${index + 1} ---`, "info");
+
+            // Check for images
+            const hasImages = rawProduct.images?.length > 0;
+            const hasImage = !!rawProduct.image;
+            const hasThumbnail = !!rawProduct.thumbnail;
+            const hasMainImage = !!rawProduct.main_image;
+
+            addLog(`🔍 فحص الصور:`, "info");
+            addLog(
+              `   images array: ${hasImages ? `✅ (${rawProduct.images?.length})` : "❌"}`,
+              hasImages ? "success" : "error",
+            );
+            addLog(
+              `   image object: ${hasImage ? "✅" : "❌"}`,
+              hasImage ? "success" : "error",
+            );
+            addLog(
+              `   thumbnail: ${hasThumbnail ? "✅" : "❌"}`,
+              hasThumbnail ? "success" : "error",
+            );
+            addLog(
+              `   main_image: ${hasMainImage ? "✅" : "❌"}`,
+              hasMainImage ? "success" : "error",
+            );
+
+            // Map to our format
+            const mappedProduct = {
+              id: rawProduct.id,
+              name:
+                rawProduct.name?.ar ||
+                rawProduct.name?.en ||
+                rawProduct.name ||
+                "Unknown",
+              media: [],
+            };
+
+            // Extract images
+            if (rawProduct.images && rawProduct.images.length > 0) {
+              mappedProduct.media = rawProduct.images.map((img) => ({
+                type: "image",
+                src: img.url || img.src || img,
+                alt: mappedProduct.name,
+              }));
+            } else if (rawProduct.image) {
+              mappedProduct.media.push({
+                type: "image",
+                src:
+                  rawProduct.image.url ||
+                  rawProduct.image.src ||
+                  rawProduct.image,
+                alt: mappedProduct.name,
+              });
+            }
+
+            addProductCard(mappedProduct, rawProduct);
           });
 
           // Summary
           const withImages = products.filter(
-            (p) => p.media && p.media.length > 0,
+            (p) => (p.images && p.images.length > 0) || p.image,
           ).length;
           const withoutImages = products.length - withImages;
 
-          addLog(`\n📊 الملخص:`, "success");
-          addLog(`   ✅ منتجات بها صور: ${withImages}`, "success");
+          addLog(`\n📊 الملخص النهائي:`, "success");
+          addLog(
+            `   ✅ منتجات بها صور: ${withImages}`,
+            withImages > 0 ? "success" : "error",
+          );
           addLog(
             `   ❌ منتجات بدون صور: ${withoutImages}`,
             withoutImages > 0 ? "error" : "success",
           );
+
+          if (withoutImages > 0) {
+            addLog(`\n💡 الحل:`, "warn");
+            addLog(
+              `   افتح Salla Dashboard → Products → اضف صور للمنتجات`,
+              "warn",
+            );
+          }
         } catch (error) {
           addLog(`❌ خطأ: ${error.message}`, "error");
-          addLog(
-            `💡 تأكد إنك فتحت هذه الأداة من نفس النطاق (Domain) للموقع`,
-            "warn",
-          );
+          console.error("Debug error:", error);
+        } finally {
+          debugBtn.disabled = false;
+          spinner.className = "spinner";
         }
       }
 
