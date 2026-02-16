@@ -19,7 +19,7 @@ function AppContent() {
   const dispatch = useDispatch();
 
   return (
-    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10 transition-colors duration-500">
+    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10">
       <GlobalOverlays />
 
       <div className="flex flex-col min-h-screen">
