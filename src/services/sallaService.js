@@ -440,6 +440,30 @@ class SallaService {
                 // Strategy A: Look for Salla's global product object in scripts
                 const scripts = document.querySelectorAll("script");
                 scripts.forEach((s) => {
+                  // Sub-Strategy A1: Schema.org JSON-LD (The Gold Standard) 🏆
+                  if (s.type === "application/ld+json") {
+                    try {
+                      const json = JSON.parse(s.textContent);
+                      const productSchema = Array.isArray(json)
+                        ? json.find((i) => i["@type"] === "Product")
+                        : json["@type"] === "Product"
+                          ? json
+                          : null;
+
+                      if (productSchema && productSchema.image) {
+                        const images = Array.isArray(productSchema.image)
+                          ? productSchema.image
+                          : [productSchema.image];
+                        if (images.length > 0) {
+                          if (config.enableLogging)
+                            log(`LD+JSON Schema found ${images.length} images`);
+                          domImages.push(...images);
+                        }
+                      }
+                    } catch (e) {}
+                  }
+
+                  // Sub-Strategy A2: Legacy unique string match
                   if (
                     s.textContent.includes("product_id") &&
                     s.textContent.includes("images") &&
