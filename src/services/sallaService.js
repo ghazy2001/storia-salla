@@ -141,7 +141,7 @@ class SallaService {
           log(
             "Bulk fetch yielded no results. Attempting targeted fetch for linked IDs...",
           );
-          const targetIds = [1314742571, 1252773325]; // Abaya-2, Abaya
+          const targetIds = [1252773325]; // Abaya 2 (New) / Abaya 1 (Working)
           const targetedResults = [];
 
           for (const id of targetIds) {
