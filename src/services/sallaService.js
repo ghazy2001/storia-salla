@@ -368,35 +368,8 @@ class SallaService {
 
         // 5. Map Options (Sizes)
         // Look for options that seem to be "Size" or "المقاس"
-        let sizes = [];
+        let sizes = ["S", "M", "L", "XL"]; // Default fallback
         let sizeVariants = [];
-
-        // AGGRESSIVE DETAIL FETCH: If options are missing, force a fetch from Salla
-        if (
-          (!targetProduct.options || targetProduct.options.length === 0) &&
-          p.id
-        ) {
-          try {
-            const sm = window.salla || this.salla;
-            const sdkGet =
-              (sm.product || sm.api?.product)?.getDetails ||
-              (sm.product || sm.api?.product)?.get;
-
-            if (typeof sdkGet === "function") {
-              log(
-                `[Storia] Missing options for ${p.id}. Forcing detail fetch...`,
-              );
-              const res = await sdkGet(p.id).catch(() => null);
-              const b = res?.data || res?.product || (res?.id ? res : null);
-              if (b && b.options && b.options.length > 0) {
-                targetProduct = b;
-                log(`[Storia] Successfully fetched full details for ${p.id}`);
-              }
-            }
-          } catch (e) {
-            log(`[Storia] Detail fetch failed for ${p.id}`, e);
-          }
-        }
 
         const options = targetProduct.options || [];
         const sizeOption = options.find((opt) => {
@@ -452,17 +425,12 @@ class SallaService {
           rawSallaData: p, // Keep for debugging if needed
         };
 
-        // DEBUG: Force stringified logs for "عباية 2" to see if detail fetch worked
         if (mappedProduct.name.includes("عباية 2")) {
-          console.log(`[Storia DEBUG] Mapping Product: ${mappedProduct.name}`);
-          console.log(
-            "[Storia DEBUG] Final Options:",
-            JSON.stringify(targetProduct.options || [], null, 2),
-          );
-          console.log(
-            "[Storia DEBUG] Final mapped sizeVariants:",
-            JSON.stringify(sizeVariants, null, 2),
-          );
+          console.log("[Storia DEBUG] Mapping Abaya 2:", {
+            options: targetProduct.options,
+            variants: targetProduct.variants,
+            mappedVariants: sizeVariants,
+          });
         }
 
         return mappedProduct;
@@ -506,6 +474,7 @@ class SallaService {
         "[Storia] cart.addItem payload:",
         JSON.stringify(payload, null, 2),
       );
+
       log("Adding to Salla cart (Full Payload):", payload);
 
       // Use Salla's cart.addItem method
