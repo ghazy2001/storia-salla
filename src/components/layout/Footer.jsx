@@ -12,11 +12,13 @@ import {
 } from "../../store/slices/uiSlice";
 import { selectCategories } from "../../store/slices/productSlice";
 import { SOCIAL_URLS, CONTACT_INFO } from "../../utils/constants";
+import { selectIsAdmin, toggleLoginModal } from "../../store/slices/adminSlice";
 
 const Footer = ({ theme }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const categories = useSelector(selectCategories);
+  const isAdmin = useSelector(selectIsAdmin);
   const [showAll, setShowAll] = useState(false);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
@@ -184,7 +186,7 @@ const Footer = ({ theme }) => {
           </form>
         </div>
       </div>
-      <div className="mt-12 w-full grid grid-cols-1 md:grid-cols-3 items-center text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-2">
+      <div className="mt-12 w-full grid grid-cols-1 md:grid-cols-3 items-center text-[10px] md:text-xs font-light tracking-widest text-brand-light/30 gap-4">
         <span className="text-center md:text-start">الرقم الضريبي</span>
         <span
           dir="ltr"
@@ -192,7 +194,17 @@ const Footer = ({ theme }) => {
         >
           <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
         </span>
-        <div className="hidden md:block"></div>
+        <div className="flex justify-center md:justify-end gap-4">
+          <button
+            onClick={() => {
+              if (isAdmin) navigate("/admin-dashboard");
+              else dispatch(toggleLoginModal());
+            }}
+            className="hover:text-brand-gold transition-colors underline decoration-brand-light/10 underline-offset-4"
+          >
+            {isAdmin ? "لوحة الإدارة" : "إدارة النظام"}
+          </button>
+        </div>
       </div>
     </footer>
   );

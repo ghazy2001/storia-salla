@@ -16,6 +16,7 @@ import {
   setContactFormOpen,
 } from "../../store/slices/uiSlice";
 import { selectCategories } from "../../store/slices/productSlice";
+import { selectIsAdmin, toggleLoginModal } from "../../store/slices/adminSlice";
 import { getButtonTheme, getThemeValue } from "../../utils/themeUtils";
 import { resolveAsset } from "../../utils/assetUtils";
 
@@ -25,6 +26,7 @@ const Navbar = ({ theme, toggleTheme }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const navLinks = useSelector(selectCategories);
   const dispatch = useDispatch();
+  const isAdmin = useSelector(selectIsAdmin);
   const navigate = useNavigate();
   const location = useLocation();
   const isHomePage = location.pathname === "/";
@@ -364,6 +366,16 @@ const Navbar = ({ theme, toggleTheme }) => {
               >
                 الأسئلة الشائعة
               </span>
+              <div
+                onClick={() => {
+                  if (isAdmin) navigate("/admin-dashboard");
+                  else dispatch(toggleLoginModal());
+                  setIsMobileMenuOpen(false);
+                }}
+                className="mt-4 pt-4 border-t border-white/5 text-[10px] text-brand-gold/50 cursor-pointer hover:text-brand-gold transition-colors text-right"
+              >
+                {isAdmin ? "لوحة التحكم" : "إدارة النظام"}
+              </div>
             </div>
           </div>
         </div>
