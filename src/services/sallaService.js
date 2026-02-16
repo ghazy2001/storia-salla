@@ -266,6 +266,10 @@ class SallaService {
             "Keys:",
             Object.keys(p),
           );
+          console.log(
+            "[Storia Debug] First few keys data:",
+            JSON.stringify(Object.fromEntries(Object.entries(p).slice(0, 10))),
+          );
         }
 
         let description = getDesc(p);
@@ -285,6 +289,12 @@ class SallaService {
                 .catch(() => null);
 
               if (detailedRes) {
+                console.log(
+                  "[Storia Debug] Detailed response keys for ID",
+                  p.id,
+                  ":",
+                  Object.keys(detailedRes),
+                );
                 // Salla SDK sometimes wraps in .data, sometimes returns the product directly
                 targetProduct =
                   detailedRes.data ||
