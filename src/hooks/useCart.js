@@ -37,9 +37,12 @@ export const useAddToCart = () => {
 
         if (!result.success) {
           console.error("[Storia] Cart sync failed:", result.error);
+          const debugInfo = result.debugPayload
+            ? `\nPayload: ${JSON.stringify(result.debugPayload)}`
+            : "";
           alert(
             `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
-              `السبب: ${result.error || "عطأ غير معروف"}`,
+              `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}`,
           );
         } else {
           console.log("[Storia] Successfully added to Salla cart");

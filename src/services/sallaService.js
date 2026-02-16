@@ -785,24 +785,29 @@ class SallaService {
           const d = res.data;
           console.log("[Storia] Raw Salla error data:", d);
 
-          const extractMessage = (obj) => {
+          const extract = (obj) => {
             if (!obj) return null;
             if (typeof obj === "string") return obj;
-            if (Array.isArray(obj)) return obj.map(extractMessage).join(", ");
+            if (Array.isArray(obj))
+              return obj.map(extract).filter(Boolean).join(", ");
             if (typeof obj === "object") {
-              return (
-                obj.message ||
-                obj.error ||
-                obj.msg ||
-                (obj.errors
-                  ? Object.values(obj.errors).flat().join(", ")
-                  : JSON.stringify(obj))
-              );
+              if (obj.ar || obj.en) return obj.ar || obj.en;
+              const fs = ["message", "error", "msg", "title"];
+              for (const f of fs) {
+                if (obj[f]) return extract(obj[f]);
+              }
+              if (obj.errors)
+                return Object.values(obj.errors)
+                  .flat()
+                  .map(extract)
+                  .filter(Boolean)
+                  .join(", ");
+              return JSON.stringify(obj);
             }
             return String(obj);
           };
 
-          const sallaMsg = extractMessage(d);
+          const sallaMsg = extract(d);
           if (sallaMsg) errorMsg = sallaMsg;
         }
       } catch (e) {
@@ -812,6 +817,7 @@ class SallaService {
       return {
         success: false,
         error: errorMsg,
+        debugPayload: payload,
       };
     }
   }
