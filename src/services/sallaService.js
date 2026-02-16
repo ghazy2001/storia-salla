@@ -594,6 +594,24 @@ class SallaService {
                   });
                 });
 
+                // Strategy D: Meta Tags (Social Sharing Images) 🌐
+                // Often the main image is defined here for Facebook/Twitter
+                const metaSelectors = [
+                  'meta[property="og:image"]',
+                  'meta[name="twitter:image"]',
+                  'link[rel="image_src"]',
+                  'meta[itemprop="image"]',
+                ];
+
+                metaSelectors.forEach((sel) => {
+                  document.querySelectorAll(sel).forEach((el) => {
+                    const url = el.content || el.href;
+                    if (url && url.includes("cdn.salla.sa")) {
+                      domImages.push(url);
+                    }
+                  });
+                });
+
                 if (domImages.length > 0) {
                   const uniqueDomImages = [...new Set(domImages)].map(
                     (url) => ({ type: "image", src: url }),
