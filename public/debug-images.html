@@ -250,10 +250,11 @@
             addLog("📡 محاولة 2: Direct Salla API...", "info");
             try {
               const res = await fetch(
-                `https://api.salla.dev/store/v1/products/${targetIds[0]}`,
+                `https://api.salla.dev/store/v1/products/${targetIds[0]}?clean=true`, // Try to get raw data
               );
               if (res.ok) {
                 const data = await res.json();
+                console.log("🔥 [DEBUG] Full Raw API Response:", data); // Log full response to console
                 const productData = data?.data || data;
                 if (productData) {
                   products.push(productData);
@@ -284,6 +285,7 @@
 
             // Check for images
             const hasImages = rawProduct.images?.length > 0;
+            const hasMedia = rawProduct.media?.length > 0; // Check media too
             const hasImage = !!rawProduct.image;
             const hasThumbnail = !!rawProduct.thumbnail;
             const hasMainImage = !!rawProduct.main_image;
@@ -292,6 +294,10 @@
             addLog(
               `   images array: ${hasImages ? `✅ (${rawProduct.images?.length})` : "❌"}`,
               hasImages ? "success" : "error",
+            );
+            addLog(
+              `   media array: ${hasMedia ? `✅ (${rawProduct.media?.length})` : "❌"}`,
+              hasMedia ? "success" : "error",
             );
             addLog(
               `   image object: ${hasImage ? "✅" : "❌"}`,
