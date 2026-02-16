@@ -14,6 +14,11 @@ export const useAddToCart = () => {
     // If on Salla platform, try to sync with Salla backend
     if (config.useSallaBackend && sallaService.isAvailable()) {
       try {
+        console.log(`[Storia] Adding to Salla: ${product.name}`, {
+          productId: product.id,
+          variantId: size,
+        });
+
         const result = await sallaService.addToCart(product.id, quantity, {
           variantId: size,
           sallaProductId: product.sallaProductId,
@@ -22,10 +27,11 @@ export const useAddToCart = () => {
         if (!result.success) {
           console.error("[Storia] Cart sync failed:", result.error);
           alert(
-            "فشل إضافة المنتج لسلة سلة. تأكد من أن المنتج موجود في سلة.\n" +
+            `فشل إضافة المنتج (${product.name}) لسلة سلة.\n` +
               (result.error || ""),
           );
         } else {
+          console.log("[Storia] Successfully added to Salla cart");
           // Success! Refresh cart from Salla to get accurate count/total
           dispatch(fetchCartFromSalla());
         }
