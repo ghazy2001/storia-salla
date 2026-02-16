@@ -286,42 +286,45 @@ class SallaService {
               (sm.product || sm.api?.product)?.getDetails ||
               (sm.product || sm.api?.product)?.get;
 
+            const isEnriched = (val) => {
+              if (!val) return false;
+              if (Array.isArray(val)) return val.length > 0;
+              return Object.keys(val).length > 0;
+            };
+
             let b = null;
             if (typeof sdkMethod === "function") {
               const res = await sdkMethod(p.id).catch(() => null);
               b = res?.data || res?.product || (res?.id ? res : null);
               if (b) {
-                console.log(
-                  `[Storia] SDK Detail Fetch Success for ${p.id}:`,
-                  b,
-                );
-                // Trust SDK options/variants if they exist
-                if (
-                  b.options?.length > 0 ||
-                  (b.options && typeof b.options === "object")
-                )
-                  targetProduct.options = b.options;
-                if (b.variants?.length > 0) targetProduct.variants = b.variants;
-                if (b.skus?.length > 0) targetProduct.skus = b.skus;
-                if (b.images?.length > 0) targetProduct.images = b.images;
+                if (config.enableLogging) log(`SDK enrichment for ${p.id}`, b);
+
+                // Additive Merge: Overwrite if SDK data is richer
+                if (isEnriched(b.options)) targetProduct.options = b.options;
+                if (isEnriched(b.variants)) targetProduct.variants = b.variants;
+                if (isEnriched(b.skus)) targetProduct.skus = b.skus;
+                if (isEnriched(b.images)) targetProduct.images = b.images;
                 if (getDesc(b)) description = getDesc(b);
               }
             }
 
-            // Fallback for missing description or if SDK failed
-            if (!description || description.length < 5) {
+            // Secondary Enrichment via REST (Always try if options still empty or desc missing)
+            if (
+              !isEnriched(targetProduct.options) ||
+              !description ||
+              description.length < 5
+            ) {
               const u = `/api/v1/products/${p.id}`;
               const r = await fetch(u).catch(() => null);
               if (r && r.ok) {
                 const d = await r.json();
                 const rb = d?.data || d?.product || d;
                 if (rb) {
-                  if (!description) description = getDesc(rb);
-                  // Only merge if target still empty
-                  if (!targetProduct.options)
+                  if (isEnriched(rb.options))
                     targetProduct.options = rb.options;
-                  if (!targetProduct.variants)
+                  if (isEnriched(rb.variants))
                     targetProduct.variants = rb.variants;
+                  if (!description) description = getDesc(rb);
                 }
               }
             }
