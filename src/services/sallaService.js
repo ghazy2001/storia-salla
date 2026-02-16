@@ -313,11 +313,19 @@ class SallaService {
                   const b = d?.data || d?.product || d;
                   if (getDesc(b)) {
                     description = getDesc(b);
-                    // Merge fields safely without replacing top-level data
-                    if (b.options) targetProduct.options = b.options;
-                    if (b.variants) targetProduct.variants = b.variants;
-                    if (b.skus) targetProduct.skus = b.skus;
-                    if (b.images) targetProduct.images = b.images;
+                    // Merge fields safely without replacing top-level data with empty ones
+                    const hasSizeData = (obj) => {
+                      if (!obj) return false;
+                      if (Array.isArray(obj)) return obj.length > 0;
+                      return Object.keys(obj).length > 0;
+                    };
+
+                    if (hasSizeData(b.options))
+                      targetProduct.options = b.options;
+                    if (hasSizeData(b.variants))
+                      targetProduct.variants = b.variants;
+                    if (hasSizeData(b.skus)) targetProduct.skus = b.skus;
+                    if (hasSizeData(b.images)) targetProduct.images = b.images;
                     break;
                   }
                 }
@@ -378,15 +386,23 @@ class SallaService {
         const findRawItems = (product, keys) => {
           for (const key of keys) {
             // Check top level, .details, AND .data (sometimes Salla wraps)
-            let items =
-              product[key] ||
-              (product.details && product.details[key]) ||
-              (product.data && product.data[key]);
+            const candidates = [
+              product[key],
+              product.details ? product.details[key] : null,
+              product.data ? product.data[key] : null,
+            ];
 
-            if (items) {
-              return typeof items === "object" && !Array.isArray(items)
-                ? Object.values(items)
-                : items;
+            for (let items of candidates) {
+              if (
+                items &&
+                (Array.isArray(items)
+                  ? items.length > 0
+                  : Object.keys(items).length > 0)
+              ) {
+                return typeof items === "object" && !Array.isArray(items)
+                  ? Object.values(items)
+                  : items;
+              }
             }
           }
           return [];
