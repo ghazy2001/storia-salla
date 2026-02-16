@@ -425,11 +425,15 @@ class SallaService {
           rawSallaData: p, // Keep for debugging if needed
         };
 
-        if (mappedProduct.name.includes("عباية 2")) {
+        if (
+          mappedProduct.id == 1314742571 ||
+          String(mappedProduct.id) === "1314742571"
+        ) {
           console.log("[Storia DEBUG] Mapping Abaya 2:", {
             options: targetProduct.options,
             variants: targetProduct.variants,
             mappedVariants: sizeVariants,
+            rawProduct: targetProduct,
           });
         }
 

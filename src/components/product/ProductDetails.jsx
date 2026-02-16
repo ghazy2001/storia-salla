@@ -81,15 +81,39 @@ const ProductDetails = () => {
     // Get price and options for selected size if available
     let price = product.price;
     let cartOptions = {};
+
+    console.log("[Storia ProductDetails] Adding to cart. State:", {
+      selectedSize,
+      sizeVariantsCount: product.sizeVariants?.length,
+      productName: product.name,
+      productId: product.id,
+    });
+
     if (selectedSize && product.sizeVariants?.length > 0) {
       const variant = product.sizeVariants.find((v) => v.size === selectedSize);
       if (variant) {
         price = variant.price;
         if (variant.optionId && variant.valueId) {
           cartOptions[variant.optionId] = variant.valueId;
+        } else {
+          console.warn(
+            "[Storia ProductDetails] Variant found but missing IDs:",
+            variant,
+          );
         }
+      } else {
+        console.warn(
+          "[Storia ProductDetails] Selected size not found in sizeVariants:",
+          selectedSize,
+        );
       }
+    } else {
+      console.warn(
+        "[Storia ProductDetails] sizeVariants missing or empty. Using fallback.",
+      );
     }
+
+    console.log("[Storia ProductDetails] Resolved cartOptions:", cartOptions);
 
     await addToCartWithSync({ ...product, price }, 1, cartOptions);
     setShowToast(true);
