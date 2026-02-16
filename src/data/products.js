@@ -2,14 +2,14 @@ export const products = [
   {
     id: 1,
     name: "عباية سوداء رسمية - كريب ملكي",
-    stock: 25,
-    category: "official",
+    stock: 18,
+    category: "cloche",
     sizes: ["S", "M", "L", "XL"],
     sizeVariants: [
-      { size: "S", price: 390, stock: 5, cost: 230 },
-      { size: "M", price: 390, stock: 8, cost: 230 },
-      { size: "L", price: 390, stock: 7, cost: 230 },
-      { size: "XL", price: 390, stock: 5, cost: 230 },
+      { size: "S", price: 350, stock: 4, cost: 200 },
+      { size: "M", price: 350, stock: 6, cost: 200 },
+      { size: "L", price: 350, stock: 5, cost: 200 },
+      { size: "XL", price: 350, stock: 3, cost: 200 },
     ],
     description:
       "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
