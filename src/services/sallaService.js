@@ -702,11 +702,24 @@ class SallaService {
         data: response,
       };
     } catch (error) {
-      // Don't log expected errors (like 410 for mock products) in production
       console.error("[Storia] Error adding to Salla cart:", error);
+
+      // Extract detailed error message from Salla response
+      let errorMsg = error.message || "Failed to add to cart";
+
+      const res = error.response;
+      if (res && res.data) {
+        const d = res.data;
+        // Salla usually returns errors in d.error or d.message or d.errors
+        errorMsg =
+          d.error ||
+          d.message ||
+          (d.errors ? Object.values(d.errors).flat().join(", ") : errorMsg);
+      }
+
       return {
         success: false,
-        error: error.message || "Failed to add to cart",
+        error: errorMsg,
       };
     }
   }

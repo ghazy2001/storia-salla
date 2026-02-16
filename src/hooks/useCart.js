@@ -38,8 +38,8 @@ export const useAddToCart = () => {
         if (!result.success) {
           console.error("[Storia] Cart sync failed:", result.error);
           alert(
-            `فشل إضافة المنتج (${product.name}) لسلة سلة.\n` +
-              (result.error || ""),
+            `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
+              `السبب: ${result.error || "عطأ غير معروف"}`,
           );
         } else {
           console.log("[Storia] Successfully added to Salla cart");
