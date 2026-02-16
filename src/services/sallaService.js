@@ -294,10 +294,16 @@ class SallaService {
 
             let b = null;
             if (typeof sdkMethod === "function") {
-              const res = await sdkMethod(p.id).catch(() => null);
+              // Try multiple call signatures for the SDK
+              let res = await sdkMethod(p.id).catch(() => null);
+              if (!res || (!res.data && !res.product && !res.id)) {
+                res = await sdkMethod({ id: p.id }).catch(() => null);
+              }
+
               b = res?.data || res?.product || (res?.id ? res : null);
               if (b) {
-                if (config.enableLogging) log(`SDK enrichment for ${p.id}`, b);
+                if (config.enableLogging)
+                  log(`SDK enrichment success for ${p.id}`, b);
 
                 // Additive Merge: Overwrite if SDK data is richer
                 if (isEnriched(b.options)) targetProduct.options = b.options;
@@ -552,13 +558,65 @@ class SallaService {
         !payload.variant_id &&
         (!payload.options || Object.keys(payload.options).length === 0)
       ) {
-        const prod =
+        let prod =
           window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[productId];
+
+        // JIT FETCH: If we still don't have variants, try a last-second detail fetch
         if (
-          prod &&
-          prod.mapped &&
-          prod.mapped.sizeVariants &&
-          prod.mapped.sizeVariants.length > 0
+          !prod ||
+          !prod.mapped ||
+          !prod.mapped.sizeVariants ||
+          prod.mapped.sizeVariants.length === 0
+        ) {
+          console.warn(
+            "[Storia] No variants found in registry. Attempting JIT fetch for product:",
+            productId,
+          );
+          try {
+            const u = `/api/v1/products/${productId}`;
+            const r = await fetch(u).catch(() => null);
+            if (r && r.ok) {
+              const d = await r.json();
+              const rb = d?.data || d?.product || d;
+              if (rb) {
+                // Temporary mapping for failsafe
+                const rawOptions =
+                  (rb.options &&
+                    (Array.isArray(rb.options)
+                      ? rb.options
+                      : Object.values(rb.options))) ||
+                  [];
+                const sizeOpt = rawOptions.find(
+                  (o) =>
+                    String(o.name).toLowerCase().includes("مقاس") ||
+                    String(o.name).toLowerCase().includes("size"),
+                );
+                if (sizeOpt && sizeOpt.values && sizeOpt.values.length > 0) {
+                  const first = sizeOpt.values[0];
+                  payload.options = { [sizeOpt.id]: first.id };
+                  console.log(
+                    "[Storia] JIT Failsafe Success (Options):",
+                    payload.options,
+                  );
+                } else if (rb.variants && rb.variants.length > 0) {
+                  payload.variant_id = rb.variants[0].id;
+                  console.log(
+                    "[Storia] JIT Failsafe Success (Variant):",
+                    payload.variant_id,
+                  );
+                }
+              }
+            }
+          } catch (e) {
+            console.error("[Storia] JIT Fetch failed", e);
+          }
+        }
+
+        // Standard failsafe if JIT didn't set payload yet
+        if (
+          !payload.variant_id &&
+          (!payload.options || Object.keys(payload.options).length === 0) &&
+          prod?.mapped?.sizeVariants?.length > 0
         ) {
           const def = prod.mapped.sizeVariants[0];
           console.warn(
