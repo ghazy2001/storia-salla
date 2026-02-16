@@ -13,7 +13,7 @@ export const products = [
     ],
     description:
       "عباية سوداء رسمية مصنوعة من الكريب الملكي الفاخر. تتميز بتصميم كلاسيكي يجمع بين الفخامة والعملية، مع قصّة منسدلة تمنحك إطلالة راقية في المناسبات الرسمية والعمل.",
-    sallaProductId: 1314742571, // Linked to "عباية-2"
+    sallaProductId: 1252773325, // Updated to match working product/new creation
     image: "/assets/products/p01/p01_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p01/p01_1.jpg" },

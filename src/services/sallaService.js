@@ -709,7 +709,7 @@ class SallaService {
           statusCode == 400 ||
           JSON.stringify(errorData || {}).includes("invalid_fields");
 
-        const isAbaya2 = Number(idToUse) === 1314742571;
+        const isAbaya2 = Number(idToUse) === 1252773325;
         diagnosis = `Detected: status=${statusCode}, validation=${isValidation}, abaya2=${isAbaya2}, retry=${isRetry}`;
 
         if ((isValidation || isAbaya2) && !isRetry) {
