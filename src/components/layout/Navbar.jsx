@@ -251,27 +251,21 @@ const Navbar = ({ theme, toggleTheme }) => {
           />
         </div>
 
-        <div className="flex items-center gap-3 md:gap-8">
-          <button
-            onClick={toggleTheme}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
-            title={getThemeValue(
-              theme,
-              "Switch to Dark Mode",
-              "Switch to Light Mode",
-            )}
-          >
-            {getThemeValue(theme, <Moon size={20} />, <Sun size={20} />)}
-          </button>
-
-          <div className="flex items-center gap-2 salla-components-container">
-            {/* Salla Search Component */}
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1 salla-components-container">
+            <button
+              onClick={toggleTheme}
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 hover:scale-110 active:scale-95 ${getButtonTheme(theme)}`}
+              title={getThemeValue(
+                theme,
+                "Switch to Dark Mode",
+                "Switch to Light Mode",
+              )}
+            >
+              {getThemeValue(theme, <Moon size={20} />, <Sun size={20} />)}
+            </button>
             <salla-search mode="modal" height="40"></salla-search>
-
-            {/* Salla User Menu Component */}
             <salla-user-menu></salla-user-menu>
-
-            {/* Salla Cart Summary Component */}
             <salla-cart-summary show-details="false"></salla-cart-summary>
           </div>
         </div>

@@ -19,7 +19,6 @@ const LoginModal = () => {
   const loginError = useSelector(selectLoginError);
   const isAdmin = useSelector((state) => state.admin.isAdmin);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   // Move hooks to top level, before any early returns
   React.useEffect(() => {
@@ -32,7 +31,7 @@ const LoginModal = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login({ email, password }));
+    dispatch(login({ email }));
   };
 
   // Clear errors when closing
@@ -70,21 +69,6 @@ const LoginModal = () => {
               placeholder="name@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition-all text-left text-gray-900 bg-white"
-              dir="ltr"
-              required
-            />
-          </div>
-
-          <div className="text-right">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              كلمة المرور
-            </label>
-            <input
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition-all text-left text-gray-900 bg-white"
               dir="ltr"
               required

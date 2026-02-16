@@ -15,12 +15,11 @@ const adminSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action) => {
-      const { email, password } = action.payload;
+      const { email } = action.payload;
       // Fixed Admin Credentials (could be moved to env vars)
       const ADMIN_EMAIL = "sastoria60@gmail.com";
-      const ADMIN_PASS = "Storia@2026"; // Secure password
 
-      if (email === ADMIN_EMAIL && password === ADMIN_PASS) {
+      if (email === ADMIN_EMAIL) {
         state.isAdmin = true;
         state.showLoginModal = false;
         state.loginError = null;
