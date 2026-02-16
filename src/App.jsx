@@ -15,21 +15,14 @@ import GlobalOverlays from "./components/layout/GlobalOverlays";
 import { useAppInitialization } from "./hooks/useAppInitialization";
 
 function AppContent() {
-  const { isReady, theme } = useAppInitialization();
+  const { theme } = useAppInitialization();
   const dispatch = useDispatch();
 
   return (
-    <div
-      className={`${isReady ? "bg-brand-offwhite" : "bg-[#0e352f]"} text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10 transition-colors duration-500`}
-    >
+    <div className="bg-brand-offwhite text-brand-charcoal min-h-screen font-sans selection:bg-brand-gold selection:text-brand-charcoal flex flex-col relative z-10 transition-colors duration-500">
       <GlobalOverlays />
 
-      <div
-        className={`flex flex-col min-h-screen transition-opacity duration-500 ease-in-out ${
-          isReady ? "opacity-100" : "opacity-0"
-        }`}
-        aria-hidden={!isReady}
-      >
+      <div className="flex flex-col min-h-screen">
         <Navbar theme={theme} toggleTheme={() => dispatch(toggleTheme())} />
         <main className="flex-grow">
           <PageContent />

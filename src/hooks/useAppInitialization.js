@@ -33,7 +33,7 @@ const preloadImages = (srcArray) => {
 export const useAppInitialization = () => {
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
-  const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(true);
 
   // Sync theme with DOM
   useEffect(() => {
@@ -46,75 +46,30 @@ export const useAppInitialization = () => {
 
   // Handle initialization
   useEffect(() => {
+    // 1. SIGNAL READY TO NATIVE LOADER IMMEDIATELY
+    document.documentElement.classList.add("storia-ready");
+
     const init = async () => {
-      // 1. Check for stored theme preference (using consistent key)
-      const storedTheme = localStorage.getItem("storia_theme");
-      if (storedTheme) {
-        dispatch(setTheme(storedTheme));
-      } else {
-        // Default to green always on first load
-        dispatch(setTheme("green"));
-      }
+      // 2. Check for stored theme preference (using consistent key)
+      const storedTheme = localStorage.getItem("storia_theme") || "green";
+      dispatch(setTheme(storedTheme));
 
-      // 3. Wait for everything to be ready
-      try {
-        await Promise.all([
-          // Timeout race: Shorten to 2.5s for instant feel
-          new Promise((resolve) =>
-            setTimeout(() => {
-              console.warn(
-                "⚠️ Initialization timed out - forcing ready state.",
-              );
-              resolve();
-            }, 2500),
-          ),
+      // 3. START BACKGROUND FETCHES (No Await)
+      dispatch(fetchProductsFromSalla());
+      dispatch(fetchCategoriesFromSalla());
+      dispatch(fetchCartFromSalla());
+      dispatch(fetchCustomerFromSalla());
+      dispatch(fetchFAQs());
+      dispatch(fetchReviews());
 
-          // Critical data fetching
-          (async () => {
-            try {
-              // 1. ABSOLUTELY ESSENTIAL DATA (Home Page Core)
-              const productPromise = dispatch(
-                fetchProductsFromSalla(),
-              ).unwrap();
+      // Preload logo for consistency, but don't block
+      preloadImages([resolveAsset("assets/logo.png")]);
 
-              // 2. BACKGROUND DATA (Start immediately, don't wait for them to finish)
-              dispatch(fetchCategoriesFromSalla());
-              dispatch(fetchCartFromSalla());
-              dispatch(fetchCustomerFromSalla());
-              dispatch(fetchFAQs());
-              dispatch(fetchReviews());
-
-              // Only wait for products to ensure the main UI has content
-              await productPromise;
-
-              // MINIMAL image preloading
-              await preloadImages([resolveAsset("assets/logo.png")]);
-            } catch (err) {
-              console.error("Data fetch failed in init", err);
-            }
-          })(),
-
-          // Wait for window load
-          new Promise((resolve) => {
-            if (document.readyState === "complete") {
-              resolve();
-            } else {
-              window.addEventListener("load", resolve, { once: true });
-            }
-          }),
-        ]);
-      } catch (error) {
-        console.error("[Storia] Initialization error:", error);
-      } finally {
-        setIsReady(true);
-        // SIGNAL READY TO NATIVE LOADER
-        document.documentElement.classList.add("storia-ready");
-      }
+      setIsReady(true);
     };
 
     init();
 
-    // 4. Re-fetch cart on window focus (to sync with Salla tab changes)
     // 4. Re-fetch cart on window focus (to sync with Salla tab changes)
     const handleFocus = () => {
       if (document.visibilityState === "visible") {
