@@ -538,9 +538,7 @@ class SallaService {
                     
                     // Also check for the variable that product-card.js might be using
                     // Often it's in a global `products` array
-                } catch(e) {}                      }
-                    } catch (e) {}
-                  }
+                } catch(e) {}
                 });
 
                 // Strategy B: Scrape <img> tags from common Salla sliders
