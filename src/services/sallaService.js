@@ -510,34 +510,7 @@ class SallaService {
                 // Strategy C: Global Variable Scan (The "Hacker" Approach) 🕵️‍♂️
                 // Look for salla.config.product.images or similar
                 try {
-                  const findImagesInObject = (obj, depth = 0) => {
-                    if (depth > 3 || !obj) return [];
-                    let found = [];
 
-                    // Check if this object IS the image list
-                    if (
-                      Array.isArray(obj) &&
-                      obj.length > 0 &&
-                      typeof obj[0] === "string" &&
-                      obj[0].includes("cdn.salla.sa")
-                    ) {
-                      return obj;
-                    }
-
-                    // Search children keys
-                    const keys = Object.keys(obj);
-                    for (const k of keys) {
-                      if (k === "images" || k === "gallery" || k === "media") {
-                        if (Array.isArray(obj[k])) {
-                          const imgs = obj[k].map((i) =>
-                            typeof i === "string"
-                              ? i
-                              : i.url || i.src || i.image,
-                          );
-                          if (
-                            imgs.length > 0 &&
-                            typeof imgs[0] === "string" &&
-                            imgs[0].includes("cdn.salla.sa")
                           ) {
                             found.push(...imgs);
                           }
