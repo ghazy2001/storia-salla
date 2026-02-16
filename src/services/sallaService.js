@@ -352,7 +352,7 @@ class SallaService {
             }
 
             // METHOD 2: Robust SDK Call (Wrapped in onReady)
-            if (!b && IS_SALLA_ENV) {
+            if (!b && typeof window !== "undefined" && window.salla) {
               try {
                 b = await new Promise((resolve) => {
                   const pidStr = String(pid);
