@@ -59,34 +59,33 @@ export const useAppInitialization = () => {
       // 3. Wait for everything to be ready
       try {
         await Promise.all([
-          // Timeout race: Shorten to 3s for extreme speed
+          // Timeout race: Shorten to 2.5s for instant feel
           new Promise((resolve) =>
             setTimeout(() => {
               console.warn(
                 "⚠️ Initialization timed out - forcing ready state.",
               );
               resolve();
-            }, 3000),
+            }, 2500),
           ),
 
           // Critical data fetching
           (async () => {
             try {
-              // 1. Critical Base Data (MUST WAIT)
+              // 1. ABSOLUTELY ESSENTIAL DATA (Home Page Core)
               const productPromise = dispatch(
                 fetchProductsFromSalla(),
               ).unwrap();
-              const categoryPromise = dispatch(
-                fetchCategoriesFromSalla(),
-              ).unwrap();
-              const cartPromise = dispatch(fetchCartFromSalla());
 
-              // 2. Secondary Data (DONT BLOCK INITIALIZATION)
+              // 2. BACKGROUND DATA (Start immediately, don't wait for them to finish)
+              dispatch(fetchCategoriesFromSalla());
+              dispatch(fetchCartFromSalla());
               dispatch(fetchCustomerFromSalla());
               dispatch(fetchFAQs());
               dispatch(fetchReviews());
 
-              await Promise.all([productPromise, categoryPromise, cartPromise]);
+              // Only wait for products to ensure the main UI has content
+              await productPromise;
 
               // MINIMAL image preloading
               await preloadImages([resolveAsset("assets/logo.png")]);
