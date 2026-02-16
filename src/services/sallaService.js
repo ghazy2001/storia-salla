@@ -242,7 +242,7 @@ class SallaService {
                 Object.values(obj.translations)[0]
               : null);
 
-          // Check features array/object
+          // Check features
           let featureDesc = "";
           if (Array.isArray(obj.features)) {
             const f = obj.features.find(
@@ -251,6 +251,19 @@ class SallaService {
                 item.type === "description",
             );
             if (f) featureDesc = f.value || f.content || "";
+          } else if (obj.features && typeof obj.features === "object") {
+            // Handle features as object (common in some Salla responses)
+            featureDesc =
+              obj.features.description ||
+              obj.features.short_description ||
+              obj.features.detailed_description ||
+              "";
+            if (!featureDesc) {
+              const dKey = Object.keys(obj.features).find((k) =>
+                k.toLowerCase().includes("desc"),
+              );
+              if (dKey) featureDesc = obj.features[dKey];
+            }
           }
 
           const fields = [
@@ -290,6 +303,9 @@ class SallaService {
               console.log(`[Storia Debug] Value ${k}:`, p[k]);
             },
           );
+          if (!getDesc(p)) {
+            console.log("[Storia Debug] NO DESCRIPTION FOUND. FULL OBJECT:", p);
+          }
         }
 
         let description = getDesc(p);
@@ -301,29 +317,18 @@ class SallaService {
             const sm = this.salla;
             const pm = (sm.api && sm.api.product) || sm.product;
 
-            if (pm) {
+            if (pm && Object.keys(pm).length > 0) {
               console.log(
-                `[Storia Debug] detail fetch for ${p.id}... methods:`,
-                pm
-                  ? Object.keys(pm).filter((k) => typeof pm[k] === "function")
-                  : "none",
+                `[Storia Debug] SDK Detail fetch for ${p.id}... methods:`,
+                Object.keys(pm).filter((k) => typeof pm[k] === "function"),
               );
               let res = null;
-              if (pm && typeof pm.get === "function") {
+              if (typeof pm.get === "function") {
                 res = await pm.get(p.id).catch(() => null);
                 if (!res) res = await pm.get({ id: p.id }).catch(() => null);
               }
-              if (!res && pm && typeof pm.fetch === "function") {
+              if (!res && typeof pm.fetch === "function") {
                 res = await pm.fetch({ id: p.id }).catch(() => null);
-              }
-              // Potential Salla storefront logic: salla.api.fetch('product.get', ...)
-              if (!res && sm.api && typeof sm.api.fetch === "function") {
-                console.log(
-                  `[Storia Debug] Trying salla.api.fetch('product.get')...`,
-                );
-                res = await sm.api
-                  .fetch("product.get", { id: p.id })
-                  .catch(() => null);
               }
 
               if (res) {
@@ -333,8 +338,29 @@ class SallaService {
                   description = getDesc(targetProduct);
                   if (productsData.indexOf(p) === 0)
                     console.log(
-                      `[Storia Debug] Detail found for ${p.id}:`,
+                      `[Storia Debug] SDK Success for ${p.id}:`,
                       description,
+                    );
+                }
+              }
+            } else if (sm && sm.api) {
+              console.log(
+                `[Storia Debug] Product SDK empty. Probing salla.api directly:`,
+                Object.keys(sm.api).filter(
+                  (k) => typeof sm.api[k] === "function",
+                ),
+              );
+              // Try generic fetch if available
+              if (typeof sm.api.fetch === "function") {
+                const res = await sm.api
+                  .fetch("product.details", { id: p.id })
+                  .catch(() => null);
+                if (res && res.data) {
+                  targetProduct = res.data;
+                  description = getDesc(targetProduct);
+                  if (description)
+                    console.log(
+                      `[Storia Debug] SDK salla.api.fetch success for ${p.id}`,
                     );
                 }
               }
@@ -343,14 +369,15 @@ class SallaService {
             // 2.1 AJAX Fallback (Multi-attempt)
             if (!description || description.length < 5) {
               console.log(
-                `[Storia Debug] SDK failed for ${p.id}. Trying AJAX fallbacks...`,
+                `[Storia Debug] SDK failed for ${p.id}. Trying AJAX...`,
               );
               const endpoints = [
+                p.url ? `${p.url}.json` : null, // Best bet for Salla themes
                 `/api/v1/product/${p.id}`,
-                `/api/v1/products/${p.id}`,
                 `/api/v1/storefront/product/${p.id}`,
-                `/api/v1/storefront/products/${p.id}`,
-              ];
+                `/products/${p.id}`,
+              ].filter(Boolean);
+
               for (const url of endpoints) {
                 try {
                   const ajaxRes = await fetch(url).catch(() => null);
@@ -359,14 +386,16 @@ class SallaService {
                     const body =
                       ajaxData?.data ||
                       ajaxData?.product ||
-                      (ajaxData?.id ? ajaxData : null);
+                      (ajaxData?.id
+                        ? ajaxData
+                        : ajaxData?.product_details
+                          ? ajaxData.product_details
+                          : null);
                     if (body) {
                       targetProduct = body;
                       description = getDesc(targetProduct);
                       if (description.length > 5) {
-                        console.log(
-                          `[Storia Debug] AJAX success for ${p.id} via ${url}`,
-                        );
+                        console.log(`[Storia Debug] AJAX Success via ${url}`);
                         break;
                       }
                     }
