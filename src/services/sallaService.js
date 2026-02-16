@@ -319,8 +319,8 @@ class SallaService {
                 }
               }
             }
-          } catch (e) {
-            /* ignore */
+          } catch (_e) {
+            console.debug("Description fetch failed for variant");
           }
         }
 
@@ -370,19 +370,26 @@ class SallaService {
         let sizes = [];
         let sizeVariants = [];
 
-        // Handle if options is an object instead of array
-        let rawOptions = targetProduct.options || [];
-        if (
-          rawOptions &&
-          typeof rawOptions === "object" &&
-          !Array.isArray(rawOptions)
-        ) {
-          rawOptions = Object.values(rawOptions);
-        }
+        // Handle if options/variants are objects or arrays, even if nested in .details
+        const findRawItems = (product, keys) => {
+          for (const key of keys) {
+            let items =
+              product[key] || (product.details && product.details[key]);
+            if (items) {
+              return typeof items === "object" && !Array.isArray(items)
+                ? Object.values(items)
+                : items;
+            }
+          }
+          return [];
+        };
 
-        // Try to find ANY option that looks like a size, or just the first option if it has values
+        const rawOptions = findRawItems(targetProduct, ["options"]);
+        const rawVariants = findRawItems(targetProduct, ["variants", "skus"]);
+
+        // Try to find ANY option that looks like a size
         let sizeOption = rawOptions.find((opt) => {
-          const name = translate(opt.name).toLowerCase();
+          const name = translate(opt.name || opt.label || "").toLowerCase();
           return (
             name.includes("size") ||
             name.includes("مقاس") ||
@@ -391,7 +398,7 @@ class SallaService {
           );
         });
 
-        // Fallback: Use the first option that has multiple values
+        // Fallback: Use the first option that has values
         if (!sizeOption && rawOptions.length > 0) {
           sizeOption = rawOptions.find((opt) => {
             const vals =
@@ -416,19 +423,20 @@ class SallaService {
             valueId: v.id,
             sallaVariantId: v.id,
           }));
-        } else if (
-          targetProduct.variants &&
-          targetProduct.variants.length > 0
-        ) {
-          // Fallback to SKU variants if no options found
-          sizeVariants = targetProduct.variants.map((v) => ({
-            size: translate(v.name || v.label || v.sku).trim(),
-            price: v.price ? v.price.amount : amount,
+        } else if (rawVariants && rawVariants.length > 0) {
+          // Fallback to SKU variants
+          sizeVariants = rawVariants.map((v) => ({
+            size: translate(v.name || v.label || v.sku || "").trim(),
+            price: v.price
+              ? typeof v.price === "object"
+                ? v.price.amount
+                : v.price
+              : amount,
             stock: v.quantity !== undefined ? v.quantity : 10,
             variantId: v.id,
             sallaVariantId: v.id,
           }));
-          sizes = sizeVariants.map((v) => v.size);
+          sizes = sizeVariants.map((v) => v.size).filter((s) => s);
         }
 
         // 6. Map Category
@@ -475,11 +483,12 @@ class SallaService {
           mappedProduct.id == 1314742571 ||
           String(mappedProduct.id) === "1314742571"
         ) {
-          console.log("[Storia DEBUG] Mapping Abaya 2:", {
-            options: targetProduct.options,
-            variants: targetProduct.variants,
-            mappedVariants: sizeVariants,
-            rawProduct: targetProduct,
+          console.log("[Storia DEBUG] Mapping Abaya 2 Final Check:", {
+            rawOptions,
+            rawVariants,
+            sizeOption,
+            sizeVariants,
+            targetProduct,
           });
         }
 
