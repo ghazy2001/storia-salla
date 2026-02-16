@@ -370,10 +370,18 @@ class SallaService {
         let sizes = [];
         let sizeVariants = [];
 
-        const options = targetProduct.options || [];
+        // Handle if options is an object instead of array
+        let rawOptions = targetProduct.options || [];
+        if (
+          rawOptions &&
+          typeof rawOptions === "object" &&
+          !Array.isArray(rawOptions)
+        ) {
+          rawOptions = Object.values(rawOptions);
+        }
 
         // Try to find ANY option that looks like a size, or just the first option if it has values
-        let sizeOption = options.find((opt) => {
+        let sizeOption = rawOptions.find((opt) => {
           const name = translate(opt.name).toLowerCase();
           return (
             name.includes("size") ||
@@ -384,16 +392,24 @@ class SallaService {
         });
 
         // Fallback: Use the first option that has multiple values
-        if (!sizeOption && options.length > 0) {
-          sizeOption = options.find(
-            (opt) => opt.values && opt.values.length > 0,
-          );
+        if (!sizeOption && rawOptions.length > 0) {
+          sizeOption = rawOptions.find((opt) => {
+            const vals =
+              opt.values ||
+              (opt.data && Array.isArray(opt.data) ? opt.data : null);
+            return vals && vals.length > 0;
+          });
         }
 
-        if (sizeOption && sizeOption.values) {
-          sizes = sizeOption.values.map((v) => translate(v.name || v.label));
-          sizeVariants = sizeOption.values.map((v) => ({
-            size: translate(v.name || v.label),
+        if (sizeOption) {
+          const vals =
+            sizeOption.values ||
+            (sizeOption.data && Array.isArray(sizeOption.data)
+              ? sizeOption.data
+              : []);
+          sizes = vals.map((v) => translate(v.name || v.label).trim());
+          sizeVariants = vals.map((v) => ({
+            size: translate(v.name || v.label).trim(),
             price: v.price ? v.price.amount : amount,
             stock: v.quantity !== undefined ? v.quantity : 10,
             optionId: sizeOption.id,
@@ -406,7 +422,7 @@ class SallaService {
         ) {
           // Fallback to SKU variants if no options found
           sizeVariants = targetProduct.variants.map((v) => ({
-            size: translate(v.name || v.label || v.sku),
+            size: translate(v.name || v.label || v.sku).trim(),
             price: v.price ? v.price.amount : amount,
             stock: v.quantity !== undefined ? v.quantity : 10,
             variantId: v.id,
@@ -494,14 +510,37 @@ class SallaService {
       };
 
       // Handle Variants vs Custom Options
-      // Salla uses 'variant_id' for SKU-managed variants
-      // and 'options' object for custom options: { [option_id]: value_id }
       if (options.variantId) {
         payload.variant_id = options.variantId;
       }
-
       if (options.options) {
         payload.options = options.options;
+      }
+
+      // AUTO-FALLBACK: If product has required options but none provided, pick first available
+      if (
+        !payload.variant_id &&
+        (!payload.options || Object.keys(payload.options).length === 0)
+      ) {
+        const prod =
+          window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[productId];
+        if (
+          prod &&
+          prod.mapped &&
+          prod.mapped.sizeVariants &&
+          prod.mapped.sizeVariants.length > 0
+        ) {
+          const def = prod.mapped.sizeVariants[0];
+          console.warn(
+            "[Storia] Failsafe activated: No selection provided, using:",
+            def,
+          );
+          if (def.variantId) {
+            payload.variant_id = def.variantId;
+          } else if (def.optionId && def.valueId) {
+            payload.options = { [def.optionId]: def.valueId };
+          }
+        }
       }
 
       console.log(
