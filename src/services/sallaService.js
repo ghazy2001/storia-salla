@@ -510,19 +510,6 @@ class SallaService {
                 // Strategy C: Global Variable Scan (The "Hacker" Approach) 🕵️‍♂️
                 // Look for salla.config.product.images or similar
                 try {
-
-                          ) {
-                            found.push(...imgs);
-                          }
-                        }
-                      } else if (typeof obj[k] === "object") {
-                        // removing recursion for now to be safe on performance, just 1 level deep check
-                        // found.push(...findImagesInObject(obj[k], depth + 1));
-                      }
-                    }
-                    return found;
-                  };
-
                   if (window.salla) {
                     if (
                       window.salla.config &&
