@@ -425,6 +425,15 @@ class SallaService {
           rawSallaData: p, // Keep for debugging if needed
         };
 
+        if (mappedProduct.name.includes("عباية 2") || true) {
+          // Log everything for now
+          console.log("[Storia DEBUG] Mapping Product:", mappedProduct.name, {
+            options: targetProduct.options,
+            variants: targetProduct.variants,
+            mappedVariants: sizeVariants,
+          });
+        }
+
         return mappedProduct;
       }),
     );
@@ -462,6 +471,10 @@ class SallaService {
         payload.options = options.options;
       }
 
+      console.log(
+        "[Storia] cart.addItem payload:",
+        JSON.stringify(payload, null, 2),
+      );
       log("Adding to Salla cart (Full Payload):", payload);
 
       // Use Salla's cart.addItem method
