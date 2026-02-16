@@ -506,26 +506,6 @@ class SallaService {
                 console.warn(`DOM Scraping failed`, err);
               }
             }
-            const html = await response.text();
-
-            // Look for standard Salla image patterns in HTML
-            // We look for large images (1000px+, or source)
-            const imageRegex =
-              /https:\/\/cdn\.salla\.sa\/[a-zA-Z0-9_\-\/]+\.(jpg|jpeg|png|webp)/gi;
-            const foundUrls = html.match(imageRegex) || [];
-
-            if (foundUrls.length > 0) {
-              // Filter unique and valid product images (exclude small icons/avatars if possible)
-              const uniqueImages = [...new Set(foundUrls)]
-                .filter(
-                  (url) =>
-                    !url.includes("avatar") &&
-                    !url.includes("logo") &&
-                    !url.includes("icon") &&
-                    !url.includes("placeholder"),
-                )
-                .map((url) => ({ type: "image", src: url }));
-            }
 
             if (b) {
               if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
