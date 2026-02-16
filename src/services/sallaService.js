@@ -313,7 +313,11 @@ class SallaService {
                   const b = d?.data || d?.product || d;
                   if (getDesc(b)) {
                     description = getDesc(b);
-                    targetProduct = b;
+                    // Merge fields safely without replacing top-level data
+                    if (b.options) targetProduct.options = b.options;
+                    if (b.variants) targetProduct.variants = b.variants;
+                    if (b.skus) targetProduct.skus = b.skus;
+                    if (b.images) targetProduct.images = b.images;
                     break;
                   }
                 }
