@@ -361,6 +361,52 @@ class SallaService {
               }
             }
 
+            // METHOD 3: HTML Scraping (The Nuclear Option) ☢️
+            // If we are on the product page, the images MUST be in the DOM or Page Source
+            if (!b && window.location.pathname.includes(pid)) {
+              try {
+                if (config.enableLogging)
+                  log(`Attempting HTML Scraping for ${pid}...`);
+                const response = await fetch(window.location.href);
+                const html = await response.text();
+
+                // Look for standard Salla image patterns in HTML
+                // We look for large images (1000px+, or source)
+                const imageRegex =
+                  /https:\/\/cdn\.salla\.sa\/[a-zA-Z0-9_\-\/]+\.(jpg|jpeg|png|webp)/gi;
+                const foundUrls = html.match(imageRegex) || [];
+
+                if (foundUrls.length > 0) {
+                  // Filter unique and valid product images (exclude small icons/avatars if possible)
+                  const uniqueImages = [...new Set(foundUrls)]
+                    .filter(
+                      (url) =>
+                        !url.includes("avatar") &&
+                        !url.includes("logo") &&
+                        !url.includes("icon") &&
+                        !url.includes("placeholder"),
+                    )
+                    .map((url) => ({ type: "image", src: url }));
+
+                  // We need a reasonable amount of images, not 100 script assets
+                  if (uniqueImages.length > 0 && uniqueImages.length < 50) {
+                    // Use these images if we found them
+                    log(
+                      `HTML Scraping success: found ${uniqueImages.length} images`,
+                    );
+                    // Create a fake 'b' object with just images
+                    b = {
+                      id: pid,
+                      images: uniqueImages,
+                      media: uniqueImages,
+                    };
+                  }
+                }
+              } catch (err) {
+                console.warn(`HTML Scraping failed for ${pid}`, err);
+              }
+            }
+
             if (b) {
               if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
               if (isEnriched(b.options)) targetProduct.options = b.options;
