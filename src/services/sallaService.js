@@ -319,8 +319,8 @@ class SallaService {
                 }
               }
             }
-          } catch (_e) {
-            console.debug("Description fetch failed for variant");
+          } catch (e) {
+            console.warn("[Storia] Detail fetch error for variant:", e.message);
           }
         }
 
@@ -373,8 +373,12 @@ class SallaService {
         // Handle if options/variants are objects or arrays, even if nested in .details
         const findRawItems = (product, keys) => {
           for (const key of keys) {
+            // Check top level, .details, AND .data (sometimes Salla wraps)
             let items =
-              product[key] || (product.details && product.details[key]);
+              product[key] ||
+              (product.details && product.details[key]) ||
+              (product.data && product.data[key]);
+
             if (items) {
               return typeof items === "object" && !Array.isArray(items)
                 ? Object.values(items)
@@ -458,7 +462,7 @@ class SallaService {
           regularPrice: targetProduct.regular_price?.amount || 0,
           currency: currency,
           category: categoryName,
-          sizes: sizes.length > 0 ? sizes : ["S", "M", "L", "XL"],
+          sizes: sizes, // CRITICAL: NO DEFAULT DUMMY SIZES
           sizeVariants: sizeVariants,
           description: description || "No description available",
           stock: targetProduct.quantity || 10,
