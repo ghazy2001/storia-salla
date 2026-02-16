@@ -12,13 +12,12 @@ import {
 } from "../../store/slices/uiSlice";
 import { selectCategories } from "../../store/slices/productSlice";
 import { SOCIAL_URLS, CONTACT_INFO } from "../../utils/constants";
-import { selectIsAdmin, toggleLoginModal } from "../../store/slices/adminSlice";
+import { toggleLoginModal } from "../../store/slices/adminSlice";
 
 const Footer = ({ theme }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const categories = useSelector(selectCategories);
-  const isAdmin = useSelector(selectIsAdmin);
   const [showAll, setShowAll] = useState(false);
   const [, setLogoClicks] = useState(0);
   const activeCategories = categories.filter((cat) => cat.isActive);
@@ -210,16 +209,7 @@ const Footer = ({ theme }) => {
         >
           <span>&copy; 2026 STORIA DESIGN. All Rights Reserved.</span>
         </span>
-        <div className="flex justify-center md:justify-end gap-4">
-          {isAdmin && (
-            <button
-              onClick={() => navigate("/admin-dashboard")}
-              className="hover:text-brand-gold transition-colors underline decoration-brand-light/10 underline-offset-4"
-            >
-              لوحة الإدارة
-            </button>
-          )}
-        </div>
+        <div className="flex justify-center md:justify-end gap-4"></div>
       </div>
     </footer>
   );

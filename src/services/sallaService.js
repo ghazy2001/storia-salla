@@ -410,7 +410,7 @@ class SallaService {
                           }
                         }, 1000);
                       }
-                    } catch (err) {
+                    } catch {
                       resolve(null);
                     }
                   }
@@ -459,7 +459,7 @@ class SallaService {
                           domImages.push(...images);
                         }
                       }
-                    } catch (err) {
+                    } catch {
                       /* ignore script read error */
                     }
                   }
@@ -480,7 +480,7 @@ class SallaService {
                         );
                         if (urls) domImages.push(...urls);
                       }
-                    } catch (err) {
+                    } catch {
                       /* ignore */
                     }
                   }
@@ -497,7 +497,7 @@ class SallaService {
                       );
                       if (urls) domImages.push(...urls);
                     }
-                  } catch (err) {
+                  } catch {
                     /* ignore */
                   }
                 });
@@ -522,7 +522,7 @@ class SallaService {
                     return found;
                   };
                   domImages.push(...checkGlobals());
-                } catch (err) {
+                } catch {
                   /* ignore */
                 }
 
