@@ -5,7 +5,7 @@ export const THEMES = {
 
 export const CONTACT_INFO = {
   EMAIL: "sastoria60@gmail.com",
-  WHATSAPP: "https://wa.me/966XXXXXXXX", // Placeholder updated if actual number provided
+  WHATSAPP: "https://wa.me/966509282460",
 };
 
 export const NAV_LINKS = [

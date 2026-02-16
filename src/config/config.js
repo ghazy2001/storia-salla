@@ -17,7 +17,7 @@ export const config = {
   isSallaEnv: IS_SALLA_ENV,
 
   // Business Configuration
-  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "966503610444",
+  whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "966509282460",
   shippingFee: 30,
 
   // Logging enabled for debugging image sync
