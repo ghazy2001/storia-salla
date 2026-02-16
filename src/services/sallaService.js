@@ -282,9 +282,7 @@ class SallaService {
         if (p.id) {
           try {
             const sm = window.salla || this.salla;
-            const sdkMethod =
-              (sm.product || sm.api?.product)?.getDetails ||
-              (sm.product || sm.api?.product)?.get;
+            const pid = Number(p.id);
 
             const isEnriched = (val) => {
               if (!val) return false;
@@ -293,44 +291,60 @@ class SallaService {
             };
 
             let b = null;
-            if (typeof sdkMethod === "function") {
-              // Try multiple call signatures for the SDK
-              let res = await sdkMethod(p.id).catch(() => null);
-              if (!res || (!res.data && !res.product && !res.id)) {
-                res = await sdkMethod({ id: p.id }).catch(() => null);
-              }
-
+            // SDK METHOD A: salla.api.fetch (Most reliable for details in Twilight)
+            if (sm.api?.fetch) {
+              const res = await sm.api
+                .fetch("product.details", { id: pid })
+                .catch(() => null);
               b = res?.data || res?.product || (res?.id ? res : null);
-              if (b) {
-                if (config.enableLogging)
-                  log(`SDK enrichment success for ${p.id}`, b);
+            }
 
-                // Additive Merge: Overwrite if SDK data is richer
-                if (isEnriched(b.options)) targetProduct.options = b.options;
-                if (isEnriched(b.variants)) targetProduct.variants = b.variants;
-                if (isEnriched(b.skus)) targetProduct.skus = b.skus;
-                if (isEnriched(b.images)) targetProduct.images = b.images;
-                if (getDesc(b)) description = getDesc(b);
+            // SDK METHOD B: salla.product.getDetails
+            if (!b) {
+              const sdkMethod =
+                (sm.product || sm.api?.product)?.getDetails ||
+                (sm.product || sm.api?.product)?.get;
+              if (typeof sdkMethod === "function") {
+                const res = await sdkMethod(pid).catch(() => null);
+                b = res?.data || res?.product || (res?.id ? res : null);
               }
             }
 
-            // Secondary Enrichment via REST (Always try if options still empty or desc missing)
+            if (b) {
+              if (config.enableLogging)
+                log(`SDK enrichment success for ${pid}`, b);
+              if (isEnriched(b.options)) targetProduct.options = b.options;
+              if (isEnriched(b.variants)) targetProduct.variants = b.variants;
+              if (isEnriched(b.skus)) targetProduct.skus = b.skus;
+              if (isEnriched(b.images)) targetProduct.images = b.images;
+              if (getDesc(b)) description = getDesc(b);
+            }
+
+            // Secondary Enrichment via REST (Fallback)
             if (
               !isEnriched(targetProduct.options) ||
               !description ||
               description.length < 5
             ) {
-              const u = `/api/v1/products/${p.id}`;
-              const r = await fetch(u).catch(() => null);
-              if (r && r.ok) {
-                const d = await r.json();
-                const rb = d?.data || d?.product || d;
-                if (rb) {
-                  if (isEnriched(rb.options))
-                    targetProduct.options = rb.options;
-                  if (isEnriched(rb.variants))
-                    targetProduct.variants = rb.variants;
-                  if (!description) description = getDesc(rb);
+              const paths = [
+                `/api/v1/products/${pid}`,
+                `/products/${pid}.json`,
+                p.url ? `${p.url}?format=json` : null,
+              ].filter(Boolean);
+
+              for (const u of paths) {
+                const r = await fetch(u).catch(() => null);
+                if (r && r.ok) {
+                  const d = await r.json();
+                  const rb = d?.data || d?.product || d;
+                  if (rb) {
+                    if (isEnriched(rb.options))
+                      targetProduct.options = rb.options;
+                    if (isEnriched(rb.variants))
+                      targetProduct.variants = rb.variants;
+                    if (!description) description = getDesc(rb);
+                    if (isEnriched(targetProduct.options)) break;
+                  }
                 }
               }
             }
@@ -573,38 +587,62 @@ class SallaService {
             productId,
           );
           try {
-            const u = `/api/v1/products/${productId}`;
-            const r = await fetch(u).catch(() => null);
-            if (r && r.ok) {
-              const d = await r.json();
-              const rb = d?.data || d?.product || d;
-              if (rb) {
-                // Temporary mapping for failsafe
-                const rawOptions =
-                  (rb.options &&
-                    (Array.isArray(rb.options)
-                      ? rb.options
-                      : Object.values(rb.options))) ||
-                  [];
-                const sizeOpt = rawOptions.find(
-                  (o) =>
-                    String(o.name).toLowerCase().includes("مقاس") ||
-                    String(o.name).toLowerCase().includes("size"),
-                );
-                if (sizeOpt && sizeOpt.values && sizeOpt.values.length > 0) {
-                  const first = sizeOpt.values[0];
-                  payload.options = { [sizeOpt.id]: first.id };
-                  console.log(
-                    "[Storia] JIT Failsafe Success (Options):",
-                    payload.options,
-                  );
-                } else if (rb.variants && rb.variants.length > 0) {
-                  payload.variant_id = rb.variants[0].id;
-                  console.log(
-                    "[Storia] JIT Failsafe Success (Variant):",
-                    payload.variant_id,
-                  );
+            const sm = window.salla || this.salla;
+            const pid = Number(productId);
+            let rb = null;
+
+            // SDK JIT
+            if (sm && sm.api?.fetch) {
+              const res = await sm.api
+                .fetch("product.details", { id: pid })
+                .catch(() => null);
+              rb = res?.data || res?.product || (res?.id ? res : null);
+            }
+
+            // REST JIT
+            if (!rb) {
+              const paths = [
+                `/api/v1/products/${pid}`,
+                `/products/${pid}.json`,
+              ].filter(Boolean);
+              for (const u of paths) {
+                const r = await fetch(u).catch(() => null);
+                if (r && r.ok) {
+                  const d = await r.json();
+                  rb = d?.data || d?.product || d;
+                  if (rb) break;
                 }
+              }
+            }
+
+            if (rb) {
+              // Temporary mapping for failsafe
+              const rawOptions =
+                (rb.options &&
+                  (Array.isArray(rb.options)
+                    ? rb.options
+                    : Object.values(rb.options))) ||
+                [];
+              const sizeOpt = rawOptions.find((o) => {
+                const n = String(o.name || o.label || "").toLowerCase();
+                return (
+                  n.includes("مقاس") || n.includes("size") || n.includes("قياس")
+                );
+              });
+
+              if (sizeOpt && sizeOpt.values && sizeOpt.values.length > 0) {
+                const first = sizeOpt.values[0];
+                payload.options = { [sizeOpt.id]: first.id };
+                console.log(
+                  "[Storia] JIT Failsafe Success (Options):",
+                  payload.options,
+                );
+              } else if (rb.variants && rb.variants.length > 0) {
+                payload.variant_id = rb.variants[0].id;
+                console.log(
+                  "[Storia] JIT Failsafe Success (Variant):",
+                  payload.variant_id,
+                );
               }
             }
           } catch (e) {
