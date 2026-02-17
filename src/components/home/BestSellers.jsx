@@ -178,7 +178,7 @@ const BestSellers = () => {
                             navigate(`/product/${featuredConfig.id}`);
                           }}
                           className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden transition-all duration-300 hover:w-32 w-10 shadow-lg z-10"
-                          title="عرض التفاصيل"
+                          title="more details"
                         >
                           <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover/btn:text-brand-gold transition-colors">
                             <ArrowRight size={20} className="-rotate-45" />
@@ -204,7 +204,7 @@ const BestSellers = () => {
                     {/* Use Synced Price from Redux if available, otherwise fallback to config */}
                     {(() => {
                       const syncedProduct = products.find(
-                        (p) => p.id === featuredConfig.id,
+                        (p) => String(p.id) === String(featuredConfig.id),
                       );
                       return syncedProduct
                         ? syncedProduct.price
@@ -212,8 +212,9 @@ const BestSellers = () => {
                     })()}
                     {/* The price string presumably includes currency or we append it if it's just a number */}
                     {!String(
-                      products.find((p) => p.id === featuredConfig.id)?.price ||
-                        featuredConfig.price,
+                      products.find(
+                        (p) => String(p.id) === String(featuredConfig.id),
+                      )?.price || featuredConfig.price,
                     ).includes("ر.س") && " ر.س"}
                   </div>
                 </div>
@@ -241,7 +242,7 @@ const BestSellers = () => {
       {/* Lightbox Modal */}
       <Lightbox
         isOpen={lightbox.isOpen}
-        image={lightbox.currentImage?.src}
+        image={resolveAsset(lightbox.currentImage?.src)}
         onClose={lightbox.close}
         onPrev={lightbox.prev}
         onNext={lightbox.next}
@@ -254,7 +255,7 @@ const BestSellers = () => {
         }
         price={(() => {
           const syncedProduct = products.find(
-            (p) => p.id === featuredConfig.id,
+            (p) => String(p.id) === String(featuredConfig.id),
           );
           return syncedProduct ? syncedProduct.price : featuredConfig.price;
         })()}
