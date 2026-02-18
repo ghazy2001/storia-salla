@@ -70,6 +70,8 @@ const Footer = ({ theme }) => {
     dispatch(showToast("تم الاشتراك في النشرة البريدية بنجاح"));
   };
 
+  const isAdmin = useSelector((state) => state.admin.isAdmin);
+
   const handleLogoClick = () => {
     // Cancel any existing reset timer
     if (logoClickTimer.current) {
@@ -77,11 +79,15 @@ const Footer = ({ theme }) => {
     }
 
     logoClickCount.current += 1;
-    setLogoClicks(logoClickCount.current); // trigger re-render if needed
+    setLogoClicks(logoClickCount.current);
 
     if (logoClickCount.current >= 5) {
-      dispatch(toggleLoginModal());
       logoClickCount.current = 0;
+      if (isAdmin) {
+        navigate("/admin-dashboard");
+      } else {
+        dispatch(toggleLoginModal());
+      }
       return;
     }
 
