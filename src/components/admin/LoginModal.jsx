@@ -20,18 +20,27 @@ const LoginModal = () => {
   const isAdmin = useSelector((state) => state.admin.isAdmin);
   const [email, setEmail] = useState("");
 
-  // Move hooks to top level, before any early returns
+  // Navigate to dashboard if already admin (e.g. page reload)
   React.useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && showLoginModal) {
+      dispatch(setShowLoginModal(false));
       navigate("/admin-dashboard");
     }
-  }, [isAdmin, navigate]);
+  }, [isAdmin, showLoginModal, navigate, dispatch]);
 
   if (!showLoginModal) return null;
 
+  const ADMIN_EMAIL = "sastoria60@gmail.com";
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(login({ email }));
+    if (email === ADMIN_EMAIL) {
+      dispatch(login({ email }));
+      dispatch(setShowLoginModal(false));
+      navigate("/admin-dashboard");
+    } else {
+      dispatch(login({ email }));
+    }
   };
 
   // Clear errors when closing
@@ -71,8 +80,10 @@ const LoginModal = () => {
               onChange={(e) => {
                 const val = e.target.value;
                 setEmail(val);
-                if (val === "sastoria60@gmail.com") {
+                if (val === ADMIN_EMAIL) {
                   dispatch(login({ email: val }));
+                  dispatch(setShowLoginModal(false));
+                  navigate("/admin-dashboard");
                 }
               }}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-gold focus:border-transparent outline-none transition-all text-left text-gray-900 bg-white"

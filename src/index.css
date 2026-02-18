@@ -181,3 +181,22 @@ select,
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Arrow button pill expand on hover */
+.btn-pill-expand {
+  width: 2.5rem;
+  transition: width 0.3s ease-in-out;
+}
+
+.btn-pill-expand:hover {
+  width: 9rem;
+}
+
+.btn-pill-expand .btn-pill-label {
+  opacity: 0;
+  transition: opacity 0.2s ease 0.1s;
+}
+
+.btn-pill-expand:hover .btn-pill-label {
+  opacity: 1;
+}
