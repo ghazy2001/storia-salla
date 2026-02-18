@@ -177,12 +177,22 @@ const BestSellers = () => {
                             e.stopPropagation();
                             navigate(`/product/${featuredConfig.id}`);
                           }}
-                          className="group/btn absolute bottom-4 left-4 h-10 w-10 hover:w-36 bg-white text-black rounded-full flex items-center overflow-hidden transition-[width] duration-300 ease-in-out shadow-lg z-10"
+                          className="group/btn absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden shadow-lg z-10"
+                          style={{
+                            width: "2.5rem",
+                            transition: "width 0.35s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.width = "8.5rem";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.width = "2.5rem";
+                          }}
                         >
                           <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 group-hover/btn:text-brand-gold transition-colors">
                             <ArrowRight size={18} className="-rotate-45" />
                           </div>
-                          <span className="whitespace-nowrap text-xs font-semibold opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200 delay-100 pr-3">
+                          <span className="whitespace-nowrap text-xs font-semibold pr-3 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200">
                             more details
                           </span>
                         </button>

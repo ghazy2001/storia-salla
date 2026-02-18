@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Plus,
   Star,
+  Home,
 } from "lucide-react";
 import {
   setAdminActiveTab,
@@ -282,6 +283,13 @@ const AdminDashboard = () => {
             لوحة التحكم
           </h1>
           <div className="flex gap-3">
+            <button
+              onClick={() => navigate("/")}
+              className="text-gray-600 hover:text-gray-900 font-medium px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors flex items-center gap-2"
+            >
+              <Home size={16} />
+              <span>الموقع</span>
+            </button>
             <button
               onClick={handleLogout}
               className="text-red-500 hover:text-red-700 font-medium px-4 py-2 border border-red-500 rounded hover:bg-red-50 transition-colors"
