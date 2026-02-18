@@ -22,10 +22,10 @@ const LoginModal = () => {
 
   // Move hooks to top level, before any early returns
   React.useEffect(() => {
-    if (isAdmin && showLoginModal) {
+    if (isAdmin) {
       navigate("/admin-dashboard");
     }
-  }, [isAdmin, navigate, showLoginModal]);
+  }, [isAdmin, navigate]);
 
   if (!showLoginModal) return null;
 
