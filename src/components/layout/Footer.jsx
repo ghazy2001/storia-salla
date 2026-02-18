@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { resolveAsset } from "../../utils/assetUtils";
 import { Instagram, Facebook, Mail } from "lucide-react";
 import { getThemeValue } from "../../utils/themeUtils";
@@ -20,6 +20,8 @@ const Footer = ({ theme }) => {
   const categories = useSelector(selectCategories);
   const [showAll, setShowAll] = useState(false);
   const [, setLogoClicks] = useState(0);
+  const logoClickCount = useRef(0);
+  const logoClickTimer = useRef(null);
   const activeCategories = categories.filter((cat) => cat.isActive);
 
   const handleNavigate = (category) => {
@@ -69,17 +71,25 @@ const Footer = ({ theme }) => {
   };
 
   const handleLogoClick = () => {
-    setLogoClicks((prev) => {
-      const newVal = prev + 1;
-      if (newVal >= 5) {
-        dispatch(toggleLoginModal());
-        return 0; // Reset
-      }
-      return newVal;
-    });
+    // Cancel any existing reset timer
+    if (logoClickTimer.current) {
+      clearTimeout(logoClickTimer.current);
+    }
 
-    // Reset clicks after 2 seconds of inactivity
-    setTimeout(() => setLogoClicks(0), 2000);
+    logoClickCount.current += 1;
+    setLogoClicks(logoClickCount.current); // trigger re-render if needed
+
+    if (logoClickCount.current >= 5) {
+      dispatch(toggleLoginModal());
+      logoClickCount.current = 0;
+      return;
+    }
+
+    // Reset after 3 seconds of inactivity
+    logoClickTimer.current = setTimeout(() => {
+      logoClickCount.current = 0;
+      setLogoClicks(0);
+    }, 3000);
   };
 
   return (
