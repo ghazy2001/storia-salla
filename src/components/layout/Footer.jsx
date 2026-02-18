@@ -7,7 +7,6 @@ import { useNavigate } from "react-router-dom";
 import {
   setSelectedCategory,
   setContactFormOpen,
-  setTrackOrderOpen,
   showToast,
 } from "../../store/slices/uiSlice";
 import { selectCategories } from "../../store/slices/productSlice";
@@ -183,12 +182,7 @@ const Footer = ({ theme }) => {
             >
               دليل المقاسات
             </li>
-            <li
-              onClick={() => dispatch(setTrackOrderOpen(true))}
-              className="hover:text-brand-gold transition-colors cursor-pointer"
-            >
-              تتبع الطلب
-            </li>
+
             <li
               onClick={() => dispatch(setContactFormOpen(true))}
               className="hover:text-brand-gold transition-colors cursor-pointer"
