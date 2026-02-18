@@ -171,22 +171,18 @@ const BestSellers = () => {
                           alt={`${featuredConfig.name} - View ${index + 1}`}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/product/${featuredConfig.id}`);
-                          }}
-                          className="btn-pill-expand absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden shadow-lg z-10"
-                        >
-                          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                            <ArrowRight size={18} className="-rotate-45" />
-                          </div>
-                          <span className="btn-pill-label whitespace-nowrap text-xs font-semibold pr-3">
-                            more details
-                          </span>
-                        </button>
                       </div>
+
+                      {/* Navigate to product button */}
+                      <button
+                        onClick={() =>
+                          navigate(`/product/${featuredConfig.id}`)
+                        }
+                        className="absolute bottom-8 left-6 h-10 w-10 bg-white text-black rounded-full flex items-center justify-center shadow-lg z-10 hover:bg-brand-gold hover:text-white transition-all duration-300 hover:scale-110"
+                        title="more details"
+                      >
+                        <ArrowRight size={18} className="-rotate-45" />
+                      </button>
                     </div>
                   </div>
                 ))}
