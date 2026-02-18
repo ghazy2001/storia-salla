@@ -26,20 +26,11 @@ import {
   updateBestSellersAction,
   deleteBestSellers as deleteBestSellersAction,
 } from "../../store/slices/contentSlice";
-import {
-  ExternalLink,
-  Package,
-  MessageSquare,
-  HelpCircle,
-  Plus,
-  Star,
-  Home,
-} from "lucide-react";
+import { Package, MessageSquare, HelpCircle, Plus, Star } from "lucide-react";
 import {
   setAdminActiveTab,
   selectAdminActiveTab,
 } from "../../store/slices/uiSlice";
-import sallaService from "../../services/sallaService";
 
 // Components
 import ProductsTab from "./dashboard/ProductsTab";
@@ -284,27 +275,11 @@ const AdminDashboard = () => {
           </h1>
           <div className="flex gap-3">
             <button
-              onClick={() => navigate("/")}
-              className="text-gray-600 hover:text-gray-900 font-medium px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition-colors flex items-center gap-2"
-            >
-              <Home size={16} />
-              <span>الموقع</span>
-            </button>
-            <button
               onClick={handleLogout}
               className="text-red-500 hover:text-red-700 font-medium px-4 py-2 border border-red-500 rounded hover:bg-red-50 transition-colors"
             >
               تسجيل خروج
             </button>
-            <a
-              href={sallaService.getDashboardUrl()}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-blue-600 text-white hover:bg-blue-700 font-medium px-4 py-2 rounded transition-colors flex items-center gap-2 shadow-sm"
-            >
-              <ExternalLink size={18} />
-              <span>لوحة تحكم سلة</span>
-            </a>
           </div>
         </div>
 
