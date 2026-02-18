@@ -178,10 +178,15 @@ const BestSellers = () => {
                         onClick={() =>
                           navigate(`/product/${featuredConfig.id}`)
                         }
-                        className="absolute bottom-8 left-6 h-10 w-10 bg-white text-black rounded-full flex items-center justify-center shadow-lg z-10 hover:bg-brand-gold hover:text-white transition-all duration-300 hover:scale-110"
-                        title="more details"
+                        className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white text-black rounded-full flex items-center gap-2 px-4 py-2 shadow-lg z-10 hover:shadow-xl hover:scale-105 transition-all duration-300"
                       >
-                        <ArrowRight size={18} className="-rotate-45" />
+                        <span className="text-sm font-semibold whitespace-nowrap">
+                          التفاصيل
+                        </span>
+                        <ArrowRight
+                          size={18}
+                          className="-rotate-45 text-brand-gold"
+                        />
                       </button>
                     </div>
                   </div>
