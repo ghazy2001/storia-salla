@@ -155,7 +155,7 @@ const BestSellers = () => {
                 {carouselImages.map((mediaItem, index) => (
                   <div
                     key={index}
-                    className="min-w-[280px] md:min-w-[320px] snap-start group relative"
+                    className="min-w-[280px] md:min-w-[320px] snap-start group/card relative"
                   >
                     {/* Card Container */}
                     <div
@@ -169,25 +169,26 @@ const BestSellers = () => {
                         <img
                           src={resolveAsset(mediaItem.src)}
                           alt={`${featuredConfig.name} - View ${index + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                         />
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/product/${featuredConfig.id}`);
-                          }}
-                          className="btn-pill-expand absolute bottom-4 left-4 h-10 bg-white text-black rounded-full flex items-center overflow-hidden shadow-lg z-10"
-                        >
-                          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                            <ArrowRight size={18} className="-rotate-45" />
-                          </div>
-                          <span className="btn-pill-label whitespace-nowrap text-xs font-semibold pr-3">
-                            more details
-                          </span>
-                        </button>
                       </div>
                     </div>
+
+                    {/* Arrow pill button - outside overflow-hidden so it can expand */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/product/${featuredConfig.id}`);
+                      }}
+                      className="btn-pill-expand absolute bottom-6 left-6 h-10 bg-white text-black rounded-full flex items-center shadow-lg z-10 cursor-pointer"
+                    >
+                      <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                        <ArrowRight size={18} className="-rotate-45" />
+                      </div>
+                      <span className="btn-pill-label whitespace-nowrap text-xs font-semibold pr-4">
+                        التفاصيل
+                      </span>
+                    </button>
                   </div>
                 ))}
               </div>

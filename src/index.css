@@ -185,11 +185,12 @@ select,
 /* Arrow button pill expand on hover */
 .btn-pill-expand {
   width: 2.5rem;
-  transition: width 0.3s ease-in-out;
+  overflow: hidden;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-pill-expand:hover {
-  width: 9rem;
+  width: 8.5rem;
 }
 
 .btn-pill-expand .btn-pill-label {
