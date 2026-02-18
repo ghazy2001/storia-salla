@@ -92,6 +92,13 @@ const BestSellers = () => {
 
   if (loading || !featuredConfig) return null;
 
+  // Resolve local product ID — API may return MongoDB _id as id
+  const matchedProduct =
+    products.find((p) => String(p.id) === String(featuredConfig.id)) ||
+    products.find((p) => p.category === featuredConfig.category) ||
+    products[0];
+  const localProductId = matchedProduct?.id || featuredConfig.id;
+
   const sectionBgClass = getThemeValue(theme, "bg-white", "bg-brand-burgundy");
   const textColorClass = getTextClass(theme);
 
@@ -178,11 +185,11 @@ const BestSellers = () => {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/product/${featuredConfig.id}`);
+                        navigate(`/product/${localProductId}`);
                       }}
                       className="btn-pill-expand absolute bottom-6 left-6 h-10 bg-white text-black rounded-full flex items-center shadow-lg z-10 cursor-pointer"
                     >
-                      <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                      <div className="btn-pill-icon w-10 h-10 flex items-center justify-center flex-shrink-0 transition-colors duration-300">
                         <ArrowRight size={18} className="-rotate-45" />
                       </div>
                       <span className="btn-pill-label whitespace-nowrap text-xs font-semibold pr-4">
