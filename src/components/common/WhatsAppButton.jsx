@@ -25,7 +25,7 @@ const WhatsAppButton = () => {
       aria-label="Chat on WhatsApp"
     >
       {/* Label - Slides out on hover (RTL text) */}
-      <span className="absolute left-full ml-4 bg-white text-brand-charcoal px-4 py-2 rounded-lg shadow-xl font-medium text-sm whitespace-nowrap opacity-0 -translate-x-8 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pointer-events-none hidden md:block border border-brand-charcoal/5 font-sans">
+      <span className="absolute left-full ml-4 bg-brand-charcoal text-white px-4 py-2 rounded-lg shadow-xl font-medium text-sm whitespace-nowrap opacity-0 -translate-x-8 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300 pointer-events-none hidden md:block border border-white/10 font-sans">
         تواصل معنا
       </span>
 
