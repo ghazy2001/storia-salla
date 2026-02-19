@@ -600,7 +600,7 @@ class SallaService {
                   if (config.enableLogging)
                     log(`AJAX enrichment success for ${pid}`, b);
                 }
-              } catch (err) {
+              } catch {
                 // Silece 400/410 errors as they are expected for invalid IDs
                 // log(`AJAX enrichment failed for ${pid}`, err);
               }

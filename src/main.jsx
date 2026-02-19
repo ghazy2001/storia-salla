@@ -5,6 +5,21 @@ import App from "./App.jsx";
 
 // Removed console.log for production build
 
+// Filter out known external warnings
+const originalWarn = console.warn;
+console.warn = (...args) => {
+  const msg = args.join(" ");
+  if (
+    msg &&
+    (msg.includes("Swiper Loop Warning") ||
+      msg.includes("preload") ||
+      msg.includes("credentials mode does not match"))
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
+
 const path = window.location.pathname.toLowerCase();
 const isSallaPage =
   path.includes("/payment") ||
