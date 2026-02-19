@@ -24,18 +24,51 @@ const ProductInfo = ({
       <h1 className="text-4xl md:text-5xl font-sans font-black mb-4 text-brand-charcoal w-full">
         {product.name}
       </h1>
-      <p className="text-2xl font-bold tracking-widest text-brand-gold mb-8 font-sans w-full">
+      <div className="mb-8 font-sans w-full">
         {(() => {
+          let currentPrice = product.price;
+          let currentSalePrice = product.salePrice; // Default to product level
+          let isOnSale = product.isOnSale;
+
           if (selectedSize && product.sizeVariants?.length > 0) {
             const variant = product.sizeVariants.find(
               (v) => v.size === selectedSize,
             );
-            if (variant) return variant.price;
+            if (variant) {
+              currentPrice = variant.price;
+              currentSalePrice = variant.salePrice;
+              isOnSale = variant.isOnSale;
+            }
           }
-          return product.price;
-        })()}{" "}
-        ر.س
-      </p>
+
+          // Safe format
+          const format = (p) => {
+            if (typeof p === "string") return p;
+            return `${p} ر.س`;
+          };
+
+          if (isOnSale) {
+            return (
+              <div className="flex items-center gap-4">
+                <span className="text-2xl font-bold tracking-widest text-brand-gold">
+                  {format(currentSalePrice)}
+                </span>
+                <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
+                  {format(currentPrice)}
+                </span>
+              </div>
+            );
+          }
+
+          return (
+            <p className="text-2xl font-bold tracking-widest text-brand-gold">
+              {typeof currentPrice === "string"
+                ? currentPrice
+                : format(currentPrice)}
+            </p>
+          );
+        })()}
+      </div>
 
       <div className="w-20 h-[1px] bg-brand-charcoal/20 mb-8 ml-auto lg:ml-auto"></div>
 
@@ -50,19 +83,34 @@ const ProductInfo = ({
             اختر المقاس
           </label>
           <div className="flex gap-3 flex-wrap">
-            {product.sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`px-6 py-3 border-2 rounded-lg font-medium transition-all ${
-                  selectedSize === size
-                    ? "border-brand-gold bg-brand-gold text-white"
-                    : "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
+            {product.sizes.map((size) => {
+              const variant = product.sizeVariants?.find(
+                (v) => v.size === size,
+              );
+              const isOutOfStock = variant?.isOutOfStock;
+
+              return (
+                <button
+                  key={size}
+                  onClick={() => !isOutOfStock && setSelectedSize(size)}
+                  disabled={isOutOfStock}
+                  className={`px-6 py-3 border-2 rounded-lg font-medium transition-all relative ${
+                    isOutOfStock
+                      ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
+                      : selectedSize === size
+                        ? "border-brand-gold bg-brand-gold text-white"
+                        : "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
+                  }`}
+                >
+                  {size}
+                  {isOutOfStock && (
+                    <span className="absolute -top-2 -left-2 bg-gray-100 text-gray-400 text-[10px] px-1 rounded border border-gray-200">
+                      نفذت
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
@@ -70,13 +118,32 @@ const ProductInfo = ({
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
         <button
           onClick={handleAddToCart}
-          className={`w-full py-5 rounded-full uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-lg ${
+          disabled={(() => {
+            if (selectedSize) {
+              const variant = product.sizeVariants?.find(
+                (v) => v.size === selectedSize,
+              );
+              return variant?.isOutOfStock;
+            }
+            return product.isOutOfStock;
+          })()}
+          className={`w-full py-5 rounded-full uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${
             theme === "green"
-              ? "bg-brand-charcoal text-white hover:bg-brand-gold"
-              : "bg-brand-gold text-brand-burgundy hover:bg-brand-burgundy hover:text-brand-gold"
+              ? "bg-brand-charcoal text-white hover:bg-brand-gold disabled:bg-gray-400"
+              : "bg-brand-gold text-brand-burgundy hover:bg-brand-burgundy hover:text-brand-gold disabled:bg-gray-400 disabled:text-gray-200"
           }`}
         >
-          إضافة للسلة
+          {(() => {
+            if (selectedSize) {
+              const variant = product.sizeVariants?.find(
+                (v) => v.size === selectedSize,
+              );
+              if (variant?.isOutOfStock) return "نفذت الكمية";
+            } else if (product.isOutOfStock) {
+              return "نفذت الكمية";
+            }
+            return "إضافة للسلة";
+          })()}
         </button>
       </div>
 

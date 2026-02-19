@@ -28,13 +28,18 @@ const ProductDetails = () => {
   );
 
   // Reset selected size when product changes or sizes are enriched
+  // Reset selected size when product changes
   useEffect(() => {
     if (product?.sizes && product.sizes.length > 0) {
-      setSelectedSize(product.sizes[0]);
-    } else {
+      // Only update if different to avoid loops
+      if (selectedSize !== product.sizes[0]) {
+        setSelectedSize(product.sizes[0]);
+      }
+    } else if (selectedSize !== "") {
       setSelectedSize("");
     }
-  }, [product?.id, product?.sizes?.length]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id, product?.sizes]);
 
   const { addToCart: addToCartWithSync } = useAddToCart();
 
@@ -75,6 +80,18 @@ const ProductDetails = () => {
   const handleAddToCart = async () => {
     if (!selectedSize && product.sizes && product.sizes.length > 0) {
       alert("الرجاء اختيار المقاس");
+      return;
+    }
+
+    // Check Stock
+    if (selectedSize && product.sizeVariants?.length > 0) {
+      const variant = product.sizeVariants.find((v) => v.size === selectedSize);
+      if (variant && variant.isOutOfStock) {
+        alert("عذراً، هذا المقاس نفذت كميته");
+        return;
+      }
+    } else if (product.isOutOfStock) {
+      alert("عذراً، هذا المنتج نفذت كميته");
       return;
     }
 

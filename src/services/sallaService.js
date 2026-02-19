@@ -608,9 +608,12 @@ class SallaService {
           }
         }
 
-        // 3. Map Price
+        // 3. Map Price & Sale Info
         let amount = 0;
         let currency = "SAR";
+        let regularPrice = 0;
+        let salePrice = null;
+        let isOnSale = false;
 
         if (targetProduct.price) {
           if (typeof targetProduct.price === "object") {
@@ -620,12 +623,41 @@ class SallaService {
             amount = targetProduct.price;
           }
         }
+        regularPrice = amount;
 
-        // Format price string
-        let priceStr = `${amount} ${currency}`;
-        if (currency === "SAR" || currency === "RS" || currency === "ر.س") {
-          priceStr = `${amount} ر.س`;
+        // Check for sale price / promotion
+        if (targetProduct.sale_price) {
+          let saleAmount =
+            typeof targetProduct.sale_price === "object"
+              ? targetProduct.sale_price.amount
+              : targetProduct.sale_price;
+
+          if (saleAmount && saleAmount < regularPrice) {
+            salePrice = saleAmount;
+            isOnSale = true;
+          }
+        } else if (targetProduct.promotion && targetProduct.promotion.price) {
+          let promoAmount =
+            typeof targetProduct.promotion.price === "object"
+              ? targetProduct.promotion.price.amount
+              : targetProduct.promotion.price;
+
+          if (promoAmount && promoAmount < regularPrice) {
+            salePrice = promoAmount;
+            isOnSale = true;
+          }
         }
+
+        // Format helper
+        const formatPrice = (p) => {
+          if (!p) return "";
+          return currency === "SAR" || currency === "RS" || currency === "ر.س"
+            ? `${p} ر.س`
+            : `${p} ${currency}`;
+        };
+
+        const priceStr = formatPrice(isOnSale ? salePrice : regularPrice);
+        const regularPriceStr = formatPrice(regularPrice);
 
         // 4. Map Images (Enhanced with Multiple Fallbacks)
         log(`[Storia] Mapping images for product ${targetProduct.id}:`, {
@@ -768,27 +800,45 @@ class SallaService {
               ? sizeOption.data
               : []);
           sizes = vals.map((v) => translate(v.name || v.label).trim());
-          sizeVariants = vals.map((v) => ({
-            size: translate(v.name || v.label).trim(),
-            price: v.price ? v.price.amount : amount,
-            stock: v.quantity !== undefined ? v.quantity : 10,
-            optionId: sizeOption.id,
-            valueId: v.id,
-            sallaVariantId: v.id,
-          }));
+          sizeVariants = vals.map((v) => {
+            const vPrice = v.price ? v.price.amount || v.price : amount;
+            const vSalePrice = v.sale_price
+              ? v.sale_price.amount || v.sale_price
+              : null;
+            const vIsOnSale = vSalePrice && vSalePrice < vPrice;
+
+            return {
+              size: translate(v.name || v.label).trim(),
+              price: vPrice,
+              salePrice: vSalePrice,
+              isOnSale: vIsOnSale,
+              stock: v.quantity !== undefined ? Number(v.quantity) : 0, // Default to 0 if undefined to be safe, or 10 if we want to be optimistic. Let's trust API.
+              isOutOfStock: v.quantity !== undefined && Number(v.quantity) <= 0,
+              optionId: sizeOption.id,
+              valueId: v.id,
+              sallaVariantId: v.id,
+            };
+          });
         } else if (rawVariants && rawVariants.length > 0) {
           // Fallback to SKU variants
-          sizeVariants = rawVariants.map((v) => ({
-            size: translate(v.name || v.label || v.sku || "").trim(),
-            price: v.price
-              ? typeof v.price === "object"
-                ? v.price.amount
-                : v.price
-              : amount,
-            stock: v.quantity !== undefined ? v.quantity : 10,
-            variantId: v.id,
-            sallaVariantId: v.id,
-          }));
+          sizeVariants = rawVariants.map((v) => {
+            const vPrice = v.price ? v.price.amount || v.price : amount;
+            const vSalePrice = v.sale_price
+              ? v.sale_price.amount || v.sale_price
+              : null;
+            const vIsOnSale = vSalePrice && vSalePrice < vPrice;
+
+            return {
+              size: translate(v.name || v.label || v.sku || "").trim(),
+              price: vPrice,
+              salePrice: vSalePrice,
+              isOnSale: vIsOnSale,
+              stock: v.quantity !== undefined ? Number(v.quantity) : 0,
+              isOutOfStock: v.quantity !== undefined && Number(v.quantity) <= 0,
+              variantId: v.id,
+              sallaVariantId: v.id,
+            };
+          });
           sizes = sizeVariants.map((v) => v.size).filter((s) => s);
         }
 
@@ -806,14 +856,26 @@ class SallaService {
           name: translate(targetProduct.name),
           image: mainImage || "/assets/logo.png",
           media: media,
-          price: amount,
-          priceStr: priceStr,
-          regularPrice: targetProduct.regular_price?.amount || 0,
+          price: priceStr,
+          regularPrice: regularPriceStr,
+          salePrice: isOnSale ? formatPrice(salePrice) : null,
+          rawPrice: amount,
+          rawRegularPrice: regularPrice,
+          rawSalePrice: salePrice,
+          isOnSale: isOnSale,
           currency: currency,
           category: categoryName,
           sizes: sizes, // CRITICAL: NO DEFAULT DUMMY SIZES
           sizeVariants: sizeVariants,
           description: description || "No description available",
+          sku: targetProduct.sku,
+          quantity:
+            targetProduct.quantity !== undefined
+              ? Number(targetProduct.quantity)
+              : 10,
+          isOutOfStock:
+            targetProduct.quantity !== undefined &&
+            Number(targetProduct.quantity) <= 0,
           stock: targetProduct.quantity || 10,
           isNew: targetProduct.is_new || false,
           isPromoted: !!targetProduct.promotion,

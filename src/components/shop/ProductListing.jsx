@@ -184,10 +184,25 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                     >
                       {product.name}
                     </h4>
-                    <p className="text-lg font-bold text-brand-gold mb-2">
-                      {product.price}{" "}
-                      {!String(product.price).includes("ر.س") && "ر.س"}
-                    </p>
+                    <div className="flex flex-col items-end">
+                      {product.isOnSale ? (
+                        <div className="flex items-center gap-2 mb-2 justify-end">
+                          <span className="text-sm text-gray-400 line-through decoration-gray-400/50">
+                            {product.regularPrice || product.price}
+                          </span>
+                          <span className="text-lg font-bold text-brand-gold">
+                            {product.salePrice}
+                          </span>
+                        </div>
+                      ) : (
+                        <p className="text-lg font-bold text-brand-gold mb-2">
+                          {product.regularPrice || product.price}{" "}
+                          {!String(product.price).includes("ر.س") &&
+                            !String(product.regularPrice).includes("ر.س") &&
+                            "ر.س"}
+                        </p>
+                      )}
+                    </div>
                     <p
                       className={`text-sm font-light leading-relaxed line-clamp-2 pl-4 ${
                         theme === "green"
