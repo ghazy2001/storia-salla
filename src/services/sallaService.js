@@ -615,37 +615,56 @@ class SallaService {
         let salePrice = null;
         let isOnSale = false;
 
-        if (targetProduct.price) {
-          if (typeof targetProduct.price === "object") {
-            amount = targetProduct.price.amount || 0;
-            currency = targetProduct.price.currency || "SAR";
-          } else {
-            amount = targetProduct.price;
+        // Helper to extract numeric value from potentially complex object
+        const getVal = (val) => {
+          if (!val && val !== 0) return 0;
+          if (typeof val === "object") return val.amount || 0;
+          return val;
+        };
+
+        amount = getVal(targetProduct.price);
+        regularPrice = amount; // Default assumption
+
+        // Case A: Salla returns `regular_price` separately (Common in some endpoints)
+        if (targetProduct.regular_price) {
+          const rawRegular = getVal(targetProduct.regular_price);
+          if (rawRegular > amount) {
+            regularPrice = rawRegular;
+            salePrice = amount;
+            isOnSale = true;
           }
         }
-        regularPrice = amount;
 
-        // Check for sale price / promotion
-        if (targetProduct.sale_price) {
-          let saleAmount =
-            typeof targetProduct.sale_price === "object"
-              ? targetProduct.sale_price.amount
-              : targetProduct.sale_price;
-
-          if (saleAmount && saleAmount < regularPrice) {
-            salePrice = saleAmount;
+        // Case B: `sale_price` field is explicit (Overrides if present and valid)
+        if (!isOnSale && targetProduct.sale_price) {
+          const rawSale = getVal(targetProduct.sale_price);
+          if (rawSale > 0 && rawSale < regularPrice) {
+            salePrice = rawSale;
             isOnSale = true;
           }
-        } else if (targetProduct.promotion && targetProduct.promotion.price) {
-          let promoAmount =
-            typeof targetProduct.promotion.price === "object"
-              ? targetProduct.promotion.price.amount
-              : targetProduct.promotion.price;
+        }
 
-          if (promoAmount && promoAmount < regularPrice) {
-            salePrice = promoAmount;
+        // Case C: Promotion object
+        if (
+          !isOnSale &&
+          targetProduct.promotion &&
+          targetProduct.promotion.price
+        ) {
+          const rawPromo = getVal(targetProduct.promotion.price);
+          if (rawPromo > 0 && rawPromo < regularPrice) {
+            salePrice = rawPromo;
             isOnSale = true;
           }
+        }
+
+        // Case D: Ensure currency is set correctly from any available source
+        if (
+          typeof targetProduct.price === "object" &&
+          targetProduct.price.currency
+        ) {
+          currency = targetProduct.price.currency;
+        } else if (targetProduct.currency) {
+          currency = targetProduct.currency;
         }
 
         // Format helper

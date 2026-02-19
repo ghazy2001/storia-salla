@@ -43,11 +43,12 @@ const ProductInfo = ({
 
           // Safe format
           const format = (p) => {
+            if (p === null || p === undefined) return "";
             if (typeof p === "string") return p;
             return `${p} ر.س`;
           };
 
-          if (isOnSale) {
+          if (isOnSale && currentSalePrice) {
             return (
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-bold tracking-widest text-brand-gold">
@@ -69,6 +70,16 @@ const ProductInfo = ({
           );
         })()}
       </div>
+
+      {/* DEBUG: Temporarily hidden - remove in production */}
+      {/* <div className="text-xs text-left bg-gray-100 p-2 mb-4 dir-ltr font-mono h-24 overflow-auto">
+         DEBUG:
+         Price: {JSON.stringify(product.price)}
+         Sale: {JSON.stringify(product.salePrice)}
+         Reg: {JSON.stringify(product.regularPrice)}
+         OnSale: {JSON.stringify(product.isOnSale)}
+         Var: {JSON.stringify(product.sizeVariants)}
+      </div> */}
 
       <div className="w-20 h-[1px] bg-brand-charcoal/20 mb-8 ml-auto lg:ml-auto"></div>
 
