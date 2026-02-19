@@ -155,13 +155,12 @@ const productSlice = createSlice({
                 options: remoteP.options || localP.options,
                 variants: remoteP.variants || localP.variants,
                 skus: remoteP.skus || localP.skus,
-                // UI data: Keep local names/media unless we explicitly want Salla's
+                // UI data from Salla (name, description) with local fallback
+                name: remoteP.name || localP.name,
+                description: remoteP.description || localP.description,
+                // Keep local media/images (hosted locally, not on Salla CDN)
                 media: localP.media,
                 image: localP.image,
-                description:
-                  localP.description && localP.description.length > 10
-                    ? localP.description
-                    : remoteP.description,
               };
             }
             return localP;
