@@ -37,5 +37,5 @@ if (!isSallaPage) {
   // The Preloader component in React will handle removing the native loader
   // once the app is fully mounted and ready to display.
 } else {
-  console.log("💰 Salla Native Page Detected - React App Halted.");
+  // Salla Native Page Detected - React App Halted.
 }

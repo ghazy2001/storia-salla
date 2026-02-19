@@ -16,7 +16,7 @@ class SallaService {
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK detected on init");
     } else if (config.useSallaBackend) {
-      console.warn(
+      log(
         "[Storia] Salla backend requested but SDK not available yet",
       );
     }
@@ -244,10 +244,10 @@ class SallaService {
                 (first.url || first.src || first.image));
 
             if (isImage) {
-              console.log(
+              log(
                 `📸 FOUND IMAGES at [${path}]: found ${obj.length} items`,
               );
-              console.log("   Sample:", first);
+              log("   Sample:", first);
             }
           }
 
@@ -263,12 +263,12 @@ class SallaService {
         // LOG: Full Raw Product Object to inspect hidden image fields
         if (p.id == 1252773325) {
           // Log only for the specific product to reduce noise
-          console.log(
+          log(
             `🔥 [Storia] Starting Deep Scan for images in product ${p.id}...`,
           );
           deepScanForImages(p);
-          console.log(`🔥 [Storia] Deep Scan Complete.`);
-          console.log(`🔥 [Storia] RAW SALLA PRODUCT (${p.id}):`, p);
+          log(`🔥 [Storia] Deep Scan Complete.`);
+          log(`🔥 [Storia] RAW SALLA PRODUCT (${p.id}):`, p);
         }
 
         // 1. Get fundamental details
@@ -347,7 +347,7 @@ class SallaService {
                   log(`AJAX enrichment success for ${pid}`, b);
               }
             } catch (err) {
-              console.warn(`AJAX enrichment failed for ${pid}`, err);
+              log(`AJAX enrichment failed for ${pid}`, err);
             }
 
             // METHOD 2: Robust SDK Call (Wrapped in onReady)
@@ -365,7 +365,7 @@ class SallaService {
                       .getDetails(pidStr)
                       .then((res) => resolve(res.data || res))
                       .catch((err) => {
-                        console.warn("SDK getDetails failed:", err);
+                        log("SDK getDetails failed:", err);
                         resolve(null);
                       });
                   } else {
@@ -383,7 +383,7 @@ class SallaService {
                               .getDetails(pidStr)
                               .then((res) => resolve(res.data || res))
                               .catch((err) => {
-                                console.warn(
+                                log(
                                   "SDK getDetails failed in onReady:",
                                   err,
                                 );
@@ -418,7 +418,7 @@ class SallaService {
                   setTimeout(() => resolve(null), 3500);
                 });
               } catch (e) {
-                console.warn("SDK Promise Wrapper failed", e);
+                log("SDK Promise Wrapper failed", e);
               }
             }
 
@@ -605,7 +605,7 @@ class SallaService {
                   }
                 }
               } catch (err) {
-                console.warn(`DOM Scraping failed`, err);
+                log(`DOM Scraping failed`, err);
               }
             }
 
@@ -671,7 +671,7 @@ class SallaService {
               }
             }
           } catch (err) {
-            console.warn("[Storia] Detail fetch error:", p.id, err.message);
+            log("[Storia] Detail fetch error:", p.id, err.message);
           }
         }
 
@@ -695,7 +695,7 @@ class SallaService {
         }
 
         // 4. Map Images (Enhanced with Multiple Fallbacks)
-        console.log(
+        log(
           `[Storia] Mapping images for product ${targetProduct.id}:`,
           {
             hasImages: !!targetProduct.images,
@@ -716,7 +716,7 @@ class SallaService {
         ];
 
         // LOG: Show raw images from Salla
-        console.log(
+        log(
           `[Storia] Raw images from Salla for product ${targetProduct.id}:`,
           {
             "targetProduct.images": targetProduct.images,
@@ -768,13 +768,13 @@ class SallaService {
           });
         }
 
-        console.log(
+        log(
           `[Storia] Extracted ${media.length} images for product ${targetProduct.id}`,
         );
 
         // If no images, use logo
         if (media.length === 0) {
-          console.warn(
+          log(
             `[Storia] No images found for product ${targetProduct.id}, using logo fallback`,
           );
           media.push({ type: "image", src: "/assets/logo.png" });
@@ -909,7 +909,7 @@ class SallaService {
           mappedProduct.id == 1314742571 ||
           String(mappedProduct.id) === "1314742571"
         ) {
-          console.log("[Storia DEBUG] Mapping Abaya 2 Final Check:", {
+          log("[Storia DEBUG] Mapping Abaya 2 Final Check:", {
             rawOptions,
             rawVariants,
             sizeOption,
@@ -967,7 +967,7 @@ class SallaService {
         !prod.mapped.sizeVariants ||
         prod.mapped.sizeVariants.length === 0
       ) {
-        console.warn(
+        log(
           "[Storia] No variants found in registry. Attempting JIT fetch for product:",
           productId,
         );
@@ -1032,14 +1032,14 @@ class SallaService {
               if (vals.length > 0) {
                 const first = vals[0];
                 payload.options = { [sizeOpt.id]: first.id };
-                console.log(
+                log(
                   "[Storia] JIT Failsafe Success (Options):",
                   payload.options,
                 );
               }
             } else if (rb.variants && rb.variants.length > 0) {
               payload.variant_id = rb.variants[0].id;
-              console.log(
+              log(
                 "[Storia] JIT Failsafe Success (Variant):",
                 payload.variant_id,
               );
@@ -1057,7 +1057,7 @@ class SallaService {
         prod?.mapped?.sizeVariants?.length > 0
       ) {
         const def = prod.mapped.sizeVariants[0];
-        console.warn(
+        log(
           "[Storia] Failsafe activated: No selection provided, using:",
           def,
         );
@@ -1069,7 +1069,7 @@ class SallaService {
       }
     }
 
-    console.log(
+    log(
       "[Storia] cart.addItem payload:",
       JSON.stringify(payload, null, 2),
     );
@@ -1079,7 +1079,7 @@ class SallaService {
     const attemptAdd = async (currentPayload, isRetry = false) => {
       lastAttemptedPayload = currentPayload;
       try {
-        console.log(
+        log(
           `[Storia] Cart attempt (Retry: ${isRetry}):`,
           currentPayload,
         );
@@ -1097,7 +1097,7 @@ class SallaService {
         diagnosis = `Detected: status=${statusCode}, validation=${isValidation}, abaya2=${isAbaya2}, retry=${isRetry}`;
 
         if ((isValidation || isAbaya2) && !isRetry) {
-          console.warn(
+          log(
             `[Storia] ${statusCode} Trigger detected. Attempting Reconstruction (V38)...`,
           );
 
@@ -1216,7 +1216,7 @@ class SallaService {
         const res = error.response;
         if (res && res.data) {
           const d = res.data;
-          console.log("[Storia] Raw Salla error data:", d);
+          log("[Storia] Raw Salla error data:", d);
 
           const extract = (obj) => {
             if (!obj) return null;
@@ -1244,7 +1244,7 @@ class SallaService {
           if (sallaMsg) errorMsg = sallaMsg;
         }
       } catch (e) {
-        console.warn("[Storia] Error parsing Salla error:", e);
+        log("[Storia] Error parsing Salla error:", e);
       }
 
       return {
@@ -1382,7 +1382,7 @@ class SallaService {
    */
   async goToCheckout() {
     if (!this.isAvailable()) {
-      console.warn(
+      log(
         "[Storia] Salla SDK not available, cannot navigate to checkout",
       );
       return;
@@ -1537,7 +1537,7 @@ class SallaService {
     } catch (error) {
       // 401/403 is common for guest users, don't log as error in prod
       if (import.meta.env.DEV) {
-        console.warn(
+        log(
           "[Storia] Salla SDK customer.fetch internal error:",
           error,
         );
@@ -1551,7 +1551,7 @@ class SallaService {
    */
   async createProduct(productData) {
     if (this.isLocalForced) {
-      console.log("[Storia Service] Mock Create Product:", productData);
+      log("[Storia Service] Mock Create Product:", productData);
       return { ...productData, id: Date.now() };
     }
     try {
@@ -1576,7 +1576,7 @@ class SallaService {
    */
   async updateProduct(id, productData) {
     if (this.isLocalForced) {
-      console.log("[Storia Service] Mock Update Product:", id, productData);
+      log("[Storia Service] Mock Update Product:", id, productData);
       return { ...productData, id };
     }
     try {
@@ -1601,7 +1601,7 @@ class SallaService {
    */
   async deleteProduct(id) {
     if (this.isLocalForced) {
-      console.log("[Storia Service] Mock Delete Product:", id);
+      log("[Storia Service] Mock Delete Product:", id);
       return { id, deleted: true };
     }
     try {
