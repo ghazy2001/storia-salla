@@ -16,9 +16,7 @@ class SallaService {
     if (config.isSallaEnv && this.salla) {
       log("Salla SDK detected on init");
     } else if (config.useSallaBackend) {
-      log(
-        "[Storia] Salla backend requested but SDK not available yet",
-      );
+      log("[Storia] Salla backend requested but SDK not available yet");
     }
   }
 
@@ -141,7 +139,7 @@ class SallaService {
           log(
             "Bulk fetch yielded no results. Attempting targeted fetch for linked IDs...",
           );
-          const targetIds = [1252773325]; // Abaya 2 (New) / Abaya 1 (Working)
+          const targetIds = []; // Removed invalid IDs
           const targetedResults = [];
 
           for (const id of targetIds) {
@@ -244,9 +242,7 @@ class SallaService {
                 (first.url || first.src || first.image));
 
             if (isImage) {
-              log(
-                `📸 FOUND IMAGES at [${path}]: found ${obj.length} items`,
-              );
+              log(`📸 FOUND IMAGES at [${path}]: found ${obj.length} items`);
               log("   Sample:", first);
             }
           }
@@ -334,23 +330,7 @@ class SallaService {
 
             let b = null;
 
-            // METHOD 1: Storefront Public AJAX API (Most Reliable for Images)
-            try {
-              const ajaxUrl = `${window.location.origin}/api/v1/products/${pid}`;
-              const res = await fetch(ajaxUrl, {
-                headers: { "X-Requested-With": "XMLHttpRequest" },
-              });
-              if (res.ok) {
-                const json = await res.json();
-                b = json.data || json;
-                if (config.enableLogging)
-                  log(`AJAX enrichment success for ${pid}`, b);
-              }
-            } catch (err) {
-              log(`AJAX enrichment failed for ${pid}`, err);
-            }
-
-            // METHOD 2: Robust SDK Call (Wrapped in onReady)
+            // METHOD 1: Robust SDK Call (Silent & Native)
             if (!b && typeof window !== "undefined" && window.salla) {
               try {
                 b = await new Promise((resolve) => {
@@ -383,10 +363,7 @@ class SallaService {
                               .getDetails(pidStr)
                               .then((res) => resolve(res.data || res))
                               .catch((err) => {
-                                log(
-                                  "SDK getDetails failed in onReady:",
-                                  err,
-                                );
+                                log("SDK getDetails failed in onReady:", err);
                                 resolve(null);
                               });
                           } else {
@@ -422,7 +399,7 @@ class SallaService {
               }
             }
 
-            // METHOD 3: Live DOM Scraping (The Intelligent Fix) 🧠
+            // METHOD 2: Live DOM Scraping (The Intelligent Fix) 🧠
             // The user is on the product page, so the images are PROBABLY loaded in the DOM (even if hidden).
             // We scan the document for common Salla slider structures.
             if (
@@ -604,8 +581,28 @@ class SallaService {
                     };
                   }
                 }
+              } catch {
+                log(`DOM Scraping failed`);
+              }
+            }
+
+            // METHOD 3: Storefront Public AJAX API (Most Reliable for Images but causes 400s)
+            // Moved to LAST resort to avoid 400 errors for invalid IDs
+            if (!b) {
+              try {
+                const ajaxUrl = `${window.location.origin}/api/v1/products/${pid}`;
+                const res = await fetch(ajaxUrl, {
+                  headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+                if (res.ok) {
+                  const json = await res.json();
+                  b = json.data || json;
+                  if (config.enableLogging)
+                    log(`AJAX enrichment success for ${pid}`, b);
+                }
               } catch (err) {
-                log(`DOM Scraping failed`, err);
+                // Silece 400/410 errors as they are expected for invalid IDs
+                // log(`AJAX enrichment failed for ${pid}`, err);
               }
             }
 
@@ -665,7 +662,7 @@ class SallaService {
                       if (isEnriched(targetProduct.options)) break;
                     }
                   }
-                } catch (err) {
+                } catch {
                   /* ignore */
                 }
               }
@@ -695,16 +692,13 @@ class SallaService {
         }
 
         // 4. Map Images (Enhanced with Multiple Fallbacks)
-        log(
-          `[Storia] Mapping images for product ${targetProduct.id}:`,
-          {
-            hasImages: !!targetProduct.images,
-            imagesLength: targetProduct.images?.length || 0,
-            hasImage: !!targetProduct.image,
-            hasThumbnail: !!targetProduct.thumbnail,
-            hasMainImage: !!targetProduct.main_image,
-          },
-        );
+        log(`[Storia] Mapping images for product ${targetProduct.id}:`, {
+          hasImages: !!targetProduct.images,
+          imagesLength: targetProduct.images?.length || 0,
+          hasImage: !!targetProduct.image,
+          hasThumbnail: !!targetProduct.thumbnail,
+          hasMainImage: !!targetProduct.main_image,
+        });
 
         // Try to get all images from multiple sources
         // Try to get all images from multiple sources
@@ -716,15 +710,12 @@ class SallaService {
         ];
 
         // LOG: Show raw images from Salla
-        log(
-          `[Storia] Raw images from Salla for product ${targetProduct.id}:`,
-          {
-            "targetProduct.images": targetProduct.images,
-            "targetProduct.media": targetProduct.media,
-            "targetProduct.image": targetProduct.image,
-            mergedSources: allSources.length,
-          },
-        );
+        log(`[Storia] Raw images from Salla for product ${targetProduct.id}:`, {
+          "targetProduct.images": targetProduct.images,
+          "targetProduct.media": targetProduct.media,
+          "targetProduct.image": targetProduct.image,
+          mergedSources: allSources.length,
+        });
 
         const seenUrls = new Set();
         const media = allSources
@@ -1057,10 +1048,7 @@ class SallaService {
         prod?.mapped?.sizeVariants?.length > 0
       ) {
         const def = prod.mapped.sizeVariants[0];
-        log(
-          "[Storia] Failsafe activated: No selection provided, using:",
-          def,
-        );
+        log("[Storia] Failsafe activated: No selection provided, using:", def);
         if (def.variantId) {
           payload.variant_id = def.variantId;
         } else if (def.optionId && def.valueId) {
@@ -1069,20 +1057,14 @@ class SallaService {
       }
     }
 
-    log(
-      "[Storia] cart.addItem payload:",
-      JSON.stringify(payload, null, 2),
-    );
+    log("[Storia] cart.addItem payload:", JSON.stringify(payload, null, 2));
 
     let lastAttemptedPayload = payload;
     let diagnosis = "No repair attempted";
     const attemptAdd = async (currentPayload, isRetry = false) => {
       lastAttemptedPayload = currentPayload;
       try {
-        log(
-          `[Storia] Cart attempt (Retry: ${isRetry}):`,
-          currentPayload,
-        );
+        log(`[Storia] Cart attempt (Retry: ${isRetry}):`, currentPayload);
         const response = await this.salla.cart.addItem(currentPayload);
         return { success: true, data: response };
       } catch (error) {
@@ -1382,9 +1364,7 @@ class SallaService {
    */
   async goToCheckout() {
     if (!this.isAvailable()) {
-      log(
-        "[Storia] Salla SDK not available, cannot navigate to checkout",
-      );
+      log("[Storia] Salla SDK not available, cannot navigate to checkout");
       return;
     }
 
@@ -1537,10 +1517,7 @@ class SallaService {
     } catch (error) {
       // 401/403 is common for guest users, don't log as error in prod
       if (import.meta.env.DEV) {
-        log(
-          "[Storia] Salla SDK customer.fetch internal error:",
-          error,
-        );
+        log("[Storia] Salla SDK customer.fetch internal error:", error);
       }
       return null;
     }
