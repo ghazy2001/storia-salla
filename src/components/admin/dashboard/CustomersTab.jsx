@@ -26,8 +26,8 @@ const CustomersTab = () => {
     try {
       const response = await axios.get(`${config.apiUrl}/api/customers`);
       setCustomers(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.error("Error fetching customers:", error);
+    } catch {
+      // Silently handle fetch errors
     } finally {
       setLoading(false);
     }

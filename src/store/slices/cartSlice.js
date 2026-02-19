@@ -11,7 +11,6 @@ export const fetchCartFromSalla = createAsyncThunk(
 
       // 2. Fetch Cart
       const response = await sallaService.getCart();
-      console.log("[Storia Cart Debug] Raw response from Salla:", response);
 
       if (!response) return null;
 
@@ -31,7 +30,6 @@ export const fetchCartFromSalla = createAsyncThunk(
 
       return response; // Return whatever we got for reducer to inspect
     } catch (error) {
-      console.error("[Storia Cart Error]", error);
       return rejectWithValue(error.message);
     }
   },
@@ -160,7 +158,6 @@ const cartSlice = createSlice({
           state.total = isNaN(safeTotal) ? 0 : safeTotal;
 
           if (Array.isArray(items)) {
-            console.log("[Storia Cart] Mapping items:", items.length);
             state.cartItems = items.map((item) => ({
               id: item.product_id || item.id,
               itemId: item.id,
@@ -180,10 +177,6 @@ const cartSlice = createSlice({
                   : null,
             }));
           } else {
-            console.warn(
-              "[Storia Cart] No items found in response or invalid format",
-              data,
-            );
             state.cartItems = [];
           }
 

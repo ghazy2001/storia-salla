@@ -24,7 +24,6 @@ class SallaStorefrontService {
     try {
       // 1. Check if Salla SDK is available
       if (typeof window.salla === "undefined" || !window.salla.cart) {
-        console.warn("Salla SDK missing, falling back to Payment Product");
         return this.fallbackCheckout(totalAmount);
       }
 
@@ -32,8 +31,8 @@ class SallaStorefrontService {
       try {
         await window.salla.cart.clear();
         log("Cleared existing Salla cart");
-      } catch (e) {
-        console.warn("Could not clear cart (might be empty)", e);
+      } catch {
+        // Cart might already be empty
       }
 
       // 3. Add items sequentially
@@ -50,8 +49,8 @@ class SallaStorefrontService {
           };
           try {
             await window.salla.cart.addItem(payload);
-          } catch (err) {
-            console.error("Failed to add item to cart:", item, err);
+          } catch {
+            // Failed to add item, continue with remaining items
           }
         }
 
@@ -66,8 +65,7 @@ class SallaStorefrontService {
       }
 
       return { success: true };
-    } catch (error) {
-      console.error("[Storia] SDK Checkout failed:", error);
+    } catch {
       // Fallback if SDK fails
       return this.fallbackCheckout(totalAmount);
     }

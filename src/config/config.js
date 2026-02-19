@@ -20,8 +20,8 @@ export const config = {
   whatsappNumber: import.meta.env.VITE_WHATSAPP_NUMBER || "966509282460",
   shippingFee: 30,
 
-  // Logging enabled for debugging image sync
-  enableLogging: true,
+  // Logging disabled in production
+  enableLogging: false,
 };
 
 // Helper to log only when enabled

@@ -86,8 +86,7 @@ export const useAppInitialization = () => {
     );
 
     // 6. Listen for Salla Events (if available via global salla object)
-    const handleSallaCartUpdate = (e) => {
-      console.log("Salla 'cart::updated' event detected!", e);
+    const handleSallaCartUpdate = () => {
       dispatch(fetchCartFromSalla());
     };
 
@@ -97,8 +96,8 @@ export const useAppInitialization = () => {
         window.salla.event.on("cart::updated", handleSallaCartUpdate);
         window.salla.event.on("cart::added", handleSallaCartUpdate);
         window.salla.event.on("cart::deleted", handleSallaCartUpdate);
-      } catch (e) {
-        console.warn("Could not subscribe to Salla events", e);
+      } catch {
+        // Ignore Salla event subscription errors
       }
     }
 

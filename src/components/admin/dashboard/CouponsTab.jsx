@@ -35,8 +35,8 @@ const CouponsTab = () => {
     try {
       const response = await axios.get(`${config.apiUrl}/api/coupons`);
       setCoupons(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.error("Error fetching coupons:", error);
+    } catch {
+      // Silently handle fetch errors
     } finally {
       setLoading(false);
     }

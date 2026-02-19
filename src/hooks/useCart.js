@@ -23,12 +23,6 @@ export const useAddToCart = () => {
         const cartOptions =
           size && typeof size === "object" ? size.options : null;
 
-        console.log(`[Storia] Adding to Salla: ${product.name}`, {
-          productId: product.id,
-          variantId,
-          options: cartOptions,
-        });
-
         const result = await sallaService.addToCart(
           product.sallaProductId || product.id,
           quantity,
@@ -40,7 +34,6 @@ export const useAddToCart = () => {
         );
 
         if (!result.success) {
-          console.error("[Storia] Cart sync failed:", result.error);
           const debugInfo = result.debugPayload
             ? `\nPayload: ${JSON.stringify(result.debugPayload)}`
             : "";
@@ -52,16 +45,14 @@ export const useAddToCart = () => {
               `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}${diagnosisInfo}`,
           );
         } else {
-          console.log("[Storia] Successfully added to Salla cart");
           // Success! Refresh cart from Salla to get accurate count/total
           dispatch(fetchCartFromSalla());
         }
-      } catch (err) {
-        console.error("[Storia] Cart sync error:", err);
+      } catch {
         alert("حدث خطأ أثناء الاتصال بسلة.");
       }
     } else {
-      console.warn("Salla Backend not enabled or SDK not ready.");
+      // Salla Backend not enabled or SDK not ready - silently ignore
     }
   };
 

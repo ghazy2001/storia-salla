@@ -317,7 +317,6 @@ const ShoppingCart = () => {
                     // 1. Sync Cart (Clear & Re-add to ensure quantities are correct)
                     const syncResult = await sallaService.syncCart(cartItems);
                     if (!syncResult.success) {
-                      console.error("Sync failed:", syncResult.error);
                       // Continue anyway? converting logic suggests we should try to checkout even if sync claims failure,
                       // but usually sync failure means empty cart.
                       // Let's alert the user but try to proceed or just stop.
@@ -330,8 +329,7 @@ const ShoppingCart = () => {
                   } else {
                     navigate("/checkout");
                   }
-                } catch (error) {
-                  console.error("Checkout error:", error);
+                } catch {
                   alert("عذراً، حدث خطأ أثناء الانتقال للدفع.");
                 } finally {
                   btn.innerText = originalText;

@@ -99,18 +99,11 @@ const Checkout = ({ theme }) => {
     setIsSubmitting(true);
 
     try {
-      console.log("[Storia] Initiating final submit. Config:", {
-        useSallaBackend: config.useSallaBackend,
-        isSallaAvailable: sallaService.isAvailable(),
-      });
-
       // If on Salla platform, redirect to Salla checkout
       if (config.useSallaBackend && sallaService.isAvailable()) {
-        console.log("[Storia] Redirecting to Salla checkout...");
         return await sallaService.goToCheckout();
       }
 
-      console.log("[Storia] Falling back to custom order creation/WhatsApp...");
       // 1. Create real order in backend
       const orderPayload = {
         customer: {
@@ -173,9 +166,8 @@ ${discountAmount > 0 ? `الخصم: -${discountAmount.toFixed(2)} ر.س\n` : ""}
       dispatch(clearCartSalla());
       dispatch(removeCoupon());
       navigate("/");
-    } catch (error) {
+    } catch {
       alert("حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.");
-      console.error("Submission error:", error);
     } finally {
       setIsSubmitting(false);
     }

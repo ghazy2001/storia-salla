@@ -127,9 +127,6 @@ const productSlice = createSlice({
         state.loading = false;
         if (Array.isArray(action.payload)) {
           const sallaProducts = action.payload;
-          console.log(
-            `[Redux] Hybrid Sync - Merging ${sallaProducts.length} Salla products into local templates`,
-          );
 
           // 1. Update existing local products with Salla data
           state.products = state.products.map((localP) => {

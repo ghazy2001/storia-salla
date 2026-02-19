@@ -42,14 +42,12 @@ const BestSellers = () => {
           const config = await response.json();
           setFeaturedConfig(config);
         } else {
-          console.warn("[BestSellers] API failed, using fallback product");
           // Fallback to first classic product if API fails
           const fallback =
             products.find((p) => p.category === "classic") || products[0];
           setFeaturedConfig(fallback);
         }
-      } catch (error) {
-        console.error("[BestSellers] Error fetching config:", error);
+      } catch {
         // Fallback to first classic product
         const fallback =
           products.find((p) => p.category === "classic") || products[0];

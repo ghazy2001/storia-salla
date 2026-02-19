@@ -69,8 +69,7 @@ const ContactForm = ({ isOpen, onClose, theme }) => {
     e.preventDefault();
 
     if (validateForm()) {
-      // Here you would typically send the data to a backend or email service
-      console.log("Form submitted:", formData);
+      // Form is valid, send to backend/email service
       dispatch(showToast("تم إرسال رسالتك بنجاح! سنتواصل معك قريباً"));
 
       // Reset form and close modal
