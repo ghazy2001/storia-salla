@@ -142,7 +142,9 @@ const productSlice = createSlice({
             if (remoteP) {
               return {
                 ...localP,
-                // Commerce data from Salla
+                // Commerce data from Salla (name, description, price)
+                name: remoteP.name || localP.name,
+                description: remoteP.description || localP.description,
                 price: remoteP.price || localP.price,
                 originalPrice:
                   remoteP.regularPrice ||
@@ -155,10 +157,7 @@ const productSlice = createSlice({
                 options: remoteP.options || localP.options,
                 variants: remoteP.variants || localP.variants,
                 skus: remoteP.skus || localP.skus,
-                // UI data from Salla (name, description) with local fallback
-                name: remoteP.name || localP.name,
-                description: remoteP.description || localP.description,
-                // Keep local media/images (hosted locally, not on Salla CDN)
+                // UI data: Keep local media/images (custom photography)
                 media: localP.media,
                 image: localP.image,
               };
