@@ -611,6 +611,11 @@ class SallaService {
 
             if (b) {
               if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
+              // Update name from enriched data (bulk fetch often returns stale names)
+              const enrichedName = translate(b.name);
+              if (enrichedName && enrichedName.length > 0) {
+                targetProduct.name = enrichedName;
+              }
               if (isEnriched(b.options)) targetProduct.options = b.options;
               if (isEnriched(b.variants)) targetProduct.variants = b.variants;
               if (isEnriched(b.skus)) targetProduct.skus = b.skus;
@@ -640,6 +645,11 @@ class SallaService {
                     const d = await r.json();
                     const rb = d?.data || d?.product || d;
                     if (rb) {
+                      // Update name if available
+                      const rbName = translate(rb.name);
+                      if (rbName && rbName.length > 0) {
+                        targetProduct.name = rbName;
+                      }
                       if (isEnriched(rb.options))
                         targetProduct.options = rb.options;
                       if (isEnriched(rb.variants))
