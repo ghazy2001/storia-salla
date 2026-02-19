@@ -165,15 +165,8 @@ const productSlice = createSlice({
             return localP;
           });
 
-          // 2. Add Salla products that aren't mapped to a local template yet
-          sallaProducts.forEach((remoteP) => {
-            const isMapped = state.products.some(
-              (lp) => String(lp.sallaProductId) === String(remoteP.id),
-            );
-            if (!isMapped) {
-              state.products.push(remoteP);
-            }
-          });
+          // Note: Only local template products are shown.
+          // Unmapped Salla products are intentionally excluded.
         }
       })
       .addCase(fetchProductsFromSalla.rejected, (state, action) => {
