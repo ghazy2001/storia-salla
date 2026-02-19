@@ -588,24 +588,6 @@ class SallaService {
 
             // METHOD 3: Storefront Public AJAX API (Most Reliable for Images but causes 400s)
             // Moved to LAST resort to avoid 400 errors for invalid IDs
-            if (!b) {
-              try {
-                const ajaxUrl = `${window.location.origin}/api/v1/products/${pid}`;
-                const res = await fetch(ajaxUrl, {
-                  headers: { "X-Requested-With": "XMLHttpRequest" },
-                });
-                if (res.ok) {
-                  const json = await res.json();
-                  b = json.data || json;
-                  if (config.enableLogging)
-                    log(`AJAX enrichment success for ${pid}`, b);
-                }
-              } catch {
-                // Silece 400/410 errors as they are expected for invalid IDs
-                // log(`AJAX enrichment failed for ${pid}`, err);
-              }
-            }
-
             if (b) {
               if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
               // Update name from enriched data (bulk fetch often returns stale names)
@@ -620,52 +602,6 @@ class SallaService {
               if (isEnriched(b.media)) targetProduct.media = b.media; // Capture media as well
               if (isEnriched(b.urls)) targetProduct.urls = b.urls; // Capture URLs just in case
               if (getDesc(b)) description = getDesc(b);
-            }
-
-            // Secondary Enrichment via REST (Fallback)
-            if (
-              !isEnriched(targetProduct.options) ||
-              !description ||
-              description.length < 5
-            ) {
-              const paths = [
-                `/api/v1/products/${pid}`,
-                `https://api.salla.dev/store/v1/products/${pid}?clean=true`,
-                `/products/${pid}.json`,
-                p.url ? `${p.url}?format=json` : null,
-              ].filter(Boolean);
-
-              for (const u of paths) {
-                try {
-                  const r = await fetch(u).catch(() => null);
-                  if (r && r.ok) {
-                    const d = await r.json();
-                    const rb = d?.data || d?.product || d;
-                    if (rb) {
-                      // Update name if available
-                      const rbName = translate(rb.name);
-                      if (rbName && rbName.length > 0) {
-                        targetProduct.name = rbName;
-                      }
-                      if (isEnriched(rb.options))
-                        targetProduct.options = rb.options;
-                      if (isEnriched(rb.variants))
-                        targetProduct.variants = rb.variants;
-                      if (!description) description = getDesc(rb);
-
-                      // Force update images if we missed them earlier
-                      if (!isEnriched(targetProduct.images) && rb.images) {
-                        targetProduct.images = rb.images;
-                        targetProduct.media = rb.images;
-                      }
-
-                      if (isEnriched(targetProduct.options)) break;
-                    }
-                  }
-                } catch {
-                  /* ignore */
-                }
-              }
             }
           } catch (err) {
             log("[Storia] Detail fetch error:", p.id, err.message);

@@ -3,7 +3,9 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import App from "./App.jsx";
 
-// Removed console.log for production build
+// Global Console Silence for Production
+// This hides logs from external scripts (like product-card.js) and internal debug logs
+console.log = () => {};
 
 // Filter out known external warnings
 const originalWarn = console.warn;
