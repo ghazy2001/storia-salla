@@ -26,8 +26,8 @@ const ProductInfo = ({
       </h1>
       <div className="mb-8 font-sans w-full">
         {(() => {
-          let currentPrice = product.price;
-          let currentSalePrice = product.salePrice; // Default to product level
+          let currentRegularPrice = product.regularPrice || product.price; // Default to normal price
+          let currentSalePrice = product.salePrice;
           let isOnSale = product.isOnSale;
 
           if (selectedSize && product.sizeVariants?.length > 0) {
@@ -35,7 +35,10 @@ const ProductInfo = ({
               (v) => v.size === selectedSize,
             );
             if (variant) {
-              currentPrice = variant.price;
+              // For variants, we mapped price as the "regular" price in sallaService if logic holds,
+              // but let's double check sallaService variant mapping.
+              // sallaService variant: price = vPrice (regular/base), salePrice = vSalePrice.
+              currentRegularPrice = variant.price;
               currentSalePrice = variant.salePrice;
               isOnSale = variant.isOnSale;
             }
@@ -48,14 +51,14 @@ const ProductInfo = ({
             return `${p} ر.س`;
           };
 
-          if (isOnSale && currentSalePrice) {
+          if (isOnSale) {
             return (
               <div className="flex items-center gap-4">
                 <span className="text-2xl font-bold tracking-widest text-brand-gold">
                   {format(currentSalePrice)}
                 </span>
                 <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
-                  {format(currentPrice)}
+                  {format(currentRegularPrice)}
                 </span>
               </div>
             );
@@ -63,9 +66,7 @@ const ProductInfo = ({
 
           return (
             <p className="text-2xl font-bold tracking-widest text-brand-gold">
-              {typeof currentPrice === "string"
-                ? currentPrice
-                : format(currentPrice)}
+              {format(currentRegularPrice)}
             </p>
           );
         })()}
