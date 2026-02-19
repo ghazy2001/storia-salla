@@ -41,24 +41,7 @@ const ProductModal = ({
                 <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
                   المعلومات الأساسية
                 </h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    اسم المنتج
-                  </label>
-                  <input
-                    type="text"
-                    value={productForm.name}
-                    onChange={(e) =>
-                      setProductForm({
-                        ...productForm,
-                        name: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all"
-                    placeholder="مثال: عباية نجد الرسمية"
-                    required
-                  />
-                </div>
+
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     رقم المنتج في سلة (Salla Product ID)
@@ -90,30 +73,6 @@ const ProductModal = ({
                     * مطلوب لربط المنتج بالسعر والتوفر في سلة. يمكنك الحصول على
                     الرقم من لوحة تحكم سلة.
                   </p>
-                </div>
-              </div>
-
-              {/* Section: Details */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-800 border-b border-gray-100 pb-2">
-                  التفاصيل الوصف
-                </h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    وصف المنتج
-                  </label>
-                  <textarea
-                    value={productForm.description}
-                    onChange={(e) =>
-                      setProductForm({
-                        ...productForm,
-                        description: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all min-h-[120px]"
-                    placeholder="اكتب وصفاً جذاباً للمنتج..."
-                    required
-                  />
                 </div>
               </div>
 
