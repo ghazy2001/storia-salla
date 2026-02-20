@@ -2,15 +2,14 @@ import React from "react";
 
 /**
  * ProductInfo Component
- *
- * Displays product details (name, price, description) and handles size selection and add to cart.
- *
+ * Renders product title, price, descriptions and add to cart section.
  * Props:
  * @param {Object} product - The product object
  * @param {string} selectedSize - Currently selected size
  * @param {Function} setSelectedSize - State setter for selected size
  * @param {Function} handleAddToCart - Function to handle adding item to cart
  * @param {string} theme - Current application theme
+ * @param {boolean} isDiscovering - Discovery status
  */
 const ProductInfo = ({
   product,
@@ -25,72 +24,31 @@ const ProductInfo = ({
       <h1 className="text-4xl md:text-5xl font-sans font-black mb-4 text-brand-charcoal w-full">
         {product.name}
       </h1>
-      <div className="mb-8 font-sans w-full">
-        {(() => {
-          let currentRegularPrice = product.regularPrice || product.price;
-          let currentSalePrice = product.salePrice;
-          let isOnSale = product.isOnSale;
 
-          if (selectedSize && product.sizeVariants?.length > 0) {
-            const variant = product.sizeVariants.find(
-              (v) => v.size === selectedSize,
-            );
-            if (variant) {
-              currentRegularPrice = variant.regularPrice || variant.price;
-              currentSalePrice = variant.salePrice || variant.price;
-              isOnSale = variant.isOnSale;
-            }
-          }
-
-          // Safe format: handles both strings and numbers
-          const format = (p) => {
-            if (p === null || p === undefined) return "";
-            if (typeof p === "string") return p;
-            return `${p} ر.س`;
-          };
-
-          // Extract numeric value for math (handles "410 ر.س" and 410)
-          const toNum = (p) => {
-            if (typeof p === "number") return p;
-            if (typeof p === "string")
-              return parseFloat(p.replace(/[^\d.]/g, "")) || 0;
-            return 0;
-          };
-
-          if (isOnSale && currentSalePrice) {
-            const regNum = toNum(currentRegularPrice);
-            const saleNum = toNum(currentSalePrice);
-            const discountPercent =
-              regNum > 0 ? Math.round(((regNum - saleNum) / regNum) * 100) : 0;
-
-            return (
-              <div className="flex flex-row items-center gap-3 w-full justify-end">
-                <span className="text-xl text-gray-400 line-through decoration-gray-400/50 decoration-1">
-                  {format(currentRegularPrice)}
-                </span>
-                <span className="text-3xl font-black tracking-widest text-brand-gold">
-                  {format(currentSalePrice)}
-                </span>
-                {discountPercent > 0 && (
-                  <span className="bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded text-[10px] font-bold">
-                    وفر %{discountPercent}
-                  </span>
-                )}
-              </div>
-            );
-          }
-
-          return (
-            <div className="w-full text-right">
-              <p className="text-3xl font-black tracking-widest text-brand-gold">
-                {format(currentRegularPrice)}
-              </p>
-            </div>
-          );
-        })()}
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <span className="text-3xl font-sans font-bold text-brand-gold">
+            {product.salePrice || product.price} ر.س
+          </span>
+          {product.isOnSale &&
+            product.regularPrice > (product.salePrice || product.price) && (
+              <span className="text-xl text-brand-charcoal/40 line-through font-sans">
+                {product.regularPrice} ر.س
+              </span>
+            )}
+        </div>
+        {product.isOnSale && (
+          <span className="bg-red-50 text-red-500 text-xs px-2 py-1 rounded-full font-bold">
+            وفر{" "}
+            {Math.round(
+              ((product.regularPrice - (product.salePrice || product.price)) /
+                product.regularPrice) *
+                100,
+            )}
+            %
+          </span>
+        )}
       </div>
-
-      <div className="w-20 h-[1px] bg-brand-charcoal/20 mb-8 ml-auto lg:ml-auto"></div>
 
       <p className="leading-loose text-brand-charcoal/80 mb-8 max-w-lg ml-auto lg:ml-auto text-base">
         {product.description}
@@ -102,37 +60,47 @@ const ProductInfo = ({
           <label className="block text-sm font-medium text-brand-charcoal mb-3">
             {isDiscovering && (!product.sizes || product.sizes.length === 0)
               ? "جارٍ تحميل المقاسات..."
-              : "اختر المقاس"}
+              : "المقاس"}
           </label>
           <div className="flex gap-3 flex-wrap">
-            {product.sizes.map((size) => {
-              const variant = product.sizeVariants?.find(
-                (v) => v.size === size,
-              );
-              const isOutOfStock = variant?.isOutOfStock;
+            {product.sizes && product.sizes.length > 0
+              ? product.sizes.map((size) => {
+                  const variant = product.sizeVariants?.find(
+                    (v) => v.size === size,
+                  );
+                  const isOutOfStock = variant?.isOutOfStock;
 
-              return (
-                <button
-                  key={size}
-                  onClick={() => !isOutOfStock && setSelectedSize(size)}
-                  disabled={isOutOfStock}
-                  className={`px-6 py-3 border-2 rounded-lg font-medium transition-all relative ${
-                    isOutOfStock
-                      ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                      : selectedSize === size
-                        ? "border-brand-gold bg-brand-gold text-white"
-                        : "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
-                  }`}
-                >
-                  {size}
-                  {isOutOfStock && (
-                    <span className="absolute -top-2 -left-2 bg-gray-100 text-gray-400 text-[10px] px-1 rounded border border-gray-200">
-                      نفذت
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                  return (
+                    <button
+                      key={size}
+                      onClick={() => !isOutOfStock && setSelectedSize(size)}
+                      disabled={isOutOfStock}
+                      className={`px-6 py-3 border-2 rounded-lg font-medium transition-all relative ${
+                        isOutOfStock
+                          ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
+                          : selectedSize === size
+                            ? "border-brand-gold bg-brand-gold text-white"
+                            : "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
+                      }`}
+                    >
+                      {size}
+                      {isOutOfStock && (
+                        <span className="absolute -top-2 -left-2 bg-gray-100 text-gray-400 text-[10px] px-1 rounded border border-gray-200">
+                          نفذت
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              : isDiscovering
+                ? // Loading skeletons for buttons
+                  [1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="w-16 h-12 bg-gray-100 animate-pulse rounded-lg border-2 border-gray-50"
+                    ></div>
+                  ))
+                : null}
           </div>
         </div>
       ) : null}
@@ -141,57 +109,61 @@ const ProductInfo = ({
         <button
           onClick={handleAddToCart}
           disabled={(() => {
-            if (selectedSize) {
+            if (product.sizes && product.sizes.length > 0) {
               const variant = product.sizeVariants?.find(
                 (v) => v.size === selectedSize,
               );
-              return variant?.isOutOfStock;
+              return !selectedSize || (variant && variant.isOutOfStock);
             }
-            return product.isOutOfStock;
+            return false;
           })()}
-          className={`w-full py-5 rounded-full uppercase tracking-widest text-xs font-bold transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none ${
-            theme === "green"
-              ? "bg-brand-charcoal text-white hover:bg-brand-gold disabled:bg-gray-400"
-              : "bg-brand-gold text-brand-burgundy hover:bg-brand-burgundy hover:text-brand-gold disabled:bg-gray-400 disabled:text-gray-200"
+          className={`w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg ${
+            (() => {
+              if (product.sizes && product.sizes.length > 0) {
+                const variant = product.sizeVariants?.find(
+                  (v) => v.size === selectedSize,
+                );
+                return !selectedSize || (variant && variant.isOutOfStock);
+              }
+              return false;
+            })()
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
+              : "bg-brand-charcoal text-white hover:bg-black hover:scale-[1.02] active:scale-[0.98]"
           }`}
         >
           {(() => {
-            if (selectedSize) {
+            if (product.sizes && product.sizes.length > 0) {
               const variant = product.sizeVariants?.find(
                 (v) => v.size === selectedSize,
               );
-              if (variant?.isOutOfStock) return "نفذت الكمية";
-            } else if (product.isOutOfStock) {
-              return "نفذت الكمية";
+              if (!selectedSize) return "اختر المقاس أولاً";
+              if (variant && variant.isOutOfStock) return "نفذت الكمية";
+              return "إضافة للسلة";
             }
             return "إضافة للسلة";
           })()}
         </button>
 
-        {/* 🌿 V14: The "Natural Way" Ghost Button Proxy */}
-        <div style={{ display: "none" }}>
-          <salla-add-product-button
-            id={`native-cart-btn-${product.sallaProductId || product.id}`}
-            product-id={product.sallaProductId || product.id}
-            quantity="1"
-          ></salla-add-product-button>
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="bg-white/50 p-4 rounded-2xl text-center border border-brand-charcoal/5">
+            <p className="text-xs opacity-50 mb-1">التوصيل</p>
+            <p className="text-sm font-bold">شحن مجاني للطلبات فوق ٥٠٠ ر.س</p>
+          </div>
+          <div className="bg-white/50 p-4 rounded-2xl text-center border border-brand-charcoal/5">
+            <p className="text-xs opacity-50 mb-1">الإرجاع</p>
+            <p className="text-sm font-bold">إرجاع مجاني خلال ١٤ يوم</p>
+          </div>
         </div>
       </div>
 
-      {/* Extra details matches RTL layout */}
-      <div className="mt-12 grid grid-cols-2 gap-8 text-xs tracking-wider text-brand-charcoal/50 w-full max-w-md ml-auto lg:ml-auto">
-        <div>
-          <h6 className="uppercase font-bold mb-2 text-brand-charcoal">
-            التوصيل
-          </h6>
-          <p>شحن مجاني للطلبات فوق ٥٠٠ ر.س</p>
-        </div>
-        <div>
-          <h6 className="uppercase font-bold mb-2 text-brand-charcoal">
-            الإرجاع
-          </h6>
-          <p>إرجاع مجاني خلال ١٤ يوم</p>
-        </div>
+      {/* Salla Native Button Proxy - Essential for the automatic fallback */}
+      <div
+        id={`native-cart-btn-${product.sallaProductId || product.id}`}
+        className="hidden"
+      >
+        <salla-add-product-button
+          product-id={product.sallaProductId || product.id}
+        ></salla-add-product-button>
       </div>
     </div>
   );

@@ -155,8 +155,14 @@ const productSlice = createSlice({
                   remoteP.salePrice < remoteP.regularPrice,
                 stock:
                   remoteP.stock !== undefined ? remoteP.stock : localP.stock,
-                sizes: remoteP.sizes || [], // Sync sizes from Salla
-                sizeVariants: remoteP.sizeVariants || [], // Sync variants from Salla
+                sizes:
+                  remoteP.sizes && remoteP.sizes.length > 0
+                    ? remoteP.sizes
+                    : localP.sizes || [],
+                sizeVariants:
+                  remoteP.sizeVariants && remoteP.sizeVariants.length > 0
+                    ? remoteP.sizeVariants
+                    : localP.sizeVariants || [],
                 options: remoteP.options || localP.options,
                 variants: remoteP.variants || localP.variants,
                 skus: remoteP.skus || localP.skus,
