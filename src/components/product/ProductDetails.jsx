@@ -61,26 +61,73 @@ const ProductDetails = () => {
               .catch(() => null);
 
             if (res && res.data) {
-              console.log("[Storia] Nuclear Fetch Success:", res.data);
               const d = res.data;
+              console.log(
+                "[Storia] DEBUG: Raw SDK Object Keys:",
+                Object.keys(d),
+              );
 
-              if (d.regular_price || d.options || d.variants || d.skus) {
+              // RECURSIVE SCANNER: Find any array that looks like options or variants
+              const findArrays = (obj, depth = 0) => {
+                let found = { options: [], variants: [] };
+                if (!obj || depth > 4) return found;
+
+                Object.entries(obj).forEach(([key, val]) => {
+                  if (Array.isArray(val) && val.length > 0) {
+                    const k = key.toLowerCase();
+                    const first = val[0];
+                    const isOpt =
+                      k.includes("opt") ||
+                      (first.name && (first.values || first.data));
+                    const isVar =
+                      k.includes("var") ||
+                      k.includes("sku") ||
+                      first.sku ||
+                      first.price;
+
+                    if (isOpt) found.options.push(...val);
+                    if (isVar) found.variants.push(...val);
+                  } else if (val && typeof val === "object") {
+                    const inner = findArrays(val, depth + 1);
+                    found.options.push(...inner.options);
+                    found.variants.push(...inner.variants);
+                  }
+                });
+                return found;
+              };
+
+              const discovery = findArrays(d);
+              if (discovery.options.length > 0)
+                console.log(
+                  `[Storia] DISCOVERY: Found ${discovery.options.length} potential options via scan.`,
+                );
+              if (discovery.variants.length > 0)
+                console.log(
+                  `[Storia] DISCOVERY: Found ${discovery.variants.length} potential variants via scan.`,
+                );
+
+              const rawOptions = d.options || discovery.options || [];
+              const rawVariants =
+                d.variants || d.skus || discovery.variants || [];
+
+              if (
+                d.regular_price ||
+                rawOptions.length > 0 ||
+                rawVariants.length > 0
+              ) {
                 const regPrice = Number(d.regular_price || d.price);
                 const curPrice = Number(d.price);
 
-                // DATA HEALING: Extract options and variants if original was empty
+                // DATA HEALING: Extract options and variants
                 let enrichedSizes = product.sizes;
                 let enrichedVariants = product.sizeVariants;
 
                 if (!enrichedVariants || enrichedVariants.length === 0) {
-                  const rawOptions = d.options || [];
-                  const rawVariants = d.variants || d.skus || [];
-
                   console.log(
-                    `[Storia] Healing: Found ${rawOptions.length} options, ${rawVariants.length} variants`,
+                    `[Storia] Healing Mode: Found ${rawOptions.length} options, ${rawVariants.length} variants`,
                   );
 
-                  // Try to find Size Option (Aggressive Search)
+                  // Aggressive Size Search
                   const sizeOpt = rawOptions.find((o) => {
                     const n = String(o.name || o.label || "").toLowerCase();
                     return (
@@ -97,7 +144,7 @@ const ProductDetails = () => {
                       sizeOpt.values ||
                       (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
                     console.log(
-                      `[Storia] Found Size Option: ${sizeOpt.name}, Values: ${vals.length}`,
+                      `[Storia] Discovery Success: ${sizeOpt.name} (${vals.length} values)`,
                     );
 
                     enrichedSizes = vals.map((v) =>
@@ -116,7 +163,7 @@ const ProductDetails = () => {
                     }));
                   } else if (rawVariants.length > 0) {
                     console.log(
-                      "[Storia] Found Variants but no specific Size Option. Mapping generic variants.",
+                      "[Storia] Mapping generic variants from discover.",
                     );
                     enrichedVariants = rawVariants.map((v) => ({
                       size: (v.name || v.label || v.sku || "").trim(),

@@ -1272,16 +1272,39 @@ class SallaService {
             diagnosis = `Trigger: ${diagnosis}. Logic: ${log.join(" | ")}`;
 
             if (rb) {
-              const pickedOptions = {};
+              console.log(`[Storia] REPAIR: Keys=${Object.keys(rb).join(",")}`);
+
+              const findRecursive = (obj, depth = 0) => {
+                let out = { o: [], v: [] };
+                if (!obj || depth > 3) return out;
+                Object.entries(obj).forEach(([k, val]) => {
+                  if (Array.isArray(val) && val.length > 0) {
+                    const key = k.toLowerCase();
+                    if (key.includes("opt")) out.o.push(...val);
+                    if (key.includes("var") || key.includes("sku"))
+                      out.v.push(...val);
+                  } else if (val && typeof val === "object") {
+                    const inner = findRecursive(val, depth + 1);
+                    out.o.push(...inner.o);
+                    out.v.push(...inner.v);
+                  }
+                });
+                return out;
+              };
+
+              const discovered = findRecursive(rb);
               const ros =
                 (rb.options &&
                   (Array.isArray(rb.options)
                     ? rb.options
                     : Object.values(rb.options))) ||
+                discovered.o ||
                 [];
-              const vs = rb.variants || rb.skus || [];
+              const vs = rb.variants || rb.skus || discovered.v || [];
+
               diagnosis += ` | Found ${ros.length} opts, ${vs.length} vars.`;
 
+              const pickedOptions = {};
               // 1. Find a Size-like option first
               const sizeLike = ros.find((o) => {
                 const n = String(o.name || o.label || "").toLowerCase();
@@ -1289,7 +1312,8 @@ class SallaService {
                   n.includes("مقاس") ||
                   n.includes("size") ||
                   n.includes("قياس") ||
-                  n.includes("قياسات")
+                  n.includes("قياسات") ||
+                  n.includes("القياس")
                 );
               });
 
@@ -1299,7 +1323,7 @@ class SallaService {
                   (Array.isArray(sizeLike.data) ? sizeLike.data : []);
                 if (vals.length > 0) {
                   pickedOptions[Number(sizeLike.id)] = Number(vals[0].id);
-                  diagnosis += ` | Auto-picked size opt ${sizeLike.id}`;
+                  diagnosis += ` | Auto-picked size ${sizeLike.id}`;
                 }
               }
 
@@ -1331,10 +1355,10 @@ class SallaService {
                 diagnosis += " | Retrying with Variant.";
                 return await attemptAdd(repairedPayload, true);
               } else {
-                diagnosis += " | No actionable options found.";
+                diagnosis += " | No actionable options/variants discovered.";
               }
             } else {
-              diagnosis += " | All fetches failed.";
+              diagnosis += " | All repair fetches failed.";
             }
           } catch (repairErr) {
             diagnosis += ` | Fatal Error: ${repairErr.message}`;
