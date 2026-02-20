@@ -1608,7 +1608,12 @@ class SallaService {
           }
         }
 
-        throw new Error(diagnosis || error.message);
+        const cleanError = new Error(
+          error.message || "فشل في إضافة المنتج للسلة",
+        );
+        cleanError.diagnosis = diagnosis;
+        cleanError.diagnostic = isDiagnosticMode;
+        throw cleanError;
       }
     };
 

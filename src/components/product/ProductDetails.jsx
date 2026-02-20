@@ -45,202 +45,233 @@ const ProductDetails = () => {
   const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
 
   useEffect(() => {
-    // Determine the real Salla ID
     const sallaId = product?.sallaProductId || product?.id;
 
-    if (product && !product.regularPrice && sallaId) {
+    // Upfront Discovery: Run if price is missing OR if sizes/variants are missing
+    const needsEnrichment =
+      product &&
+      (!product.regularPrice || !product.sizes || product.sizes.length === 0);
+
+    if (needsEnrichment && sallaId) {
       console.log(
-        `[Storia] Nuclear Fetch: Product ${sallaId} missing regular price, fetching...`,
+        `[Storia] Upfront Discovery: Product ${sallaId} needs data enrichment.`,
       );
 
       const fetchDetails = async () => {
         try {
           if (window.salla && window.salla.api && window.salla.api.product) {
+            // 1. CONSOLE HIJACKER: Native Salla scripts often log the full product object. Intercept them.
+            const hijackConsole = () => {
+              const originalLog = console.log;
+              console.log = (...args) => {
+                args.forEach((arg) => {
+                  if (
+                    arg &&
+                    typeof arg === "object" &&
+                    arg.id == sallaId &&
+                    (arg.options || arg.variants || arg.skus)
+                  ) {
+                    console.warn("[Storia] Hijacker Captured Native Data!");
+                    processDiscovery(arg);
+                  }
+                });
+                originalLog.apply(console, args);
+              };
+              // Keep hijacker active for a bit
+              setTimeout(() => {
+                console.log = originalLog;
+              }, 5000);
+            };
+            hijackConsole();
+
             const res = await window.salla.api.product
               .getDetails(sallaId)
               .catch(() => null);
 
             let d = res?.data;
 
-            // V3 SNIFFER: Hunt for Salla's native product object in the global namespace
-            const globalSniff = () => {
-              if (window.product && window.product.id == sallaId)
-                return window.product;
-              if (
-                window.salla_config?.product &&
-                window.salla_config.product.id == sallaId
-              )
-                return window.salla_config.product;
-              // Deep hunt in window (Last resort)
-              for (let key in window) {
-                if (
-                  key.includes("product") &&
-                  window[key] &&
-                  window[key].id == sallaId
-                )
-                  return window[key];
-              }
-              return null;
-            };
-
-            const sniffed = globalSniff();
-            if (sniffed) {
-              console.log(
-                "[Storia] Archeology V3: Found High-Fidelity data in Global Context.",
-              );
-              d = sniffed;
-            }
-
-            if (d && (d.regular_price || d.options || d.variants || d.skus)) {
-              console.log(
-                "[Storia] DEBUG: Discovery Object Keys:",
-                Object.keys(d),
-              );
-
-              const scavenge = (obj, depth = 0) => {
-                let found = { options: [], variants: [] };
-                if (!obj || depth > 10) return found;
-
-                Object.values(obj).forEach((val) => {
-                  if (Array.isArray(val) && val.length > 0) {
-                    const first = val[0];
-                    if (typeof first !== "object" || first === null) return;
-
-                    const isOption =
-                      first.id &&
-                      (first.name || first.label) &&
-                      (first.values || first.data || Array.isArray(first.data));
-                    const isVariant =
-                      first.id && (first.sku || first.price || first.sku_id);
-
-                    if (isOption) found.options.push(...val);
-                    if (isVariant) found.variants.push(...val);
-                  } else if (val && typeof val === "object" && val !== null) {
-                    const inner = scavenge(val, depth + 1);
-                    found.options.push(...inner.options);
-                    found.variants.push(...inner.variants);
-                  }
-                });
-                return found;
+            // 2. HIGH-VELOCITY SNIFFER: Check globals repeatedly for late population
+            const velocitySniff = (attempts = 0) => {
+              const sniff = () => {
+                if (window.product && window.product.id == sallaId)
+                  return window.product;
+                if (window.salla_config?.product?.id == sallaId)
+                  return window.salla_config.product;
+                return null;
               };
+              const found = sniff();
+              if (found && (found.options || found.variants)) {
+                processDiscovery(found);
+              } else if (attempts < 10) {
+                setTimeout(() => velocitySniff(attempts + 1), 500);
+              }
+            };
+            velocitySniff();
 
-              const discovery = scavenge(d);
-              if (discovery.options.length > 0)
-                console.log(
-                  `[Storia] ARCHEOLOGY V3: Discovered ${discovery.options.length} hidden options.`,
-                );
-              if (discovery.variants.length > 0)
-                console.log(
-                  `[Storia] ARCHEOLOGY V3: Discovered ${discovery.variants.length} hidden variants.`,
-                );
-
-              const rawOptions = d.options || discovery.options || [];
-              const rawVariants =
-                d.variants || d.skus || discovery.variants || [];
-
+            const processDiscovery = (discoveryData) => {
+              if (!discoveryData) return;
               if (
-                d.regular_price ||
-                rawOptions.length > 0 ||
-                rawVariants.length > 0
+                discoveryData.regular_price ||
+                discoveryData.options ||
+                discoveryData.variants ||
+                discoveryData.skus
               ) {
-                const regPrice = Number(d.regular_price || d.price);
-                const curPrice = Number(d.price);
+                console.log(
+                  "[Storia] DEBUG: Discovery Object Keys:",
+                  Object.keys(discoveryData),
+                );
 
-                // DATA HEALING: Extract options and variants
-                let enrichedSizes = product.sizes;
-                let enrichedVariants = product.sizeVariants;
+                const scavenge = (obj, depth = 0) => {
+                  let found = { options: [], variants: [] };
+                  if (!obj || depth > 10) return found;
 
-                if (!enrichedVariants || enrichedVariants.length === 0) {
+                  Object.values(obj).forEach((val) => {
+                    if (Array.isArray(val) && val.length > 0) {
+                      const first = val[0];
+                      if (typeof first !== "object" || first === null) return;
+
+                      const isOption =
+                        first.id &&
+                        (first.name || first.label) &&
+                        (first.values ||
+                          first.data ||
+                          Array.isArray(first.data));
+                      const isVariant =
+                        first.id && (first.sku || first.price || first.sku_id);
+
+                      if (isOption) found.options.push(...val);
+                      if (isVariant) found.variants.push(...val);
+                    } else if (val && typeof val === "object" && val !== null) {
+                      const inner = scavenge(val, depth + 1);
+                      found.options.push(...inner.options);
+                      found.variants.push(...inner.variants);
+                    }
+                  });
+                  return found;
+                };
+
+                const discovery = scavenge(discoveryData);
+                if (discovery.options.length > 0)
                   console.log(
-                    `[Storia] Healing Mode: Finding sizes in discovery sets...`,
+                    `[Storia] ARCHEOLOGY V3: Discovered ${discovery.options.length} hidden options.`,
+                  );
+                if (discovery.variants.length > 0)
+                  console.log(
+                    `[Storia] ARCHEOLOGY V3: Discovered ${discovery.variants.length} hidden variants.`,
                   );
 
-                  // Aggressive Size Search
-                  const sizeOpt = rawOptions.find((o) => {
-                    const n = String(o.name || o.label || "").toLowerCase();
-                    return (
-                      n.includes("مقاس") ||
-                      n.includes("size") ||
-                      n.includes("قياس") ||
-                      n.includes("القياس") ||
-                      n.includes("النوع")
-                    );
-                  });
+                const rawOptions =
+                  discoveryData.options || discovery.options || [];
+                const rawVariants =
+                  discoveryData.variants ||
+                  discoveryData.skus ||
+                  discovery.variants ||
+                  [];
 
-                  if (sizeOpt) {
-                    const vals =
-                      sizeOpt.values ||
-                      (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
-                    console.log(
-                      `[Storia] HEAL SUCCESS: Unlocked Size Option "${sizeOpt.name}" (${vals.length} values).`,
-                    );
+                if (
+                  discoveryData.regular_price ||
+                  rawOptions.length > 0 ||
+                  rawVariants.length > 0
+                ) {
+                  const regPrice = Number(
+                    discoveryData.regular_price || discoveryData.price,
+                  );
+                  const curPrice = Number(discoveryData.price);
 
-                    enrichedSizes = vals.map((v) =>
-                      (v.name || v.label || "").trim(),
-                    );
-                    enrichedVariants = vals.map((v) => ({
-                      size: (v.name || v.label || "").trim(),
-                      price: Number(v.price || curPrice),
-                      regularPrice: Number(
-                        v.regular_price || v.price || regPrice || curPrice,
-                      ),
-                      isOnSale: true,
-                      variantId: v.id,
-                      optionId: sizeOpt.id,
-                      valueId: v.id,
-                    }));
-                  } else if (rawVariants.length > 0) {
+                  let enrichedSizes = product.sizes;
+                  let enrichedVariants = product.sizeVariants;
+
+                  if (!enrichedVariants || enrichedVariants.length === 0) {
                     console.log(
-                      "[Storia] ARCHEOLOGY: Attempting direct variant mapping.",
+                      `[Storia] Healing Mode: Finding sizes in discovery sets...`,
                     );
-                    enrichedVariants = rawVariants.map((v) => ({
-                      size:
-                        (v.name || v.label || v.sku || "").trim() || "Default",
-                      price: Number(v.price || curPrice),
-                      regularPrice: Number(
-                        v.regular_price || v.price || regPrice || curPrice,
-                      ),
-                      isOnSale: true,
-                      variantId: v.id,
-                    }));
-                    enrichedSizes = enrichedVariants
-                      .map((v) => v.size)
-                      .filter(Boolean);
-                  }
-                } else {
-                  // Price only update
-                  enrichedVariants = product.sizeVariants.map((v) => {
-                    if (Math.abs(Number(v.price) - curPrice) < 0.1) {
-                      return {
-                        ...v,
-                        regularPrice: regPrice,
-                        salePrice: curPrice,
+                    const sizeOpt = rawOptions.find((o) => {
+                      const n = String(o.name || o.label || "").toLowerCase();
+                      return (
+                        n.includes("مقاس") ||
+                        n.includes("size") ||
+                        n.includes("قياس") ||
+                        n.includes("القياس") ||
+                        n.includes("النوع")
+                      );
+                    });
+
+                    if (sizeOpt) {
+                      const vals =
+                        sizeOpt.values ||
+                        (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+                      console.log(
+                        `[Storia] HEAL SUCCESS: Unlocked Size Option "${sizeOpt.name}" (${vals.length} values).`,
+                      );
+                      enrichedSizes = vals.map((v) =>
+                        (v.name || v.label || "").trim(),
+                      );
+                      enrichedVariants = vals.map((v) => ({
+                        size: (v.name || v.label || "").trim(),
+                        price: Number(v.price || curPrice),
+                        regularPrice: Number(
+                          v.regular_price || v.price || regPrice || curPrice,
+                        ),
                         isOnSale: true,
-                      };
+                        variantId: v.id,
+                        optionId: sizeOpt.id,
+                        valueId: v.id,
+                      }));
+                    } else if (rawVariants.length > 0) {
+                      console.log(
+                        "[Storia] ARCHEOLOGY: Attempting direct variant mapping.",
+                      );
+                      enrichedVariants = rawVariants.map((v) => ({
+                        size:
+                          (v.name || v.label || v.sku || "").trim() ||
+                          "Default",
+                        price: Number(v.price || curPrice),
+                        regularPrice: Number(
+                          v.regular_price || v.price || regPrice || curPrice,
+                        ),
+                        isOnSale: true,
+                        variantId: v.id,
+                      }));
+                      enrichedSizes = enrichedVariants
+                        .map((v) => v.size)
+                        .filter(Boolean);
                     }
-                    return v;
+                  } else {
+                    enrichedVariants = product.sizeVariants.map((v) => {
+                      if (Math.abs(Number(v.price) - curPrice) < 0.1) {
+                        return {
+                          ...v,
+                          regularPrice: regPrice,
+                          salePrice: curPrice,
+                          isOnSale: true,
+                        };
+                      }
+                      return v;
+                    });
+                  }
+
+                  setEnrichedPriceInfo({
+                    regularPrice: regPrice,
+                    salePrice: curPrice,
+                    isOnSale: true,
+                    sizes: enrichedSizes || product.sizes,
+                    sizeVariants: enrichedVariants || product.sizeVariants,
                   });
                 }
-
-                setEnrichedPriceInfo({
-                  regularPrice: regPrice,
-                  salePrice: curPrice,
-                  isOnSale: true,
-                  sizes: enrichedSizes || product.sizes,
-                  sizeVariants: enrichedVariants || product.sizeVariants,
-                });
               }
-            }
+            };
+            // Run initial discovery with fetched/existing data
+            processDiscovery(d);
           }
         } catch (e) {
-          console.error("[Storia] Nuclear Fetch Error:", e);
+          console.error("[Storia] Discovery Error:", e);
         }
       };
 
-      // Increased delay to ensure SDK stability
-      setTimeout(fetchDetails, 1500);
+      // Faster initial trigger
+      setTimeout(fetchDetails, 500);
     }
-  }, [product]);
+  }, [product?.id, product?.sizes, setEnrichedPriceInfo]);
 
   // Merge enriched info if available
   const displayProduct = enrichedPriceInfo

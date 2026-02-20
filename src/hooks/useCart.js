@@ -34,16 +34,29 @@ export const useAddToCart = () => {
         );
 
         if (!result.success) {
+          const isDiagnostic =
+            window.__STORIA_DIAGNOSTIC__ || result.diagnostic;
           const debugInfo = result.debugPayload
             ? `\nPayload: ${JSON.stringify(result.debugPayload)}`
             : "";
           const diagnosisInfo = result.diagnosis
             ? `\nDiagnosis: ${result.diagnosis}`
             : "";
-          alert(
-            `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
-              `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}${diagnosisInfo}`,
-          );
+
+          if (isDiagnostic) {
+            alert(
+              `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
+                `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}${diagnosisInfo}`,
+            );
+          } else {
+            console.warn(`[Storia] Add to Cart Failed: ${result.error}`, {
+              debug: result.debugPayload,
+              diagnosis: result.diagnosis,
+            });
+            alert(
+              `عذراً، لم نتمكن من إضافة المنتج (${product.name}) للسلة. يرجى المحاولة مرة أخرى لاحقاً.`,
+            );
+          }
           return { success: false };
         } else {
           // Success! Refresh cart from Salla to get accurate count/total
