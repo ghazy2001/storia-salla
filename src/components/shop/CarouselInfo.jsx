@@ -63,12 +63,19 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
       </h2>
 
       <div className="flex items-center gap-4 mb-10">
-        <span className="text-brand-gold text-2xl font-sans font-bold">
-          {renderPrice(product.salePrice || product.price)}
-        </span>
+        <div className="flex items-center gap-4">
+          <span className="text-brand-gold text-2xl font-sans font-bold">
+            {renderPrice(product.salePrice || product.price)}
+          </span>
+          {product.isOnSale && regPrice > curPrice && (
+            <span className="text-lg text-brand-charcoal/40 line-through font-sans">
+              {renderPrice(product.regularPrice)}
+            </span>
+          )}
+        </div>
         {product.isOnSale && regPrice > curPrice && (
-          <span className="text-lg text-brand-charcoal/40 line-through font-sans">
-            {renderPrice(product.regularPrice)}
+          <span className="bg-red-50 text-red-500 text-xs px-2 py-1 rounded-full font-bold">
+            وفر {Math.round(((regPrice - curPrice) / regPrice) * 100)}%
           </span>
         )}
       </div>

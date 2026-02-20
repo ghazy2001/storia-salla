@@ -186,20 +186,45 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                     </h4>
                     <div className="flex flex-col items-start">
                       {product.isOnSale ? (
-                        <div className="flex items-center gap-2 mb-2 justify-start">
-                          <span className="text-lg font-bold text-brand-gold">
-                            {product.salePrice}
-                          </span>
-                          <span className="text-sm text-gray-400 line-through decoration-gray-400/50">
-                            {product.regularPrice || product.price}
-                          </span>
+                        <div className="flex flex-col items-start gap-1 mb-2">
+                          <div className="flex items-center gap-2 justify-start">
+                            <span className="text-lg font-bold text-brand-gold">
+                              {product.salePrice}
+                            </span>
+                            <span className="text-sm text-gray-400 line-through decoration-gray-400/50">
+                              {product.regularPrice || product.price}
+                            </span>
+                          </div>
+                          {(() => {
+                            const safeParse = (val) => {
+                              if (!val) return 0;
+                              const cleaned = String(val).replace(
+                                /[^\d.]/g,
+                                "",
+                              );
+                              return parseFloat(cleaned) || 0;
+                            };
+                            const regPrice = safeParse(product.regularPrice);
+                            const curPrice = safeParse(
+                              product.salePrice || product.price,
+                            );
+                            const discount =
+                              regPrice > curPrice && regPrice > 0
+                                ? Math.round(
+                                    ((regPrice - curPrice) / regPrice) * 100,
+                                  )
+                                : 0;
+
+                            return discount > 0 ? (
+                              <span className="bg-red-50 text-red-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                وفر {discount}%
+                              </span>
+                            ) : null;
+                          })()}
                         </div>
                       ) : (
                         <p className="text-lg font-bold text-brand-gold mb-2">
-                          {product.regularPrice || product.price}{" "}
-                          {!String(product.price).includes("ر.س") &&
-                            !String(product.regularPrice).includes("ر.س") &&
-                            "ر.س"}
+                          {product.price}
                         </p>
                       )}
                     </div>

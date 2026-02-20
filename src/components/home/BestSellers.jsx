@@ -204,24 +204,47 @@ const BestSellers = () => {
               className={`flex justify-between items-center px-8 mt-6 gap-12 ${textColorClass}`}
             >
               <div className="w-full text-right">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="text-brand-gold text-3xl font-bold">
-                    {/* Use Synced Price from Redux if available, otherwise fallback to config */}
-                    {(() => {
-                      const syncedProduct = products.find(
-                        (p) => String(p.id) === String(featuredConfig.id),
-                      );
-                      return syncedProduct
-                        ? syncedProduct.price
-                        : featuredConfig.price;
-                    })()}
-                    {/* The price string presumably includes currency or we append it if it's just a number */}
-                    {!String(
-                      products.find(
-                        (p) => String(p.id) === String(featuredConfig.id),
-                      )?.price || featuredConfig.price,
-                    ).includes("ر.س") && " ر.س"}
-                  </div>
+                <div className="flex items-center gap-3 mb-2 flex-wrap justify-end">
+                  {(() => {
+                    const syncedProduct = products.find(
+                      (p) => String(p.id) === String(featuredConfig.id),
+                    );
+                    const prod = syncedProduct || featuredConfig;
+
+                    const safeParse = (val) => {
+                      if (!val) return 0;
+                      const cleaned = String(val).replace(/[^\d.]/g, "");
+                      return parseFloat(cleaned) || 0;
+                    };
+
+                    const regPrice = safeParse(prod.regularPrice);
+                    const curPrice = safeParse(prod.price);
+                    const discount =
+                      regPrice > curPrice && regPrice > 0
+                        ? Math.round(((regPrice - curPrice) / regPrice) * 100)
+                        : 0;
+
+                    return (
+                      <>
+                        <div className="text-brand-gold text-3xl font-bold flex items-center gap-2">
+                          <span>{prod.price}</span>
+                          {!String(prod.price).includes("ر.س") && " ر.س"}
+                        </div>
+                        {prod.isOnSale && regPrice > curPrice && (
+                          <span className="text-xl text-gray-400 line-through">
+                            {prod.regularPrice}
+                            {!String(prod.regularPrice).includes("ر.س") &&
+                              " ر.س"}
+                          </span>
+                        )}
+                        {prod.isOnSale && discount > 0 && (
+                          <span className="bg-red-50 text-red-500 text-xs px-2 py-1 rounded-full font-bold">
+                            وفر {discount}%
+                          </span>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
                 <p
                   className={`${textColorClass} opacity-80 text-lg font-light leading-relaxed`}
