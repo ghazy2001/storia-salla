@@ -1244,14 +1244,13 @@ class SallaService {
                 logNotes.push(`SniffedID:${targetOptionId}`);
               }
             } else if (errorData?.message?.includes("options.")) {
-              // Regex to find the first \d+ after "options."
               const match = errorData.message.match(/options\.(\d+)/);
               if (match) {
                 targetOptionId = match[1];
-                logNotes.push(`RegexSniffed:${targetOptionId}`);
+                logNotes.push(`SniffedMsgID:${targetOptionId}`);
               } else {
                 // Secondary check for any ID in the message if it refers to options
-                const idMatch = errorData.message.match(/\d{5,}/); // IDs are usually long
+                const idMatch = errorData.message.match(/\d{5,}/);
                 if (idMatch) {
                   targetOptionId = idMatch[0];
                   logNotes.push(`FuzzySniffed:${targetOptionId}`);
@@ -1268,7 +1267,7 @@ class SallaService {
               logNotes.push("Found:salla_config!");
             }
 
-            // 3. SDK FETCH (Only stop if NOT hollow)
+            // 3. SDK FETCH (Stop ONLY if NOT hollow)
             if (!rb || isHollow(rb)) {
               logNotes.push("SDK:Attempting...");
               const target =
@@ -1325,13 +1324,14 @@ class SallaService {
             // 5. AGGRESSIVE HTML SURFACE SCRAPER (Nuclear Fallback)
             if (!rb || isHollow(rb)) {
               logNotes.push("HTML:Scraping...");
-              // Try multiple URL patterns that Salla uses
+              // Try multiple URL patterns including the one returned by Salla if any
               const patterns = [
+                rb?.url,
                 `/p/${pid}`,
                 `/p${pid}`,
                 `/product/p${pid}`,
                 `/product/${pid}`,
-              ];
+              ].filter(Boolean);
 
               for (const p of patterns) {
                 const htmlRes = await fetch(p).catch(() => null);
@@ -1351,16 +1351,39 @@ class SallaService {
                       const parsed = JSON.parse(match[1]);
                       if (parsed && !isHollow(parsed)) {
                         rb = parsed;
-                        logNotes.push(`HTML:Found(${p})!`);
+                        logNotes.push(`HTML:FoundData!`);
                         break;
                       }
-                    } catch {}
+                    } catch {
+                      /* ignore */
+                    }
                   }
                 }
               }
             }
 
-            // 6. PRECISION HUNTER: If we still have no RB but have a TargetID, search the WHOLE window object
+            // 6. CACHE MINING: Search window.salla for hidden variants
+            if (!rb || isHollow(rb)) {
+              logNotes.push("Cache:Mining...");
+              const mine = (obj, depth = 0) => {
+                if (!obj || depth > 5) return null;
+                if (obj.id == pid && !isHollow(obj)) return obj;
+                for (let k in obj) {
+                  if (obj[k] && typeof obj[k] === "object" && k !== "this") {
+                    const res = mine(obj[k], depth + 1);
+                    if (res) return res;
+                  }
+                }
+                return null;
+              };
+              const found = mine(window.salla);
+              if (found) {
+                rb = found;
+                logNotes.push("Cache:Found!");
+              }
+            }
+
+            // 7. PRECISION HUNTER: If we still have no RB but have a TargetID, search the WHOLE window object
             if (!rb && targetOptionId) {
               logNotes.push("Hunter:Engaged...");
               const hunt = (obj, id, depth = 0) => {
