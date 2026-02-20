@@ -62,8 +62,8 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
         {product.name}
       </h2>
 
-      <div className="flex items-center gap-4 mb-6">
-        <span className="text-brand-gold text-2xl font-sans font-medium">
+      <div className="flex items-center gap-4 mb-10">
+        <span className="text-brand-gold text-2xl font-sans font-bold">
           {renderPrice(product.salePrice || product.price)}
         </span>
         {product.isOnSale && regPrice > curPrice && (

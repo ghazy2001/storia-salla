@@ -37,15 +37,13 @@ const ProductInfo = ({ product, handleAddToCart, theme }) => {
 
   return (
     <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
-      <h1 className="text-4xl md:text-5xl font-sans font-black mb-4 text-brand-charcoal w-full">
+      <h1 className="text-4xl md:text-5xl font-sans font-black mb-8 text-brand-charcoal w-full">
         {product.name}
       </h1>
 
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex items-center gap-4 mb-10">
         <div className="flex items-center gap-3">
-          <span
-            className={`text-3xl font-sans font-bold ${isGoldTheme ? "text-brand-gold" : "text-brand-charcoal"}`}
-          >
+          <span className="text-3xl font-sans font-bold text-brand-gold">
             {renderPrice(product.salePrice || product.price)}
           </span>
           {product.isOnSale && regPrice > curPrice && (
@@ -61,7 +59,7 @@ const ProductInfo = ({ product, handleAddToCart, theme }) => {
         )}
       </div>
 
-      <p className="leading-loose text-brand-charcoal/80 mb-8 max-w-lg ml-auto lg:ml-auto text-base">
+      <p className="leading-loose text-brand-charcoal/80 mb-12 max-w-lg ml-auto lg:ml-auto text-base">
         {product.description}
       </p>
 
