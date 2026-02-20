@@ -72,7 +72,7 @@ const ProductDetails = () => {
                 let found = { options: [], variants: [] };
                 if (!obj || depth > 5) return found;
 
-                Object.entries(obj).forEach(([key, val]) => {
+                Object.values(obj).forEach((val) => {
                   if (Array.isArray(val) && val.length > 0) {
                     const first = val[0];
                     if (typeof first !== "object") return;

@@ -1277,7 +1277,7 @@ class SallaService {
               const archeology = (obj, depth = 0) => {
                 let out = { o: [], v: [] };
                 if (!obj || depth > 5) return out;
-                Object.entries(obj).forEach(([k, val]) => {
+                Object.values(obj).forEach((val) => {
                   if (Array.isArray(val) && val.length > 0) {
                     const first = val[0];
                     if (typeof first === "object") {
