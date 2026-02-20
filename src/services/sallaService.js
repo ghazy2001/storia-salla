@@ -918,8 +918,10 @@ class SallaService {
             regularPrice: vRegularPrice,
             salePrice: vSalePrice,
             isOnSale: vIsOnSale,
-            stock: v.quantity !== undefined ? Number(v.quantity) : 0,
-            isOutOfStock: v.quantity !== undefined && Number(v.quantity) <= 0,
+            stock: v.quantity !== undefined ? Number(v.quantity) : -1,
+            isOutOfStock:
+              v.is_out_of_stock ??
+              (v.quantity !== undefined && Number(v.quantity) === 0),
             optionId: sizeOption ? sizeOption.id : null,
             valueId: v.id,
             variantId: v.id,
@@ -994,8 +996,9 @@ class SallaService {
               ? Number(targetProduct.quantity)
               : 10,
           isOutOfStock:
-            targetProduct.quantity !== undefined &&
-            Number(targetProduct.quantity) <= 0,
+            targetProduct.is_out_of_stock ??
+            (targetProduct.quantity !== undefined &&
+              Number(targetProduct.quantity) === 0),
           stock: targetProduct.quantity || 10,
           isNew: targetProduct.is_new || false,
           isPromoted: !!targetProduct.promotion,
