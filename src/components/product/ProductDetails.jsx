@@ -45,28 +45,33 @@ const ProductDetails = () => {
   const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
 
   useEffect(() => {
-    if (product && !product.regularPrice && product.id) {
-      console.log("Client-Side Fetch: Missing regular price, fetching...");
+    // Determine the real Salla ID
+    const sallaId = product?.sallaProductId || product?.id;
+
+    if (product && !product.regularPrice && sallaId) {
+      console.log(
+        `[Storia] Nuclear Fetch: Product ${sallaId} missing regular price, fetching...`,
+      );
 
       const fetchDetails = async () => {
         try {
-          // Try to use Salla SDK directly in browser
           if (window.salla && window.salla.api && window.salla.api.product) {
             const res = await window.salla.api.product
-              .getDetails(product.id)
+              .getDetails(sallaId)
               .catch(() => null);
+
             if (res && res.data) {
-              console.log("Client-Side Fetch Success:", res.data);
+              console.log("[Storia] Nuclear Fetch Success:", res.data);
               const d = res.data;
               if (d.regular_price) {
                 const regPrice = Number(d.regular_price);
                 const curPrice = Number(d.price);
 
-                // Build enriched variants if they exist
+                // Build enriched variants
                 let enrichedVariants = null;
                 if (product.sizeVariants) {
                   enrichedVariants = product.sizeVariants.map((v) => {
-                    // If variant matches the current price, give it the same regular price
+                    // Match by price similarity
                     if (Math.abs(Number(v.price) - curPrice) < 0.1) {
                       return {
                         ...v,
@@ -89,12 +94,12 @@ const ProductDetails = () => {
             }
           }
         } catch (e) {
-          console.error("Client-Side Fetch Error:", e);
+          console.error("[Storia] Nuclear Fetch Error:", e);
         }
       };
 
-      // Small delay to ensure Salla is ready
-      setTimeout(fetchDetails, 1000);
+      // Increased delay to ensure SDK stability
+      setTimeout(fetchDetails, 1500);
     }
   }, [product]);
 
@@ -140,57 +145,57 @@ const ProductDetails = () => {
   }
 
   const handleAddToCart = async () => {
-    if (!selectedSize && product.sizes && product.sizes.length > 0) {
+    // USE ENRICHED DATA
+    const workingProduct = displayProduct;
+
+    if (
+      !selectedSize &&
+      workingProduct.sizes &&
+      workingProduct.sizes.length > 0
+    ) {
       alert("الرجاء اختيار المقاس");
       return;
     }
 
     // Check Stock
-    if (selectedSize && product.sizeVariants?.length > 0) {
-      const variant = product.sizeVariants.find((v) => v.size === selectedSize);
+    if (selectedSize && workingProduct.sizeVariants?.length > 0) {
+      const variant = workingProduct.sizeVariants.find(
+        (v) => v.size === selectedSize,
+      );
       if (variant && variant.isOutOfStock) {
         alert("عذراً، هذا المقاس نفذت كميته");
         return;
       }
-    } else if (product.isOutOfStock) {
+    } else if (workingProduct.isOutOfStock) {
       alert("عذراً، هذا المنتج نفذت كميته");
       return;
     }
 
     // Get price and options for selected size if available
-    let price = product.price;
-    let syncData = {}; // Can contain variant_id or options object
+    let price = workingProduct.price;
+    let syncData = {
+      sallaProductId: workingProduct.sallaProductId || workingProduct.id,
+    };
 
-    if (selectedSize && product.sizeVariants?.length > 0) {
-      const variant = product.sizeVariants.find(
+    if (selectedSize && workingProduct.sizeVariants?.length > 0) {
+      const variant = workingProduct.sizeVariants.find(
         (v) => String(v.size).trim() === String(selectedSize).trim(),
       );
       if (variant) {
         price = variant.price;
-        // Priority 1: SKU-based variant_id
-        if (variant.variantId) {
-          syncData.variantId = variant.variantId;
+        // Priority 1: Variant ID
+        if (variant.variantId || variant.sallaVariantId) {
+          syncData.variantId = variant.variantId || variant.sallaVariantId;
         }
-        // Priority 2: Custom Options (e.g. { [optionId]: valueId })
+        // Priority 2: Custom Options
         else if (variant.optionId && variant.valueId) {
           syncData.options = { [variant.optionId]: variant.valueId };
         }
-      } else {
-        // Selected size not found in variants
-      }
-    } else if (product.sizeVariants?.length > 0) {
-      // Emergency fallback
-      const variant = product.sizeVariants[0];
-      price = variant.price;
-      if (variant.variantId) {
-        syncData.variantId = variant.variantId;
-      } else if (variant.optionId && variant.valueId) {
-        syncData.options = { [variant.optionId]: variant.valueId };
       }
     }
 
     // Sync with Salla backend
-    await addToCartWithSync({ ...product, price }, 1, syncData);
+    await addToCartWithSync({ ...workingProduct, price }, 1, syncData);
     setShowToast(true);
   };
 

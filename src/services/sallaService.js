@@ -1231,34 +1231,31 @@ class SallaService {
               if (rb) log.push("SDK:Found!");
             }
 
-            // 2. REST Attempt (Local Proxy)
-            if (!rb) {
-              log.push("REST:Attempting...");
-              const r = await fetch(`/api/v1/products/${pid}`).catch((e) => {
-                log.push(`REST:Err=${e.message}`);
-                return null;
-              });
-              if (r && r.ok) {
-                const d = await r.json();
-                rb = d?.data || d?.product || d;
-                log.push("REST:Found!");
-              }
-            }
-
-            // 3. Direct Salla Attempt (V39 Addition)
+            // 2. Direct Salla Attempt (V40 Polished)
+            // Using storefront API often needs Store-Identifier from script config
             if (!rb) {
               log.push("Direct:Attempting...");
-              // Public storefront endpoint
+              const storeId = window.salla?.config?.store_id || "";
+              const headers = {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              };
+              if (storeId) headers["Store-Identifier"] = storeId;
+
               const r = await fetch(
                 `https://api.salla.dev/store/v1/products/${pid}`,
+                { headers },
               ).catch((e) => {
                 log.push(`Direct:Err=${e.message}`);
                 return null;
               });
+
               if (r && r.ok) {
                 const d = await r.json();
                 rb = d?.data || d?.product || d;
                 log.push("Direct:Found!");
+              } else if (r) {
+                log.push(`Direct:Status=${r.status}`);
               }
             }
 
