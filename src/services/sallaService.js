@@ -1209,79 +1209,105 @@ class SallaService {
 
         if ((isValidation || isAbaya2) && !isRetry) {
           log(
-            `[Storia] ${statusCode} Trigger detected. Attempting Reconstruction (V38)...`,
+            `[Storia] ${statusCode} Trigger detected. Attempting Reactive Repair (V43)...`,
           );
 
           try {
             const pid = Number(idToUse);
             const sm = window.salla || this.salla;
             let rb = null;
-            let log = [];
+            let logNotes = [];
 
-            // 1. SDK Attempt (V41 Updated to getDetails)
-            log.push("SDK:Attempting...");
-            if (sm.api?.product?.getDetails) {
-              const res = await sm.api.product.getDetails(pid).catch((e) => {
-                log.push(`SDK:Err=${e.message}`);
-                return null;
-              });
-              rb = res?.data || res?.product || (res?.id ? res : null);
-              if (rb) log.push("SDK:Found!");
-            } else if (sm.api?.fetch) {
-              const res = await sm.api
-                .fetch("product.details", { id: pid })
-                .catch((e) => {
-                  log.push(`SDK_Fetch:Err=${e.message}`);
-                  return null;
-                });
-              rb = res?.data || res?.product || (res?.id ? res : null);
-              if (rb) log.push("SDK:Found!");
+            // 1. Sniff the error for specific missing Option IDs
+            let precisionId = null;
+            if (errorData?.errors) {
+              const errKeys = Object.keys(errorData.errors);
+              const optErr = errKeys.find((k) => k.startsWith("options."));
+              if (optErr) {
+                precisionId = optErr.split(".")[1];
+                logNotes.push(`SniffedMissingOpt:${precisionId}`);
+              } else if (errorData.message?.includes("options.")) {
+                const match = errorData.message.match(/options\.(\d+)/);
+                if (match) {
+                  precisionId = match[1];
+                  logNotes.push(`SniffedMsgOpt:${precisionId}`);
+                }
+              }
             }
 
-            // 2. Direct Salla Attempt (V41 Polished)
+            // 2. High-Precision Local Fallback
+            if (window.product?.id == pid) {
+              rb = window.product;
+              logNotes.push("Global:Found(window.product)!");
+            }
+
+            // 3. SDK Attempt
             if (!rb) {
-              log.push("Direct:Attempting...");
-              const storeId = window.salla?.config?.store_id || "";
+              logNotes.push("SDK:Attempting...");
+              const target =
+                sm.api?.product?.getDetails || sm.api?.product?.fetch;
+              if (target) {
+                const res = await target
+                  .call(sm.api.product, pid)
+                  .catch(() => null);
+                rb = res?.data || res?.product || (res?.id ? res : null);
+                if (rb) logNotes.push("SDK:Found!");
+              }
+            }
+
+            // 4. Multi-Domain Direct Fetch
+            if (!rb) {
+              logNotes.push("Direct:Attempting...");
+              const storeId = sm.config?.store_id || "";
               const headers = {
                 Accept: "application/json",
                 "Content-Type": "application/json",
               };
               if (storeId) headers["Store-Identifier"] = storeId;
 
-              // Try both patterns for robustness
               const urls = [
                 `https://api.salla.dev/store/v1/products/${pid}`,
-                `https://api.salla.dev/store/v1/products/${pid}/details`,
+                `https://api.salla.sa/store/v1/products/${pid}`,
+                `https://s.salla.sa/products/${pid}.json`,
               ];
 
               for (const url of urls) {
                 const r = await fetch(url, { headers }).catch(() => null);
                 if (r && r.ok) {
                   const d = await r.json();
-                  rb = d?.data || d?.product || d;
+                  rb = d?.data || d?.product || (d?.id ? d : null);
                   if (rb) {
-                    log.push(`Direct:Found(${url.split("/").pop()})!`);
+                    logNotes.push(
+                      `Direct:Found(${url.includes("api.salla.sa") ? "sa" : url.includes(".json") ? "json" : "dev"})!`,
+                    );
                     break;
                   }
-                } else if (r) {
-                  log.push(`Direct:${url.split("/").pop()}:Status=${r.status}`);
                 }
               }
             }
 
-            diagnosis = `Trigger: ${diagnosis}. Logic: ${log.join(" | ")}`;
+            diagnosis = `Trigger: ${diagnosis}. Logic: ${logNotes.join(" | ")}`;
 
             if (rb) {
               console.log(`[Storia] REPAIR: Keys=${Object.keys(rb).join(",")}`);
 
               const archeology = (obj, depth = 0) => {
                 let out = { o: [], v: [] };
-                if (!obj || depth > 5) return out;
+                if (!obj || depth > 6) return out;
+
+                // Check if obj itself is an option
+                if (
+                  obj.id &&
+                  (obj.name || obj.label) &&
+                  (obj.values || obj.data)
+                ) {
+                  out.o.push(obj);
+                }
+
                 Object.values(obj).forEach((val) => {
                   if (Array.isArray(val) && val.length > 0) {
                     const first = val[0];
-                    if (typeof first === "object") {
-                      // OPTION detected by structure
+                    if (typeof first === "object" && first !== null) {
                       if (
                         first.id &&
                         (first.name || first.label) &&
@@ -1291,7 +1317,6 @@ class SallaService {
                       ) {
                         out.o.push(...val);
                       }
-                      // VARIANT detected by structure
                       if (
                         first.id &&
                         (first.sku || first.price || first.sku_id)
@@ -1299,7 +1324,7 @@ class SallaService {
                         out.v.push(...val);
                       }
                     }
-                  } else if (val && typeof val === "object") {
+                  } else if (val && typeof val === "object" && val !== null) {
                     const inner = archeology(val, depth + 1);
                     out.o.push(...inner.o);
                     out.v.push(...inner.v);
@@ -1319,34 +1344,49 @@ class SallaService {
               const vs = rb.variants || rb.skus || discovered.v || [];
 
               diagnosis += ` | Found ${ros.length} opts, ${vs.length} vars.`;
-              if (ros.length === 0) {
-                diagnosis += ` | RootKeys: ${Object.keys(rb).join(",").slice(0, 100)}`;
-              }
 
               const pickedOptions = {};
-              // 1. Find a Size-like option first
-              const sizeLike = ros.find((o) => {
-                const n = String(o.name || o.label || "").toLowerCase();
-                return (
-                  n.includes("مقاس") ||
-                  n.includes("size") ||
-                  n.includes("قياس") ||
-                  n.includes("قياسات") ||
-                  n.includes("القياس")
-                );
-              });
 
-              if (sizeLike) {
-                const vals =
-                  sizeLike.values ||
-                  (Array.isArray(sizeLike.data) ? sizeLike.data : []);
-                if (vals.length > 0) {
-                  pickedOptions[Number(sizeLike.id)] = Number(vals[0].id);
-                  diagnosis += ` | Auto-picked size ${sizeLike.id}`;
+              // 1. Precision Match (The key we sniffed from the error)
+              if (precisionId) {
+                const target = ros.find(
+                  (o) => String(o.id) === String(precisionId),
+                );
+                if (target) {
+                  const vals =
+                    target.values ||
+                    (Array.isArray(target.data) ? target.data : []);
+                  if (vals.length > 0) {
+                    pickedOptions[Number(target.id)] = Number(vals[0].id);
+                    diagnosis += ` | Precision-picked ${target.id}`;
+                  }
                 }
               }
 
-              // 2. Fallback: Fill ALL required options with first value
+              // 2. Size Discovery (Traditional)
+              if (Object.keys(pickedOptions).length === 0) {
+                const sizeLike = ros.find((o) => {
+                  const n = String(o.name || o.label || "").toLowerCase();
+                  return (
+                    n.includes("مقاس") ||
+                    n.includes("size") ||
+                    n.includes("قياس") ||
+                    n.includes("القياس")
+                  );
+                });
+
+                if (sizeLike) {
+                  const vals =
+                    sizeLike.values ||
+                    (Array.isArray(sizeLike.data) ? sizeLike.data : []);
+                  if (vals.length > 0) {
+                    pickedOptions[Number(sizeLike.id)] = Number(vals[0].id);
+                    diagnosis += ` | Auto-picked size ${sizeLike.id}`;
+                  }
+                }
+              }
+
+              // 3. Last Resort Fallback
               ros.forEach((opt) => {
                 if (!pickedOptions[Number(opt.id)]) {
                   const vals =
@@ -1363,7 +1403,7 @@ class SallaService {
                   quantity: Number(currentPayload.quantity),
                   options: pickedOptions,
                 };
-                diagnosis += " | Retrying with Options.";
+                diagnosis += " | Retrying with discovered options.";
                 return await attemptAdd(repairedPayload, true);
               } else if (vs.length > 0) {
                 const repairedPayload = {
@@ -1371,14 +1411,14 @@ class SallaService {
                   quantity: Number(currentPayload.quantity),
                   variant_id: Number(vs[0].id),
                 };
-                diagnosis += " | Retrying with Variant.";
+                diagnosis += " | Retrying with discovered variant.";
                 return await attemptAdd(repairedPayload, true);
               } else {
                 diagnosis +=
                   " | No actionable discovered. Structure Blindness!";
               }
             } else {
-              diagnosis += " | All repair fetches failed.";
+              diagnosis += " | All repair attempts failed to find data.";
             }
           } catch (repairErr) {
             diagnosis += ` | Fatal Error: ${repairErr.message}`;

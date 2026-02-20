@@ -60,35 +60,39 @@ const ProductDetails = () => {
               .getDetails(sallaId)
               .catch(() => null);
 
-            if (res && res.data) {
-              const d = res.data;
+            let d = res?.data;
+            if (window.product && window.product.id == sallaId) {
+              console.log(
+                "[Storia] Discovery Success: Found in Global Context (window.product)",
+              );
+              d = window.product;
+            }
+
+            if (d && (d.regular_price || d.options || d.variants || d.skus)) {
               console.log(
                 "[Storia] DEBUG: Raw SDK Object Keys:",
                 Object.keys(d),
               );
 
-              // DATA ARCHEOLOGIST: Find ANY array containing option-like or variant-like structures
               const scavenge = (obj, depth = 0) => {
                 let found = { options: [], variants: [] };
-                if (!obj || depth > 5) return found;
+                if (!obj || depth > 7) return found;
 
                 Object.values(obj).forEach((val) => {
                   if (Array.isArray(val) && val.length > 0) {
                     const first = val[0];
-                    if (typeof first !== "object") return;
+                    if (typeof first !== "object" || first === null) return;
 
-                    // Does it look like an OPTION? (Array of things with values/data)
                     const isOption =
                       first.id &&
                       (first.name || first.label) &&
                       (first.values || first.data || Array.isArray(first.data));
-                    // Does it look like a VARIANT? (Array of things with sku/price/id)
                     const isVariant =
                       first.id && (first.sku || first.price || first.sku_id);
 
                     if (isOption) found.options.push(...val);
                     if (isVariant) found.variants.push(...val);
-                  } else if (val && typeof val === "object") {
+                  } else if (val && typeof val === "object" && val !== null) {
                     const inner = scavenge(val, depth + 1);
                     found.options.push(...inner.options);
                     found.variants.push(...inner.variants);
@@ -100,11 +104,11 @@ const ProductDetails = () => {
               const discovery = scavenge(d);
               if (discovery.options.length > 0)
                 console.log(
-                  `[Storia] ARCHEOLOGY: Found ${discovery.options.length} options scattered in data.`,
+                  `[Storia] ARCHEOLOGY: Found ${discovery.options.length} options scattered.`,
                 );
               if (discovery.variants.length > 0)
                 console.log(
-                  `[Storia] ARCHEOLOGY: Found ${discovery.variants.length} variants scattered in data.`,
+                  `[Storia] ARCHEOLOGY: Found ${discovery.variants.length} variants scattered.`,
                 );
 
               const rawOptions = d.options || discovery.options || [];
@@ -145,7 +149,7 @@ const ProductDetails = () => {
                       sizeOpt.values ||
                       (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
                     console.log(
-                      `[Storia] HEAL SUCCESS: Found Size Option "${sizeOpt.name}" with ${vals.length} values.`,
+                      `[Storia] HEAL SUCCESS: Found Size Option "${sizeOpt.name}" (${vals.length} values).`,
                     );
 
                     enrichedSizes = vals.map((v) =>
@@ -164,7 +168,7 @@ const ProductDetails = () => {
                     }));
                   } else if (rawVariants.length > 0) {
                     console.log(
-                      "[Storia] HEAL WARNING: No size opt found, mapping variants directly.",
+                      "[Storia] HEAL WARNING: Mapping variants directly.",
                     );
                     enrichedVariants = rawVariants.map((v) => ({
                       size:
