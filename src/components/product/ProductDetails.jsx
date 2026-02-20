@@ -90,7 +90,66 @@ const ProductDetails = () => {
 
             let d = res?.data;
 
-            // 3. JIT SLUG FETCHER (V8 Surgeon): Probing HTML for hidden attributes and scripts
+            // HELPER: Recursive Searcher (V9)
+            const probe = (item) => {
+              if (!item || typeof item !== "object") return null;
+              if (item.id == sallaId && (item.options || item.variants))
+                return item;
+              for (let k in item) {
+                if (item[k] && typeof item[k] === "object" && k !== "parent") {
+                  const found = probe(item[k]);
+                  if (found) return found;
+                }
+              }
+              return null;
+            };
+
+            // 1. LIVE DOM SNIFFER (V9): Search the current page without a network fetch
+            const liveProbe = (text) => {
+              if (!text) return null;
+              const scripts =
+                text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
+              for (let s of scripts) {
+                const content = s
+                  .replace(/<script.*?>/i, "")
+                  .replace(/<\/script>/i, "")
+                  .trim();
+                try {
+                  const jsonMatch = content.match(/{[\s\S]*?}/);
+                  if (jsonMatch) {
+                    const found = probe(JSON.parse(jsonMatch[0]));
+                    if (found) return found;
+                  }
+                } catch {
+                  /* ignore */
+                }
+              }
+              const attrMatch =
+                text.match(/data-product=["']({.*?})["']/i) ||
+                text.match(/data-product-data=["']({.*?})["']/i);
+              if (attrMatch) {
+                try {
+                  const unescaped = attrMatch[1]
+                    .replace(/&quot;/g, '"')
+                    .replace(/&amp;/g, "&");
+                  const parsed = JSON.parse(unescaped);
+                  if (parsed && parsed.id == sallaId) return parsed;
+                } catch {
+                  /* ignore */
+                }
+              }
+              return null;
+            };
+
+            // Immediate Check - Best for SPA
+            const immediate = liveProbe(document.documentElement.outerHTML);
+            if (immediate) {
+              console.warn("[Storia] V9: Live DOM Sniffer SUCCESS!");
+              processDiscovery(immediate);
+              return;
+            }
+
+            // 2. JIT SLUG FETCHER (V8 Surgeon): Probing HTML for hidden attributes and scripts
             const jitSlugFetch = async () => {
               const url = product.url || product.slug || `/p/${sallaId}`;
               console.log(`[Storia] V8: JIT Surgeon Probing ${url}...`);
@@ -99,73 +158,12 @@ const ProductDetails = () => {
                 headers: { "Store-Identifier": storeId },
               }).catch(() => null);
               if (res && res.ok) {
-                const text = (await res.ok) ? await res.text() : "";
-
-                // Strategy A: JSON.parse Script Blocks
-                const scripts =
-                  text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
-                for (let s of scripts) {
-                  const content = s
-                    .replace(/<script.*?>/i, "")
-                    .replace(/<\/script>/i, "")
-                    .trim();
-                  try {
-                    const jsonMatch = content.match(/{[\s\S]*?}/);
-                    if (jsonMatch) {
-                      const parsed = JSON.parse(jsonMatch[0]);
-                      const probe = (item) => {
-                        if (!item || typeof item !== "object") return null;
-                        if (
-                          item.id == sallaId &&
-                          (item.options || item.variants)
-                        )
-                          return item;
-                        for (let k in item) {
-                          if (
-                            item[k] &&
-                            typeof item[k] === "object" &&
-                            k !== "parent"
-                          ) {
-                            const found = probe(item[k]);
-                            if (found) return found;
-                          }
-                        }
-                        return null;
-                      };
-                      const found = probe(parsed);
-                      if (found) {
-                        console.warn(
-                          "[Storia] V8: JIT Scraper SUCCESS (Script)!",
-                        );
-                        processDiscovery(found);
-                        return true;
-                      }
-                    }
-                  } catch {
-                    /* ignore */
-                  }
-                }
-
-                // Strategy B: Data Attributes
-                const productJsonMatch =
-                  text.match(/data-product=["']({.*?})["']/i) ||
-                  text.match(/data-product-data=["']({.*?})["']/i);
-                if (productJsonMatch) {
-                  try {
-                    const unescaped = productJsonMatch[1]
-                      .replace(/&quot;/g, '"')
-                      .replace(/&amp;/g, "&");
-                    const parsed = JSON.parse(unescaped);
-                    if (parsed && parsed.id == sallaId) {
-                      console.warn(
-                        "[Storia] V8: JIT Scraper SUCCESS (Attribute)!",
-                      );
-                      processDiscovery(parsed);
-                      return true;
-                    }
-                  } catch {
-                    /* ignore */
-                  }
+                const text = await res.text();
+                const found = liveProbe(text);
+                if (found) {
+                  console.warn("[Storia] V8: JIT Scraper SUCCESS!");
+                  processDiscovery(found);
+                  return true;
                 }
               }
               return false;

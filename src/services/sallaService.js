@@ -1220,6 +1220,19 @@ class SallaService {
             let rb = null;
             let logNotes = [];
 
+            // HELPER: Recursive Searcher (V9)
+            const probe = (item) => {
+              if (!item || typeof item !== "object") return null;
+              if (item.id == pid && !isHollow(item)) return item;
+              for (let k in item) {
+                if (item[k] && typeof item[k] === "object" && k !== "parent") {
+                  const r = probe(item[k]);
+                  if (r) return r;
+                }
+              }
+              return null;
+            };
+
             // 1. SNIFF ERROR: Look for specific missing Option IDs
             let targetOptionId = null;
             if (errorData) {
@@ -1268,13 +1281,57 @@ class SallaService {
               }, 2000);
             }
 
-            // 2. SEARCH GLOBAL CONTEXT
-            if (window.product && window.product.id == pid) {
-              rb = window.product;
-              logNotes.push("Found:window.product!");
-            } else if (window.salla_config?.product?.id == pid) {
-              rb = window.salla_config.product;
-              logNotes.push("Found:salla_config!");
+            // 2. SEARCH LIVE DOM & GLOBAL CONTEXT (V9: Live Sniffer)
+            const liveProbe = (text) => {
+              if (!text) return null;
+              const scripts =
+                text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
+              for (let s of scripts) {
+                const content = s
+                  .replace(/<script.*?>/i, "")
+                  .replace(/<\/script>/i, "")
+                  .trim();
+                if (!content || content.length < 50) continue;
+                try {
+                  const jsonMatch = content.match(/{[\s\S]*?}/);
+                  if (jsonMatch) {
+                    const parsed = JSON.parse(jsonMatch[0]);
+                    const found = probe(parsed);
+                    if (found) return found;
+                  }
+                } catch {
+                  /* ignore */
+                }
+              }
+              const attrMatch =
+                text.match(/data-product=["']({.*?})["']/i) ||
+                text.match(/data-product-data=["']({.*?})["']/i);
+              if (attrMatch) {
+                try {
+                  const unescaped = attrMatch[1]
+                    .replace(/&quot;/g, '"')
+                    .replace(/&amp;/g, "&");
+                  const parsed = JSON.parse(unescaped);
+                  if (parsed && parsed.id == pid) return parsed;
+                } catch {
+                  /* ignore */
+                }
+              }
+              return null;
+            };
+
+            // Start with current page DOM - Fast & Same-Origin
+            rb = liveProbe(document.documentElement.outerHTML);
+            if (rb) logNotes.push("Live:DOM:Found!");
+
+            if (!rb || isHollow(rb)) {
+              if (window.product && window.product.id == pid) {
+                rb = window.product;
+                logNotes.push("Found:window.product!");
+              } else if (window.salla_config?.product?.id == pid) {
+                rb = window.salla_config.product;
+                logNotes.push("Found:salla_config!");
+              }
             }
 
             // 3. SDK FETCH
@@ -1294,48 +1351,44 @@ class SallaService {
                 } else if (fetched) {
                   rb = fetched;
                   logNotes.push("SDK:Found(Hollow)!");
-                  console.log(
-                    `[Storia] Hollow SDK Keys:`,
-                    Object.keys(fetched),
-                  );
                 }
               }
             }
 
-            // 4. MULTI-DOMAIN DIRECT FETCH
+            // 4. PRECISE DIRECT FETCH (Same-Origin Only)
             if (!rb || isHollow(rb)) {
               logNotes.push("Direct:Attempting...");
               const storeId = sm.config?.store_id || "";
               const headers = {
                 Accept: "application/json",
-                "Content-Type": "application/json",
+                "Store-Identifier": storeId,
               };
-              if (storeId) headers["Store-Identifier"] = storeId;
               const urls = [
-                `https://s.salla.sa/products/${pid}.json`,
                 `/api/v1/products/${pid}`,
-                `/p${pid}.json`,
-                `/p/${pid}.json`,
+                `/p/${pid}`,
+                `/product/${pid}`,
               ];
               for (const url of urls) {
                 const r = await fetch(url, { headers }).catch(() => null);
                 if (r && r.ok) {
-                  const d = await r.json();
-                  const fetched = d?.data || d?.product || (d?.id ? d : null);
-                  if (fetched && !isHollow(fetched)) {
-                    rb = fetched;
-                    logNotes.push(
-                      `Direct:Found(${url.includes("sa") ? "sa" : "dev"})!`,
-                    );
-                    break;
+                  try {
+                    const d = await r.json();
+                    const fetched = d?.data || d?.product || (d?.id ? d : null);
+                    if (fetched && !isHollow(fetched)) {
+                      rb = fetched;
+                      logNotes.push(`Direct:Found(${url})!`);
+                      break;
+                    }
+                  } catch {
+                    /* Silently skip HTML responses */
                   }
                 }
               }
             }
 
-            // 5. V8 SURGEON HTML SCRAPER (DOM & Attribute Archeology)
+            // 5. V9 SURGEON HTML SCRAPER (Background fetches if DOM failed)
             if (!rb || isHollow(rb)) {
-              logNotes.push("V8:SurgeonEngaged...");
+              logNotes.push("V9:SurgeonEngaged...");
               const storeId = sm.config?.store_id || "";
               const headers = {
                 Accept: "application/json, text/html",
@@ -1359,72 +1412,15 @@ class SallaService {
               ].filter(Boolean);
 
               for (const p of patterns) {
-                log(`[Storia] V8 Scraper: Probing ${p}...`);
+                log(`[Storia] V9 Scraper: Probing ${p}...`);
                 const htmlRes = await fetch(p, { headers }).catch(() => null);
                 if (htmlRes && htmlRes.ok) {
                   const text = await htmlRes.text();
-
-                  // Strategy A: JSON-LD & Scripts (Enhanced V7)
-                  const scripts =
-                    text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
-                  for (let s of scripts) {
-                    const content = s
-                      .replace(/<script.*?>/i, "")
-                      .replace(/<\/script>/i, "")
-                      .trim();
-                    if (!content || content.length < 50) continue;
-
-                    try {
-                      const jsonMatch = content.match(/{[\s\S]*?}/);
-                      if (jsonMatch) {
-                        const parsed = JSON.parse(jsonMatch[0]);
-                        const probe = (item) => {
-                          if (!item || typeof item !== "object") return null;
-                          if (item.id == pid && !isHollow(item)) return item;
-                          for (let k in item) {
-                            if (
-                              item[k] &&
-                              typeof item[k] === "object" &&
-                              k !== "parent"
-                            ) {
-                              const r = probe(item[k]);
-                              if (r) return r;
-                            }
-                          }
-                          return null;
-                        };
-                        const found = probe(parsed);
-                        if (found) {
-                          rb = found;
-                          logNotes.push("V8:Found(Script)!");
-                          break;
-                        }
-                      }
-                    } catch {
-                      /* skip */
-                    }
-                  }
-                  if (rb && !isHollow(rb)) break;
-
-                  // Strategy B: DATA-ATTRIBUTES (The Surgeon)
-                  log(`[Storia] V8: Probing attributes for ID ${pid}...`);
-                  const productJsonMatch =
-                    text.match(/data-product=["']({.*?})["']/i) ||
-                    text.match(/data-product-data=["']({.*?})["']/i);
-                  if (productJsonMatch) {
-                    try {
-                      const unescaped = productJsonMatch[1]
-                        .replace(/&quot;/g, '"')
-                        .replace(/&amp;/g, "&");
-                      const parsed = JSON.parse(unescaped);
-                      if (parsed && parsed.id == pid) {
-                        rb = parsed;
-                        logNotes.push("V8:Found(Attr)!");
-                        break;
-                      }
-                    } catch {
-                      /* ignore */
-                    }
+                  const found = liveProbe(text);
+                  if (found) {
+                    rb = found;
+                    logNotes.push("V9:Scraper:Found!");
+                    break;
                   }
 
                   // Strategy C: Specific Option Hunter in HTML
@@ -1435,10 +1431,7 @@ class SallaService {
                         "i",
                       ),
                     );
-                    if (optMatch) {
-                      logNotes.push("V8:HTML:OptionSeen!");
-                      // If we see the option but can't find the full object, at least we know it exists.
-                    }
+                    if (optMatch) logNotes.push("V9:HTML:OptionSeen!");
                   }
                 }
               }
