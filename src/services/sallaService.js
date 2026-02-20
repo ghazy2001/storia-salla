@@ -870,6 +870,7 @@ class SallaService {
             name.includes("size") ||
             name.includes("مقاس") ||
             name.includes("قياس") ||
+            name.includes("القياس") ||
             name.includes("اللون")
           );
         });
@@ -1056,71 +1057,118 @@ class SallaService {
 
   /**
    * Fetch detailed product data (with sizes/options) for a single product
-   * Uses the same mapping logic as _processSallaProducts
+   * Uses multiple strategies and maps through _processSallaProducts
    * @param {number|string} sallaProductId - Salla product ID
    * @returns {object|null} Fully mapped product with sizes, variants, prices
    */
   async getProductDetails(sallaProductId) {
-    if (!this.isAvailable()) {
-      log("[Storia] SDK not available for getProductDetails");
+    log(`[Storia] getProductDetails(${sallaProductId}) starting...`);
+    let rawProduct = null;
+
+    // STRATEGY 1: Direct REST API (most reliable for full product data with options)
+    try {
+      const sm = window.salla || this.salla;
+      const storeId = sm?.config?.store_id || "";
+      const headers = { Accept: "application/json" };
+      if (storeId) headers["Store-Identifier"] = storeId;
+
+      const restUrls = [
+        `/api/v1/products/${sallaProductId}`,
+        `/products/${sallaProductId}.json`,
+      ];
+
+      for (const url of restUrls) {
+        try {
+          log(`[Storia] V18 Fidelity: Trying REST: ${url}`);
+          const res = await fetch(url, { headers });
+          if (res.ok) {
+            const json = await res.json();
+            rawProduct = json.data || json.product || (json.id ? json : null);
+            if (rawProduct) {
+              log(`[Storia] V18 Success from ${url}:`, {
+                hasOptions: !!rawProduct.options?.length,
+                hasVariants: !!(
+                  rawProduct.variants?.length || rawProduct.skus?.length
+                ),
+              });
+              break;
+            }
+          }
+        } catch (e) {
+          log(`[Storia] REST ${url} failed:`, e.message);
+        }
+      }
+    } catch (e) {
+      log("[Storia] REST strategy failed:", e);
+    }
+
+    // STRATEGY 2: SDK product.get() (may not have options but worth trying)
+    if (!rawProduct && this.isAvailable()) {
+      try {
+        const productManager =
+          this.salla.product ||
+          (this.salla.api ? this.salla.api.product : null);
+
+        if (productManager) {
+          if (typeof productManager.get === "function") {
+            try {
+              const res = await productManager.get(sallaProductId);
+              rawProduct = res?.data || (res?.id ? res : null);
+              if (rawProduct) log("[Storia] SDK product.get() success");
+            } catch (e) {
+              log("[Storia] SDK product.get() failed:", e.message);
+            }
+          }
+
+          if (!rawProduct && typeof productManager.fetch === "function") {
+            try {
+              const res = await productManager.fetch({ id: sallaProductId });
+              if (res?.data) {
+                rawProduct = Array.isArray(res.data) ? res.data[0] : res.data;
+                if (rawProduct) log("[Storia] SDK product.fetch({id}) success");
+              }
+            } catch (e) {
+              log("[Storia] SDK product.fetch({id}) failed:", e.message);
+            }
+          }
+        }
+      } catch (e) {
+        log("[Storia] SDK strategy failed:", e);
+      }
+    }
+
+    // STRATEGY 3: Check __STORIA_PRODUCTS__ cache
+    if (!rawProduct) {
+      const cached = window.__STORIA_PRODUCTS__?.[sallaProductId];
+      if (cached?.raw) {
+        rawProduct = cached.raw;
+        log("[Storia] Using cached raw product data");
+      }
+    }
+
+    if (!rawProduct) {
+      log(`[Storia] Could not fetch product ${sallaProductId} from any source`);
       return null;
     }
 
+    // Use existing mapping logic
     try {
-      const productManager =
-        this.salla.product || (this.salla.api ? this.salla.api.product : null);
-
-      if (!productManager) {
-        log("[Storia] No product manager available");
-        return null;
-      }
-
-      let rawProduct = null;
-
-      // Try .get() first (individual product fetch with full options)
-      if (typeof productManager.get === "function") {
-        try {
-          const res = await productManager.get(sallaProductId);
-          if (res?.data) rawProduct = res.data;
-          else if (res?.id) rawProduct = res;
-        } catch (e) {
-          log("[Storia] product.get() failed:", e);
-        }
-      }
-
-      // Fallback to .fetch() with product ID
-      if (!rawProduct && typeof productManager.fetch === "function") {
-        try {
-          const res = await productManager.fetch({ id: sallaProductId });
-          if (res?.data) {
-            rawProduct = Array.isArray(res.data) ? res.data[0] : res.data;
-          }
-        } catch (e) {
-          log("[Storia] product.fetch({id}) failed:", e);
-        }
-      }
-
-      if (!rawProduct) {
-        log(`[Storia] Could not fetch product ${sallaProductId}`);
-        return null;
-      }
-
-      // Use existing mapping logic
       const mapped = await this._processSallaProducts([rawProduct]);
       if (mapped && mapped.length > 0) {
-        log(`[Storia] getProductDetails(${sallaProductId}) SUCCESS:`, {
+        log(`[Storia] getProductDetails(${sallaProductId}) FINAL:`, {
           sizes: mapped[0].sizes,
-          sizeVariants: mapped[0].sizeVariants?.length,
+          sizeVariantsCount: mapped[0].sizeVariants?.length,
           isOnSale: mapped[0].isOnSale,
+          regularPrice: mapped[0].regularPrice,
+          salePrice: mapped[0].salePrice,
         });
         return mapped[0];
       }
-
-      return null;
-    } catch (error) {
-      console.error("[Storia] getProductDetails error:", error);
-      return null;
+    } catch (e) {
+      log("[Storia] _processSallaProducts mapping failed:", e);
     }
+
+    return null;
   }
 
   /**
