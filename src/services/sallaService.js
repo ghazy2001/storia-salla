@@ -818,6 +818,56 @@ class SallaService {
           });
         }
 
+        // Helper to map variant price logic
+        const mapVariant = (v) => {
+          const vPrice = getVal(v.price) || amount;
+          let vRegularPrice = vPrice;
+          let vSalePrice = null;
+          let vIsOnSale = false;
+
+          // Check regular price
+          if (v.regular_price) {
+            const rawReg = getVal(v.regular_price);
+            if (rawReg > vPrice) {
+              vRegularPrice = rawReg;
+              vSalePrice = vPrice;
+              vIsOnSale = true;
+            }
+          }
+
+          // Check sale price
+          if (!vIsOnSale && v.sale_price) {
+            const rawSale = getVal(v.sale_price);
+            if (rawSale > 0 && rawSale < vRegularPrice) {
+              vSalePrice = rawSale;
+              vIsOnSale = true;
+            }
+          }
+
+          // Check promotion
+          if (!vIsOnSale && v.promotion && v.promotion.price) {
+            const rawPromo = getVal(v.promotion.price);
+            if (rawPromo > 0 && rawPromo < vRegularPrice) {
+              vSalePrice = rawPromo;
+              vIsOnSale = true;
+            }
+          }
+
+          return {
+            size: translate(v.name || v.label || v.sku || "").trim(),
+            price: vPrice, // This is the "effective" price
+            regularPrice: vRegularPrice,
+            salePrice: vSalePrice,
+            isOnSale: vIsOnSale,
+            stock: v.quantity !== undefined ? Number(v.quantity) : 0,
+            isOutOfStock: v.quantity !== undefined && Number(v.quantity) <= 0,
+            optionId: sizeOption ? sizeOption.id : null,
+            valueId: v.id,
+            variantId: v.id,
+            sallaVariantId: v.id,
+          };
+        };
+
         if (sizeOption) {
           const vals =
             sizeOption.values ||
@@ -825,45 +875,9 @@ class SallaService {
               ? sizeOption.data
               : []);
           sizes = vals.map((v) => translate(v.name || v.label).trim());
-          sizeVariants = vals.map((v) => {
-            const vPrice = v.price ? v.price.amount || v.price : amount;
-            const vSalePrice = v.sale_price
-              ? v.sale_price.amount || v.sale_price
-              : null;
-            const vIsOnSale = vSalePrice && vSalePrice < vPrice;
-
-            return {
-              size: translate(v.name || v.label).trim(),
-              price: vPrice,
-              salePrice: vSalePrice,
-              isOnSale: vIsOnSale,
-              stock: v.quantity !== undefined ? Number(v.quantity) : 0, // Default to 0 if undefined to be safe, or 10 if we want to be optimistic. Let's trust API.
-              isOutOfStock: v.quantity !== undefined && Number(v.quantity) <= 0,
-              optionId: sizeOption.id,
-              valueId: v.id,
-              sallaVariantId: v.id,
-            };
-          });
+          sizeVariants = vals.map(mapVariant);
         } else if (rawVariants && rawVariants.length > 0) {
-          // Fallback to SKU variants
-          sizeVariants = rawVariants.map((v) => {
-            const vPrice = v.price ? v.price.amount || v.price : amount;
-            const vSalePrice = v.sale_price
-              ? v.sale_price.amount || v.sale_price
-              : null;
-            const vIsOnSale = vSalePrice && vSalePrice < vPrice;
-
-            return {
-              size: translate(v.name || v.label || v.sku || "").trim(),
-              price: vPrice,
-              salePrice: vSalePrice,
-              isOnSale: vIsOnSale,
-              stock: v.quantity !== undefined ? Number(v.quantity) : 0,
-              isOutOfStock: v.quantity !== undefined && Number(v.quantity) <= 0,
-              variantId: v.id,
-              sallaVariantId: v.id,
-            };
-          });
+          sizeVariants = rawVariants.map(mapVariant);
           sizes = sizeVariants.map((v) => v.size).filter((s) => s);
         }
 
