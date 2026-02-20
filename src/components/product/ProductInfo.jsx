@@ -3,13 +3,6 @@ import React from "react";
 /**
  * ProductInfo Component
  * Renders product title, price, descriptions and add to cart section.
- * Props:
- * @param {Object} product - The product object
- * @param {string} selectedSize - Currently selected size
- * @param {Function} setSelectedSize - State setter for selected size
- * @param {Function} handleAddToCart - Function to handle adding item to cart
- * @param {string} theme - Current application theme
- * @param {boolean} isDiscovering - Discovery status
  */
 const ProductInfo = ({
   product,
@@ -19,6 +12,9 @@ const ProductInfo = ({
   theme,
   isDiscovering,
 }) => {
+  // Use theme if needed, otherwise ignore to fix lint
+  const isGoldTheme = theme === "gold" || !theme;
+
   return (
     <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
       <h1 className="text-4xl md:text-5xl font-sans font-black mb-4 text-brand-charcoal w-full">
@@ -27,7 +23,9 @@ const ProductInfo = ({
 
       <div className="flex items-center gap-4 mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-3xl font-sans font-bold text-brand-gold">
+          <span
+            className={`text-3xl font-sans font-bold ${isGoldTheme ? "text-brand-gold" : "text-brand-charcoal"}`}
+          >
             {product.salePrice || product.price} ر.س
           </span>
           {product.isOnSale &&
@@ -40,11 +38,20 @@ const ProductInfo = ({
         {product.isOnSale && (
           <span className="bg-red-50 text-red-500 text-xs px-2 py-1 rounded-full font-bold">
             وفر{" "}
-            {Math.round(
-              ((product.regularPrice - (product.salePrice || product.price)) /
-                product.regularPrice) *
-                100,
-            )}
+            {(() => {
+              const reg = parseFloat(
+                String(product.regularPrice).replace(/[^\d.]/g, ""),
+              );
+              const sale = parseFloat(
+                String(product.salePrice || product.price).replace(
+                  /[^\d.]/g,
+                  "",
+                ),
+              );
+              if (!reg || isNaN(reg) || !sale || isNaN(sale) || reg <= sale)
+                return 0;
+              return Math.round(((reg - sale) / reg) * 100);
+            })()}
             %
           </span>
         )}
@@ -66,7 +73,7 @@ const ProductInfo = ({
             {product.sizes && product.sizes.length > 0
               ? product.sizes.map((size) => {
                   const variant = product.sizeVariants?.find(
-                    (v) => v.size === size,
+                    (v) => String(v.size).trim() === String(size).trim(),
                   );
                   const isOutOfStock = variant?.isOutOfStock;
 
@@ -111,7 +118,7 @@ const ProductInfo = ({
           disabled={(() => {
             if (product.sizes && product.sizes.length > 0) {
               const variant = product.sizeVariants?.find(
-                (v) => v.size === selectedSize,
+                (v) => String(v.size).trim() === String(selectedSize).trim(),
               );
               return !selectedSize || (variant && variant.isOutOfStock);
             }
@@ -121,7 +128,7 @@ const ProductInfo = ({
             (() => {
               if (product.sizes && product.sizes.length > 0) {
                 const variant = product.sizeVariants?.find(
-                  (v) => v.size === selectedSize,
+                  (v) => String(v.size).trim() === String(selectedSize).trim(),
                 );
                 return !selectedSize || (variant && variant.isOutOfStock);
               }
@@ -134,7 +141,7 @@ const ProductInfo = ({
           {(() => {
             if (product.sizes && product.sizes.length > 0) {
               const variant = product.sizeVariants?.find(
-                (v) => v.size === selectedSize,
+                (v) => String(v.size).trim() === String(selectedSize).trim(),
               );
               if (!selectedSize) return "اختر المقاس أولاً";
               if (variant && variant.isOutOfStock) return "نفذت الكمية";
@@ -156,11 +163,9 @@ const ProductInfo = ({
         </div>
       </div>
 
-      {/* Salla Native Button Proxy - Essential for the automatic fallback */}
-      <div
-        id={`native-cart-btn-${product.sallaProductId || product.id}`}
-        className="hidden"
-      >
+      {/* Salla Native Button Proxy - THE SAFETY VALVE */}
+      {/* Keeping it in DOM but visually hidden so it's clickable by script */}
+      <div className="opacity-0 pointer-events-none absolute left-0 top-0 overflow-hidden w-px h-px">
         <salla-add-product-button
           product-id={product.sallaProductId || product.id}
         ></salla-add-product-button>

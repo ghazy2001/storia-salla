@@ -221,6 +221,19 @@ class SallaService {
       log("MAPPING_V6 - Starting detailed product processing");
     }
 
+    const getVal = (val) => {
+      if (!val && val !== 0) return 0;
+      if (typeof val === "number") return val;
+      if (typeof val === "object" && val.amount !== undefined)
+        return Number(val.amount);
+      if (typeof val === "string") {
+        // Strip currency symbols and commas, handle negative signs if any
+        const num = parseFloat(val.replace(/[^\d.-]/g, ""));
+        return isNaN(num) ? 0 : num;
+      }
+      return Number(val) || 0;
+    };
+
     const mappedResults = await Promise.all(
       productsData.map(async (p) => {
         const translate = (val) => {
@@ -664,19 +677,6 @@ class SallaService {
         let isOnSale = false;
         let priceStr = "";
 
-        // Helper to extract numeric value from potentially complex object
-        const getVal = (val) => {
-          if (!val && val !== 0) return 0;
-          let raw = val;
-          if (typeof val === "object") raw = val.amount || 0;
-          // Ensure we work with numbers
-          if (typeof raw === "string") {
-            // Remove currency symbols or commas if present, though usually Salla sends raw numbers as strings
-            return parseFloat(raw.replace(/[^\d.-]/g, "")) || 0;
-          }
-          return raw;
-        };
-
         amount = getVal(targetProduct.price);
         regularPrice = amount; // Default assumption
 
@@ -843,7 +843,6 @@ class SallaService {
               product.details ? product.details[key] : null,
               product.data ? product.data[key] : null,
             ];
-
             for (let items of candidates) {
               if (
                 items &&
