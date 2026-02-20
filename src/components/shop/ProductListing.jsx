@@ -176,7 +176,7 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                       عرض التفاصيل
                     </button>
                   </div>
-                  <div className="px-2 transition-transform duration-500 group-hover:translate-x-[-8px]">
+                  <div className="px-2 transition-transform duration-500 group-hover:translate-x-[8px]">
                     <h4
                       className={`text-xl font-sans mb-1 group-hover:text-brand-gold transition-colors ${
                         theme === "green" ? "text-brand-charcoal" : "text-white"
@@ -184,9 +184,9 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                     >
                       {product.name}
                     </h4>
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-start">
                       {product.isOnSale ? (
-                        <div className="flex items-center gap-2 mb-2 justify-end">
+                        <div className="flex items-center gap-2 mb-2 justify-start">
                           <span className="text-sm text-gray-400 line-through decoration-gray-400/50">
                             {product.regularPrice || product.price}
                           </span>

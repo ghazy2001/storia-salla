@@ -24,7 +24,6 @@ const ProductDetails = () => {
   const [activeMedia, setActiveMedia] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [enrichedData, setEnrichedData] = useState(null);
-  const [isDiscovering, setIsDiscovering] = useState(false);
 
   // 2. Final Product Data (Base + Enriched)
   const displayProduct = useMemo(() => {
@@ -39,7 +38,6 @@ const ProductDetails = () => {
     if (!sallaId || sallaId < 100) return;
 
     let isMounted = true;
-    setIsDiscovering(true);
 
     const discover = async () => {
       try {
@@ -58,7 +56,9 @@ const ProductDetails = () => {
       } catch (err) {
         console.warn("[Storia] Discovery Error:", err);
       } finally {
-        if (isMounted) setIsDiscovering(false);
+        if (isMounted) {
+          /* done */
+        }
       }
     };
 
@@ -74,6 +74,26 @@ const ProductDetails = () => {
 
   // 4. Cart Logic - THE PURE NATIVE PROXY
   // No more manual size validation! Salla handles it in the native popup.
+  useEffect(() => {
+    // Listen for Salla's native "item added" event to show our Toast
+    const handleSallaCartAdd = (event) => {
+      console.log("[Storia] Salla Cart Event detected:", event);
+      setShowToast(true);
+      // Refresh local cart state to update header count etc.
+      dispatch(fetchCartFromSalla());
+    };
+
+    if (window.salla) {
+      window.salla.event.on("cart::add-item", handleSallaCartAdd);
+    }
+
+    return () => {
+      if (window.salla) {
+        window.salla.event.off("cart::add-item", handleSallaCartAdd);
+      }
+    };
+  }, [dispatch]);
+
   const handleAddToCart = useCallback(() => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
@@ -94,15 +114,13 @@ const ProductDetails = () => {
 
     if (nativeBtn) {
       nativeBtn.click();
-      // Since Salla handles the toast/feedback, we don't strictly need ours,
-      // but we can listen for Salla's cart events if we want.
-      setShowToast(true);
-      setTimeout(() => dispatch(fetchCartFromSalla()), 1000);
+      // Toast and refresh are now handled by the event listener above
+      // to ensure they only happen on SUCCESSFUL addition.
     } else {
       console.error("[Storia] Native Salla button not found!");
       alert("عذراً، نظام السلة غير متوفر حالياً.");
     }
-  }, [displayProduct, dispatch]);
+  }, [displayProduct]);
 
   if (!baseProduct && products.length > 0) {
     return (

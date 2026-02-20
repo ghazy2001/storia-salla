@@ -5,7 +5,7 @@ import React from "react";
  * Renders product title, price, and add to cart section.
  * Streamlined to remove redundant currency labels and info boxes.
  */
-const ProductInfo = ({ product, handleAddToCart, theme }) => {
+const ProductInfo = ({ product, handleAddToCart }) => {
   // Ultra-safe parsing for numeric calculation to avoid NaN
   const safeParse = (val) => {
     if (!val) return 0;
