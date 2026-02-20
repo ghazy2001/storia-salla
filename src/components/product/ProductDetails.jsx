@@ -30,6 +30,10 @@ const ProductDetails = () => {
   const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
   const { addToCart } = useAddToCart();
 
+  const displayProduct = enrichedPriceInfo
+    ? { ...product, ...enrichedPriceInfo }
+    : product;
+
   // Reset selected size when product changes or sizes are enriched
   useEffect(() => {
     if (displayProduct?.sizes && displayProduct.sizes.length > 0) {
@@ -101,10 +105,6 @@ const ProductDetails = () => {
     const timer = setTimeout(scavenge, 1500);
     return () => clearTimeout(timer);
   }, [product?.id, product?.sallaProductId]);
-
-  const displayProduct = enrichedPriceInfo
-    ? { ...product, ...enrichedPriceInfo }
-    : product;
 
   useEffect(() => {
     window.scrollTo(0, 0);
