@@ -166,7 +166,14 @@ class SallaService {
           log("SDK fetches failed. Attempting Direct Storefront API (REST)...");
           try {
             // Fetch directly from the store's public API
-            const restRes = await fetch("/api/v1/products?per_page=100");
+            const sm = window.salla || this.salla;
+            const storeId = sm?.config?.store_id || "";
+            const headers = { Accept: "application/json" };
+            if (storeId) headers["Store-Identifier"] = storeId;
+
+            const restRes = await fetch("/api/v1/products?per_page=100", {
+              headers,
+            });
             if (restRes.ok) {
               const restData = await restRes.json();
               if (restData && restData.data) {
@@ -984,6 +991,8 @@ class SallaService {
           id: targetProduct.id,
           sallaProductId: targetProduct.id,
           name: translate(targetProduct.name),
+          slug: targetProduct.slug || "",
+          url: targetProduct.urls?.customer || targetProduct.url || "",
           image: mainImage || "/assets/logo.png",
           media: media,
           price: priceStr,
@@ -1281,7 +1290,7 @@ class SallaService {
               }, 2000);
             }
 
-            // 2. SEARCH LIVE DOM & GLOBAL CONTEXT (V9: Live Sniffer)
+            // 2. SEARCH LIVE DOM & GLOBAL CONTEXT (V10: Cache Discovery)
             const liveProbe = (text) => {
               if (!text) return null;
               const scripts =
@@ -1320,9 +1329,22 @@ class SallaService {
               return null;
             };
 
-            // Start with current page DOM - Fast & Same-Origin
-            rb = liveProbe(document.documentElement.outerHTML);
-            if (rb) logNotes.push("Live:DOM:Found!");
+            // Strategy 0: Salla's Internal Cache Mirror 🪞
+            if (window.salla?.config?.products) {
+              const cached = Object.values(window.salla.config.products).find(
+                (p) => p.id == pid,
+              );
+              if (cached && !isHollow(cached)) {
+                rb = cached;
+                logNotes.push("V10:SallaCache!");
+              }
+            }
+
+            // Strategy 1: Live DOM Sniffer
+            if (!rb || isHollow(rb)) {
+              rb = liveProbe(document.documentElement.outerHTML);
+              if (rb) logNotes.push("Live:DOM:Found!");
+            }
 
             if (!rb || isHollow(rb)) {
               if (window.product && window.product.id == pid) {
@@ -1355,7 +1377,7 @@ class SallaService {
               }
             }
 
-            // 4. PRECISE DIRECT FETCH (Same-Origin Only)
+            // 4. PRECISE DIRECT FETCH (Slug Discovery ✨)
             if (!rb || isHollow(rb)) {
               logNotes.push("Direct:Attempting...");
               const storeId = sm.config?.store_id || "";
@@ -1363,75 +1385,75 @@ class SallaService {
                 Accept: "application/json",
                 "Store-Identifier": storeId,
               };
+
+              const history =
+                window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[pid];
+              const slugUrl = history?.mapped?.url || history?.mapped?.slug;
+
               const urls = [
+                slugUrl,
                 `/api/v1/products/${pid}`,
                 `/p/${pid}`,
                 `/product/${pid}`,
-              ];
+              ].filter(Boolean);
               for (const url of urls) {
-                const r = await fetch(url, { headers }).catch(() => null);
+                const r = await fetch(url.startsWith("http") ? url : url, {
+                  headers,
+                }).catch(() => null);
                 if (r && r.ok) {
                   try {
                     const d = await r.json();
                     const fetched = d?.data || d?.product || (d?.id ? d : null);
                     if (fetched && !isHollow(fetched)) {
                       rb = fetched;
-                      logNotes.push(`Direct:Found(${url})!`);
+                      logNotes.push(
+                        `Direct:Found(${url.length > 20 ? "slug" : url})!`,
+                      );
                       break;
                     }
                   } catch {
-                    /* Silently skip HTML responses */
+                    /* skip */
                   }
                 }
               }
             }
 
-            // 5. V9 SURGEON HTML SCRAPER (Background fetches if DOM failed)
+            // 5. V10 SURGEON HTML SCRAPER (Slug-First)
             if (!rb || isHollow(rb)) {
-              logNotes.push("V9:SurgeonEngaged...");
+              logNotes.push("V10:SurgeonEngaged...");
               const storeId = sm.config?.store_id || "";
               const headers = {
                 Accept: "application/json, text/html",
                 "Store-Identifier": storeId,
               };
 
-              let relativeUrl = null;
-              if (rb?.url) {
-                try {
-                  relativeUrl = new URL(rb.url).pathname;
-                } catch {
-                  relativeUrl = rb.url;
-                }
-              }
+              const history =
+                window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[pid];
+              const slugUrl = history?.mapped?.url || history?.mapped?.slug;
+
               const patterns = [
-                relativeUrl,
-                `/p${pid}`,
+                slugUrl,
                 `/p/${pid}`,
-                `/product/p${pid}`,
                 `/product/${pid}`,
+                `/p${pid}`,
               ].filter(Boolean);
 
               for (const p of patterns) {
-                log(`[Storia] V9 Scraper: Probing ${p}...`);
+                log(`[Storia] V10 Scraper: Probing ${p}...`);
                 const htmlRes = await fetch(p, { headers }).catch(() => null);
                 if (htmlRes && htmlRes.ok) {
                   const text = await htmlRes.text();
                   const found = liveProbe(text);
                   if (found) {
                     rb = found;
-                    logNotes.push("V9:Scraper:Found!");
+                    logNotes.push("V10:Scraper:Found!");
                     break;
                   }
-
-                  // Strategy C: Specific Option Hunter in HTML
-                  if (targetOptionId) {
-                    const optMatch = text.match(
-                      new RegExp(
-                        `data-option-id=["']${targetOptionId}["']`,
-                        "i",
-                      ),
-                    );
-                    if (optMatch) logNotes.push("V9:HTML:OptionSeen!");
+                  if (
+                    targetOptionId &&
+                    text.includes(`data-option-id="${targetOptionId}"`)
+                  ) {
+                    logNotes.push("V10:HTML:OptionSeen!");
                   }
                 }
               }

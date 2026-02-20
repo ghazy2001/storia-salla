@@ -149,10 +149,10 @@ const ProductDetails = () => {
               return;
             }
 
-            // 2. JIT SLUG FETCHER (V8 Surgeon): Probing HTML for hidden attributes and scripts
+            // 2. JIT SLUG FETCHER (V10 Universal): Probing HTML via Slug to avoid 410 Gone
             const jitSlugFetch = async () => {
               const url = product.url || product.slug || `/p/${sallaId}`;
-              console.log(`[Storia] V8: JIT Surgeon Probing ${url}...`);
+              console.log(`[Storia] V10: JIT Universal Probing ${url}...`);
               const storeId = window.salla?.config?.store_id || "";
               const res = await fetch(url, {
                 headers: { "Store-Identifier": storeId },
@@ -161,7 +161,7 @@ const ProductDetails = () => {
                 const text = await res.text();
                 const found = liveProbe(text);
                 if (found) {
-                  console.warn("[Storia] V8: JIT Scraper SUCCESS!");
+                  console.warn("[Storia] V10: JIT Scraper SUCCESS!");
                   processDiscovery(found);
                   return true;
                 }
