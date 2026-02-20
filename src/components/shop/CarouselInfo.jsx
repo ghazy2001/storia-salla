@@ -35,21 +35,21 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
       sallaId,
     );
 
+    // NEW: Always signal parent that a click happened (to start polling)
+    if (onAddToCart) {
+      onAddToCart({ product, quantity: 1, isClickOnly: true });
+    }
+
     // Trigger the hidden native Salla button for this product
     const nativeBtn = document.querySelector(
       `salla-add-product-button[product-id="${sallaId}"]`,
     );
     if (nativeBtn) {
-      // Look for the actual button inside the custom element shadow or directly
       const btn = nativeBtn.querySelector("button") || nativeBtn;
       btn.click();
     } else {
-      // Fallback to manual hook if native button not found
-      onAddToCart &&
-        onAddToCart({
-          product: product,
-          quantity: 1,
-        });
+      // Fallback: If no native button, the signal above will also handle the add
+      onAddToCart && onAddToCart({ product, quantity: 1 });
     }
   };
 

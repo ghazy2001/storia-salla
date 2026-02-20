@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useSelector } from "react-redux";
-import { selectProducts } from "../../store/slices/productSlice";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  selectProducts,
+  selectCategories,
+} from "../../store/slices/productSlice";
+import { fetchCartFromSalla } from "../../store/slices/cartSlice";
 import ProductCarousel from "./ProductCarousel";
 import { useAddToCart } from "../../hooks/useCart";
 import Toast from "../common/Toast";
-import { selectCategories } from "../../store/slices/productSlice";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -19,17 +22,130 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const [showToast, setShowToast] = useState(false);
   const { addToCart: addToCartWithSync } = useAddToCart();
 
+  // --- TURBO WATCHER V23 (STORE SYNC) ---
+  const dispatch = useDispatch();
+  const cartCount = useSelector((state) => state.cart.count);
+  const prevCountRef = useRef(cartCount);
+  const lastClickTimeRef = useRef(0);
+  const pollingIntervalRef = useRef(null);
+
+  // 1. WATCHER: Count monitoring as baseline
+  useEffect(() => {
+    if (cartCount > prevCountRef.current) {
+      const timeSinceClick = Date.now() - lastClickTimeRef.current;
+      if (timeSinceClick < 15000) {
+        console.log("[Store] Cart count increased, showing toast.");
+        setShowToast(true);
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+    }
+    prevCountRef.current = cartCount;
+  }, [cartCount]);
+
+  // 2. EVENT TRAPS: Catch Salla events
+  useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    let isSallaEventAttached = false;
+
+    const handleCartSuccess = (event) => {
+      console.log("[Store] Salla Cart Success Trap!", event?.detail);
+      if (isMounted) {
+        setShowToast(true);
+        dispatch(fetchCartFromSalla());
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+    };
+
+    const attachListeners = () => {
+      if (!isMounted) return false;
+      document.addEventListener("salla-cart-updated", handleCartSuccess);
+      document.addEventListener("cart::add-item", handleCartSuccess);
+      document.addEventListener("cart::added", handleCartSuccess);
+      document.addEventListener("cart::updated", handleCartSuccess);
+
+      if (window.salla && window.salla.event) {
+        window.salla.event.on("cart::add-item", handleCartSuccess);
+        window.salla.event.on("cart::added", handleCartSuccess);
+        window.salla.event.on("cart::updated", handleCartSuccess);
+        isSallaEventAttached = true;
+        return true;
+      }
+      return false;
+    };
+
+    const cleanup = () => {
+      document.removeEventListener("salla-cart-updated", handleCartSuccess);
+      document.removeEventListener("cart::add-item", handleCartSuccess);
+      document.removeEventListener("cart::added", handleCartSuccess);
+      document.removeEventListener("cart::updated", handleCartSuccess);
+
+      if (isSallaEventAttached && window.salla && window.salla.event) {
+        try {
+          window.salla.event.off("cart::add-item", handleCartSuccess);
+          window.salla.event.off("cart::added", handleCartSuccess);
+          window.salla.event.off("cart::updated", handleCartSuccess);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+
+    if (!attachListeners()) {
+      const interval = setInterval(() => {
+        retryCount++;
+        if (attachListeners() || retryCount > 20) clearInterval(interval);
+      }, 500);
+      return () => {
+        clearInterval(interval);
+        isMounted = false;
+        cleanup();
+      };
+    }
+
+    return () => {
+      isMounted = false;
+      cleanup();
+    };
+  }, [dispatch]);
+
   // Sync internal filter state when initialFilter prop changes (e.g. from Navbar)
   useEffect(() => {
     setFilter(initialFilter);
   }, [initialFilter]);
 
   const handleAddToCart = async (payload) => {
-    // payload is already { product, quantity, size } from CarouselInfo
-    const { product, quantity, size } = payload;
-    await addToCartWithSync(product, quantity, size);
-    setShowToast(true);
+    const { product, quantity, size, isClickOnly } = payload;
+
+    // Record click for fallbacks
+    lastClickTimeRef.current = Date.now();
+
+    // Start Turbo Polling
+    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    dispatch(fetchCartFromSalla());
+    let pollCount = 0;
+    pollingIntervalRef.current = setInterval(() => {
+      pollCount++;
+      dispatch(fetchCartFromSalla());
+      if (pollCount >= 20) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }, 250);
+
+    // Only proceed to manual add if NOT just a click proxy
+    if (!isClickOnly) {
+      await addToCartWithSync(product, quantity, size);
+      setShowToast(true);
+    }
   };
+  // --- END TURBO WATCHER ---
 
   useEffect(() => {
     // Filter products with animation

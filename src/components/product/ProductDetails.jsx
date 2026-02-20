@@ -123,6 +123,7 @@ const ProductDetails = () => {
       document.addEventListener("salla-cart-updated", handleCartSuccess);
       document.addEventListener("cart::add-item", handleCartSuccess);
       document.addEventListener("cart::added", handleCartSuccess);
+      document.addEventListener("cart::updated", handleCartSuccess);
 
       // B. Salla SDK Level
       if (window.salla && window.salla.event) {
@@ -139,6 +140,7 @@ const ProductDetails = () => {
       document.removeEventListener("salla-cart-updated", handleCartSuccess);
       document.removeEventListener("cart::add-item", handleCartSuccess);
       document.removeEventListener("cart::added", handleCartSuccess);
+      document.removeEventListener("cart::updated", handleCartSuccess);
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
@@ -186,19 +188,16 @@ const ProductDetails = () => {
     let pollCount = 0;
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
-      console.log("[Storia] Active Sync Polling (Speed Mode)...", pollCount);
+      console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
+      // Poll every 250ms for 5s (total 20 attempts)
       if (pollCount >= 20) {
-        // Poll every 500ms for 10s
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
-    }, 500);
+    }, 250);
 
-    console.log(
-      "[Storia] V22: Triggering Native Button & Active Sync for ID:",
-      sallaId,
-    );
+    console.log("[Storia] V23: Turbo Polling & Event Trap for ID:", sallaId);
 
     // Trigger the native Salla button.
     // This will open Salla's selection popup if sizes are needed,
