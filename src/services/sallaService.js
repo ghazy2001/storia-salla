@@ -458,7 +458,7 @@ class SallaService {
                         if (urls) domImages.push(...urls);
                       }
                     } catch {
-                      /* ignore */
+                      // Silent ignore
                     }
                   }
 
@@ -1220,25 +1220,46 @@ class SallaService {
             let rb = null;
             let logNotes = [];
 
+            // HELPER: Check if a product object is actually useful (has options/variants)
+            const isHollow = (obj) => {
+              if (!obj) return true;
+              const ros =
+                (obj.options &&
+                  (Array.isArray(obj.options)
+                    ? obj.options
+                    : Object.values(obj.options))) ||
+                [];
+              const vs = obj.variants || obj.skus || [];
+              // If it has no options/variants and no data archeology found anything yet, it's hollow
+              return ros.length === 0 && vs.length === 0;
+            };
+
             // 1. SNIFF ERROR: Look for specific missing Option IDs in Salla's detailed error message
             let targetOptionId = null;
             if (errorData?.errors) {
               const errKeys = Object.keys(errorData.errors);
-              // Salla format: "options.123456": ["The options.123456 field is required."]
               const optMatch = errKeys.find((k) => k.startsWith("options."));
               if (optMatch) {
                 targetOptionId = optMatch.split(".")[1];
                 logNotes.push(`SniffedID:${targetOptionId}`);
               }
             } else if (errorData?.message?.includes("options.")) {
+              // Regex to find the first \d+ after "options."
               const match = errorData.message.match(/options\.(\d+)/);
               if (match) {
                 targetOptionId = match[1];
-                logNotes.push(`SniffedMsgID:${targetOptionId}`);
+                logNotes.push(`RegexSniffed:${targetOptionId}`);
+              } else {
+                // Secondary check for any ID in the message if it refers to options
+                const idMatch = errorData.message.match(/\d{5,}/); // IDs are usually long
+                if (idMatch) {
+                  targetOptionId = idMatch[0];
+                  logNotes.push(`FuzzySniffed:${targetOptionId}`);
+                }
               }
             }
 
-            // 2. SEARCH GLOBAL CONTEXT (window.product is often standard Salla)
+            // 2. SEARCH GLOBAL CONTEXT
             if (window.product && window.product.id == pid) {
               rb = window.product;
               logNotes.push("Found:window.product!");
@@ -1247,8 +1268,8 @@ class SallaService {
               logNotes.push("Found:salla_config!");
             }
 
-            // 3. SDK FETCH (Fallback if globals missing)
-            if (!rb) {
+            // 3. SDK FETCH (Only stop if NOT hollow)
+            if (!rb || isHollow(rb)) {
               logNotes.push("SDK:Attempting...");
               const target =
                 sm.api?.product?.getDetails || sm.api?.product?.fetch;
@@ -1256,13 +1277,20 @@ class SallaService {
                 const res = await target
                   .call(sm.api.product, pid)
                   .catch(() => null);
-                rb = res?.data || res?.product || (res?.id ? res : null);
-                if (rb) logNotes.push("SDK:Found!");
+                const fetched =
+                  res?.data || res?.product || (res?.id ? res : null);
+                if (fetched && !isHollow(fetched)) {
+                  rb = fetched;
+                  logNotes.push("SDK:Found(Full)!");
+                } else if (fetched) {
+                  rb = fetched; // Hold on to it, but keep looking
+                  logNotes.push("SDK:Found(Hollow)!");
+                }
               }
             }
 
-            // 4. MULTI-DOMAIN DIRECT FETCH
-            if (!rb) {
+            // 4. MULTI-DOMAIN DIRECT FETCH (Only if still hollow)
+            if (!rb || isHollow(rb)) {
               logNotes.push("Direct:Attempting...");
               const storeId = sm.config?.store_id || "";
               const headers = {
@@ -1275,14 +1303,16 @@ class SallaService {
                 `https://api.salla.dev/store/v1/products/${pid}`,
                 `https://api.salla.sa/store/v1/products/${pid}`,
                 `https://s.salla.sa/products/${pid}.json`,
+                `https://${window.location.host}/api/v1/products/${pid}`,
               ];
 
               for (const url of urls) {
                 const r = await fetch(url, { headers }).catch(() => null);
                 if (r && r.ok) {
                   const d = await r.json();
-                  rb = d?.data || d?.product || (d?.id ? d : null);
-                  if (rb) {
+                  const fetched = d?.data || d?.product || (d?.id ? d : null);
+                  if (fetched && !isHollow(fetched)) {
+                    rb = fetched;
                     logNotes.push(
                       `Direct:Found(${url.includes("sa") ? "sa" : "dev"})!`,
                     );
@@ -1292,28 +1322,39 @@ class SallaService {
               }
             }
 
-            // 5. HTML SURFACE SCRAPER (Nuclear Fallback)
-            if (!rb) {
+            // 5. AGGRESSIVE HTML SURFACE SCRAPER (Nuclear Fallback)
+            if (!rb || isHollow(rb)) {
               logNotes.push("HTML:Scraping...");
-              const pageUrl = `/p/${pid}`; // Salla standard path
-              const htmlRes = await fetch(pageUrl).catch(() => null);
-              if (htmlRes && htmlRes.ok) {
-                const text = await htmlRes.text();
-                // Try to find window.product = { ... } or JSON blobs
-                const match =
-                  text.match(/window\.product\s*=\s*({.*?});/s) ||
-                  text.match(
-                    /<script id="product-data" type="application\/json">({.*?})<\/script>/s,
-                  ) ||
-                  text.match(
-                    /<script.*?type="application\/json".*?>({.*?})<\/script>/s,
-                  );
-                if (match) {
-                  try {
-                    rb = JSON.parse(match[1]);
-                    logNotes.push("HTML:FoundData!");
-                  } catch {
-                    // Silent ignore
+              // Try multiple URL patterns that Salla uses
+              const patterns = [
+                `/p/${pid}`,
+                `/p${pid}`,
+                `/product/p${pid}`,
+                `/product/${pid}`,
+              ];
+
+              for (const p of patterns) {
+                const htmlRes = await fetch(p).catch(() => null);
+                if (htmlRes && htmlRes.ok) {
+                  const text = await htmlRes.text();
+                  // Hunt for common Salla JSON data patterns
+                  const match =
+                    text.match(/window\.product\s*=\s*({.*?});/s) ||
+                    text.match(
+                      /<script id="product-data" type="application\/json">({.*?})<\/script>/s,
+                    ) ||
+                    text.match(
+                      /<script.*?type="application\/json".*?>({.*?})<\/script>/s,
+                    );
+                  if (match) {
+                    try {
+                      const parsed = JSON.parse(match[1]);
+                      if (parsed && !isHollow(parsed)) {
+                        rb = parsed;
+                        logNotes.push(`HTML:Found(${p})!`);
+                        break;
+                      }
+                    } catch {}
                   }
                 }
               }
