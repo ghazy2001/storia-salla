@@ -1,4 +1,5 @@
 import React from "react";
+import { useCartSync } from "../../hooks/useCartSync";
 
 /**
  * CarouselInfo Component - V20.2 UI Refinement
@@ -28,12 +29,17 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
   const curPrice = safeParse(product.salePrice || product.price);
   const sallaId = product.sallaProductId || product.id;
 
+  const { triggerPoll } = useCartSync();
+
   // New Native Proxy handler for "Add to Cart" button in carousel
   const handleNativeAddToCart = () => {
     console.log(
       "[Storia] V20.2: Proxying Carousel Add to Cart for ID:",
       sallaId,
     );
+
+    // Speed up sync!
+    triggerPoll();
 
     // Trigger the hidden native Salla button for this product
     const nativeBtn = document.querySelector(
