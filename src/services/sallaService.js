@@ -1218,21 +1218,27 @@ class SallaService {
             let rb = null;
             let log = [];
 
-            // 1. SDK Attempt
+            // 1. SDK Attempt (V41 Updated to getDetails)
             log.push("SDK:Attempting...");
-            if (sm.api?.fetch) {
+            if (sm.api?.product?.getDetails) {
+              const res = await sm.api.product.getDetails(pid).catch((e) => {
+                log.push(`SDK:Err=${e.message}`);
+                return null;
+              });
+              rb = res?.data || res?.product || (res?.id ? res : null);
+              if (rb) log.push("SDK:Found!");
+            } else if (sm.api?.fetch) {
               const res = await sm.api
                 .fetch("product.details", { id: pid })
                 .catch((e) => {
-                  log.push(`SDK:Err=${e.message}`);
+                  log.push(`SDK_Fetch:Err=${e.message}`);
                   return null;
                 });
               rb = res?.data || res?.product || (res?.id ? res : null);
               if (rb) log.push("SDK:Found!");
             }
 
-            // 2. Direct Salla Attempt (V40 Polished)
-            // Using storefront API often needs Store-Identifier from script config
+            // 2. Direct Salla Attempt (V41 Polished)
             if (!rb) {
               log.push("Direct:Attempting...");
               const storeId = window.salla?.config?.store_id || "";
@@ -1242,20 +1248,24 @@ class SallaService {
               };
               if (storeId) headers["Store-Identifier"] = storeId;
 
-              const r = await fetch(
+              // Try both patterns for robustness
+              const urls = [
                 `https://api.salla.dev/store/v1/products/${pid}`,
-                { headers },
-              ).catch((e) => {
-                log.push(`Direct:Err=${e.message}`);
-                return null;
-              });
+                `https://api.salla.dev/store/v1/products/${pid}/details`,
+              ];
 
-              if (r && r.ok) {
-                const d = await r.json();
-                rb = d?.data || d?.product || d;
-                log.push("Direct:Found!");
-              } else if (r) {
-                log.push(`Direct:Status=${r.status}`);
+              for (const url of urls) {
+                const r = await fetch(url, { headers }).catch(() => null);
+                if (r && r.ok) {
+                  const d = await r.json();
+                  rb = d?.data || d?.product || d;
+                  if (rb) {
+                    log.push(`Direct:Found(${url.split("/").pop()})!`);
+                    break;
+                  }
+                } else if (r) {
+                  log.push(`Direct:${url.split("/").pop()}:Status=${r.status}`);
+                }
               }
             }
 

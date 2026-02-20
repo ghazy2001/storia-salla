@@ -63,15 +63,64 @@ const ProductDetails = () => {
             if (res && res.data) {
               console.log("[Storia] Nuclear Fetch Success:", res.data);
               const d = res.data;
-              if (d.regular_price) {
-                const regPrice = Number(d.regular_price);
+
+              if (d.regular_price || d.options || d.variants) {
+                const regPrice = Number(d.regular_price || d.price);
                 const curPrice = Number(d.price);
 
-                // Build enriched variants
-                let enrichedVariants = null;
-                if (product.sizeVariants) {
+                // DATA HEALING: Extract options and variants if original was empty
+                let enrichedSizes = product.sizes;
+                let enrichedVariants = product.sizeVariants;
+
+                if (!enrichedVariants || enrichedVariants.length === 0) {
+                  const rawOptions = d.options || [];
+                  const rawVariants = d.variants || [];
+
+                  // Try to find Size Option
+                  const sizeOpt = rawOptions.find((o) => {
+                    const n = String(o.name || o.label || "").toLowerCase();
+                    return (
+                      n.includes("مقاس") ||
+                      n.includes("size") ||
+                      n.includes("قياس")
+                    );
+                  });
+
+                  if (sizeOpt) {
+                    const vals =
+                      sizeOpt.values ||
+                      (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+                    enrichedSizes = vals.map((v) =>
+                      (v.name || v.label || "").trim(),
+                    );
+                    enrichedVariants = vals.map((v) => ({
+                      size: (v.name || v.label || "").trim(),
+                      price: Number(v.price || curPrice),
+                      regularPrice: Number(
+                        v.regular_price || v.price || regPrice || curPrice,
+                      ),
+                      isOnSale: true,
+                      variantId: v.id,
+                      optionId: sizeOpt.id,
+                      valueId: v.id,
+                    }));
+                  } else if (rawVariants.length > 0) {
+                    enrichedVariants = rawVariants.map((v) => ({
+                      size: (v.name || v.label || v.sku || "").trim(),
+                      price: Number(v.price || curPrice),
+                      regularPrice: Number(
+                        v.regular_price || v.price || regPrice || curPrice,
+                      ),
+                      isOnSale: true,
+                      variantId: v.id,
+                    }));
+                    enrichedSizes = enrichedVariants
+                      .map((v) => v.size)
+                      .filter(Boolean);
+                  }
+                } else {
+                  // Just update prices for existing variants
                   enrichedVariants = product.sizeVariants.map((v) => {
-                    // Match by price similarity
                     if (Math.abs(Number(v.price) - curPrice) < 0.1) {
                       return {
                         ...v,
@@ -88,6 +137,7 @@ const ProductDetails = () => {
                   regularPrice: regPrice,
                   salePrice: curPrice,
                   isOnSale: true,
+                  sizes: enrichedSizes || product.sizes,
                   sizeVariants: enrichedVariants || product.sizeVariants,
                 });
               }
