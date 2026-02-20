@@ -26,7 +26,7 @@ const ProductInfo = ({
       </h1>
       <div className="mb-8 font-sans w-full">
         {(() => {
-          let currentRegularPrice = product.regularPrice || product.price; // Default to normal price
+          let currentRegularPrice = product.regularPrice || product.price;
           let currentSalePrice = product.salePrice;
           let isOnSale = product.isOnSale;
 
@@ -35,27 +35,32 @@ const ProductInfo = ({
               (v) => v.size === selectedSize,
             );
             if (variant) {
-              // For variants, we mapped price as the "regular" price in sallaService if logic holds,
-              // but let's double check sallaService variant mapping.
-              // sallaService variant: price = vPrice (regular/base), salePrice = vSalePrice.
-              currentRegularPrice = variant.price;
-              currentSalePrice = variant.salePrice;
+              currentRegularPrice = variant.regularPrice || variant.price;
+              currentSalePrice = variant.salePrice || variant.price;
               isOnSale = variant.isOnSale;
             }
           }
 
-          // Safe format
+          // Safe format: handles both strings and numbers
           const format = (p) => {
             if (p === null || p === undefined) return "";
             if (typeof p === "string") return p;
             return `${p} ر.س`;
           };
 
-          if (isOnSale) {
-            const discountPercent = Math.round(
-              ((currentRegularPrice - currentSalePrice) / currentRegularPrice) *
-                100,
-            );
+          // Extract numeric value for math (handles "410 ر.س" and 410)
+          const toNum = (p) => {
+            if (typeof p === "number") return p;
+            if (typeof p === "string")
+              return parseFloat(p.replace(/[^\d.]/g, "")) || 0;
+            return 0;
+          };
+
+          if (isOnSale && currentSalePrice) {
+            const regNum = toNum(currentRegularPrice);
+            const saleNum = toNum(currentSalePrice);
+            const discountPercent =
+              regNum > 0 ? Math.round(((regNum - saleNum) / regNum) * 100) : 0;
 
             return (
               <div className="flex flex-row items-center gap-3 w-full justify-end">

@@ -48,63 +48,136 @@ const ProductDetails = () => {
   useEffect(() => {
     const sallaId = product?.sallaProductId || product?.id;
     if (!sallaId) return;
+    // Skip if we already have good data from Redux
+    if (product?.isOnSale && product?.regularPrice && product?.salePrice)
+      return;
 
-    // V16: Silent Scavenger (Zero Network) 🌓
-    const scavenge = () => {
+    // V17: Deep Integration 🦾
+    const discover = async () => {
       try {
-        const sm = window.salla;
-        let rb = null;
-
-        // 1. Check Salla internal config
-        if (sm?.config?.products) {
-          rb = Object.values(sm.config.products).find((p) => p.id == sallaId);
+        // STRATEGY 1: Check __STORIA_PRODUCTS__ global cache (instant, zero network)
+        const cached = window.__STORIA_PRODUCTS__?.[sallaId]?.mapped;
+        if (cached && cached.isOnSale) {
+          console.log(`[Storia] V17: Cache hit for ${sallaId}`);
+          setEnrichedPriceInfo({
+            regularPrice: cached.regularPrice || cached.rawRegularPrice,
+            salePrice: cached.salePrice || cached.rawSalePrice,
+            isOnSale: cached.isOnSale,
+            sizes: cached.sizes || [],
+            sizeVariants: cached.sizeVariants || [],
+          });
+          return;
         }
 
-        // 2. Check current page product
-        if (!rb && window.product?.id == sallaId) rb = window.product;
+        // STRATEGY 2: Use Salla SDK (official API, single request)
+        const sm = window.salla;
+        const productManager = sm?.product || sm?.api?.product;
+        if (productManager && typeof productManager.get === "function") {
+          console.log(`[Storia] V17: SDK fetch for ${sallaId}...`);
+          const res = await productManager.get(sallaId).catch(() => null);
+          const d = res?.data || (res?.id ? res : null);
 
-        // 3. Scan DOM for data-product attributes
-        if (!rb) {
-          const productEl =
-            document.querySelector(`[data-product-id="${sallaId}"]`) ||
-            document.querySelector(`[data-product*="${sallaId}"]`);
-          if (productEl) {
-            const raw =
-              productEl.getAttribute("data-product") ||
-              productEl.getAttribute("data-product-data");
-            if (raw) {
-              try {
-                rb = JSON.parse(raw);
-              } catch (e) {}
+          if (d) {
+            const translate = (val) => {
+              if (!val) return "";
+              if (typeof val === "string") return val;
+              return val.ar || val.en || Object.values(val)[0] || "";
+            };
+
+            const getVal = (v) => {
+              if (v === null || v === undefined) return 0;
+              if (typeof v === "number") return v;
+              return Number(v.amount) || Number(v) || 0;
+            };
+
+            const amount = getVal(d.price);
+            let regularPrice = getVal(d.regular_price) || amount;
+            let salePrice = amount;
+            let isOnSale = regularPrice > salePrice;
+
+            // Map size options
+            let sizeVariants = [];
+            let sizes = [];
+            const rawOptions = d.options || [];
+            const rawVariants = d.variants || d.skus || [];
+
+            const sizeOpt =
+              rawOptions.find((o) => {
+                const n = translate(o.name || o.label).toLowerCase();
+                return (
+                  n.includes("مقاس") || n.includes("size") || n.includes("قياس")
+                );
+              }) || (rawOptions.length > 0 ? rawOptions[0] : null);
+
+            if (sizeOpt) {
+              const vals =
+                sizeOpt.values ||
+                (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+              sizes = vals.map((v) => translate(v.name || v.label).trim());
+              sizeVariants = vals.map((v) => ({
+                size: translate(v.name || v.label).trim(),
+                price: getVal(v.price) || amount,
+                regularPrice:
+                  getVal(v.regular_price) || getVal(v.price) || regularPrice,
+                salePrice: getVal(v.sale_price) || getVal(v.price) || salePrice,
+                isOnSale: isOnSale,
+                variantId: v.id,
+                optionId: sizeOpt.id,
+                valueId: v.id,
+              }));
+            } else if (rawVariants.length > 0) {
+              sizeVariants = rawVariants.map((v) => ({
+                size: translate(v.name || v.label || v.sku).trim() || "Default",
+                price: getVal(v.price) || amount,
+                regularPrice:
+                  getVal(v.regular_price) || getVal(v.price) || regularPrice,
+                isOnSale: isOnSale,
+                variantId: v.id,
+              }));
+              sizes = sizeVariants.map((v) => v.size).filter(Boolean);
+            }
+
+            // If variants have sale info but main doesn't, lift it up
+            if (!isOnSale && sizeVariants.length > 0) {
+              const sv = sizeVariants.find((v) => v.regularPrice > v.price);
+              if (sv) {
+                regularPrice = sv.regularPrice;
+                salePrice = sv.price;
+                isOnSale = true;
+              }
+            }
+
+            if (isOnSale || sizes.length > 0) {
+              console.log(
+                `[Storia] V17 Discovery: price ${regularPrice} → ${salePrice}, ${sizes.length} sizes`,
+              );
+              setEnrichedPriceInfo({
+                regularPrice,
+                salePrice,
+                isOnSale,
+                sizes: sizes.length > 0 ? sizes : undefined,
+                sizeVariants:
+                  sizeVariants.length > 0 ? sizeVariants : undefined,
+              });
             }
           }
         }
-
-        if (rb) {
-          const regPrice = Number(rb.regular_price || rb.price);
-          const salePrice = Number(rb.price);
-
-          if (regPrice > salePrice) {
-            console.log(
-              `[Storia] V16 Hybrid: Scavenged slashed price ${regPrice}`,
-            );
-            setEnrichedPriceInfo({
-              regularPrice: regPrice,
-              salePrice: salePrice,
-              isOnSale: true,
-            });
-          }
-        }
       } catch (err) {
-        console.warn("[Storia] V16 Scavenge failed", err);
+        console.warn("[Storia] V17 Discovery Error:", err);
       }
     };
 
-    scavenge();
-    // Re-check after a short delay to account for Salla script lazy-loading
-    const timer = setTimeout(scavenge, 1500);
+    // Run immediately and retry once after SDK lazy-loads
+    discover();
+    const timer = setTimeout(discover, 2500);
     return () => clearTimeout(timer);
-  }, [product?.id, product?.sallaProductId]);
+  }, [
+    product?.id,
+    product?.sallaProductId,
+    product?.isOnSale,
+    product?.regularPrice,
+    product?.salePrice,
+  ]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -234,9 +307,9 @@ const ProductDetails = () => {
           setActiveMedia={setActiveMedia}
         />
 
-        {/* Product Info */}
+        {/* Product Info - uses displayProduct so enriched price/sizes show */}
         <ProductInfo
-          product={product}
+          product={displayProduct}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
           handleAddToCart={handleAddToCart}

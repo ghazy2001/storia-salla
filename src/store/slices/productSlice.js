@@ -143,10 +143,16 @@ const productSlice = createSlice({
                 name: remoteP.name || localP.name,
                 description: remoteP.description || localP.description,
                 price: remoteP.price || localP.price,
-                originalPrice:
+                regularPrice:
                   remoteP.regularPrice ||
                   remoteP.originalPrice ||
+                  localP.regularPrice ||
                   localP.originalPrice,
+                salePrice: remoteP.salePrice || localP.salePrice,
+                isOnSale:
+                  remoteP.isOnSale ??
+                  localP.isOnSale ??
+                  remoteP.salePrice < remoteP.regularPrice,
                 stock:
                   remoteP.stock !== undefined ? remoteP.stock : localP.stock,
                 sizes: remoteP.sizes || [], // Sync sizes from Salla
