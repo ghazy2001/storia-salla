@@ -7,7 +7,6 @@ import React from "react";
  */
 const ProductInfo = ({ product, handleAddToCart, theme }) => {
   const isGoldTheme = theme === "gold" || !theme;
-  const isBurgundy = theme === "burgundy";
 
   // Ultra-safe parsing for numeric calculation to avoid NaN
   const safeParse = (val) => {
@@ -69,13 +68,8 @@ const ProductInfo = ({ product, handleAddToCart, theme }) => {
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
         <button
           onClick={handleAddToCart}
-          className={`w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
-                     hover:scale-[1.02] active:scale-[0.98]
-                     ${
-                       isBurgundy
-                         ? "bg-white text-brand-burgundy hover:bg-gray-100"
-                         : "bg-brand-charcoal text-white hover:bg-black"
-                     }`}
+          className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
+                     bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
         >
           إضافة للسلة
         </button>
