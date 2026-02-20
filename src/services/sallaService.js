@@ -1204,10 +1204,12 @@ class SallaService {
           statusCode == 400 ||
           JSON.stringify(errorData || {}).includes("invalid_fields");
 
-        const isAbaya2 = Number(idToUse) === 1252773325;
-        diagnosis = `Detected: status=${statusCode}, validation=${isValidation}, abaya2=${isAbaya2}, retry=${isRetry}`;
+        const isDiagnosticMode = [1252773325, 205379656].includes(
+          Number(idToUse),
+        );
+        diagnosis = `Detected: status=${statusCode}, validation=${isValidation}, diagnostic=${isDiagnosticMode}, retry=${isRetry}`;
 
-        if ((isValidation || isAbaya2) && !isRetry) {
+        if ((isValidation || isDiagnosticMode) && !isRetry) {
           log(
             `[Storia] ${statusCode} Trigger detected. Attempting Reactive Repair (V44)...`,
           );
@@ -1259,7 +1261,65 @@ class SallaService {
               }
             }
 
-            // 4. PRECISION HUNTER: If we have a TargetID but no RB, search the WHOLE window object
+            // 4. MULTI-DOMAIN DIRECT FETCH
+            if (!rb) {
+              logNotes.push("Direct:Attempting...");
+              const storeId = sm.config?.store_id || "";
+              const headers = {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              };
+              if (storeId) headers["Store-Identifier"] = storeId;
+
+              const urls = [
+                `https://api.salla.dev/store/v1/products/${pid}`,
+                `https://api.salla.sa/store/v1/products/${pid}`,
+                `https://s.salla.sa/products/${pid}.json`,
+              ];
+
+              for (const url of urls) {
+                const r = await fetch(url, { headers }).catch(() => null);
+                if (r && r.ok) {
+                  const d = await r.json();
+                  rb = d?.data || d?.product || (d?.id ? d : null);
+                  if (rb) {
+                    logNotes.push(
+                      `Direct:Found(${url.includes("sa") ? "sa" : "dev"})!`,
+                    );
+                    break;
+                  }
+                }
+              }
+            }
+
+            // 5. HTML SURFACE SCRAPER (Nuclear Fallback)
+            if (!rb) {
+              logNotes.push("HTML:Scraping...");
+              const pageUrl = `/p/${pid}`; // Salla standard path
+              const htmlRes = await fetch(pageUrl).catch(() => null);
+              if (htmlRes && htmlRes.ok) {
+                const text = await htmlRes.text();
+                // Try to find window.product = { ... } or JSON blobs
+                const match =
+                  text.match(/window\.product\s*=\s*({.*?});/s) ||
+                  text.match(
+                    /<script id="product-data" type="application\/json">({.*?})<\/script>/s,
+                  ) ||
+                  text.match(
+                    /<script.*?type="application\/json".*?>({.*?})<\/script>/s,
+                  );
+                if (match) {
+                  try {
+                    rb = JSON.parse(match[1]);
+                    logNotes.push("HTML:FoundData!");
+                  } catch {
+                    // Silent ignore
+                  }
+                }
+              }
+            }
+
+            // 6. PRECISION HUNTER: If we still have no RB but have a TargetID, search the WHOLE window object
             if (!rb && targetOptionId) {
               logNotes.push("Hunter:Engaged...");
               const hunt = (obj, id, depth = 0) => {
