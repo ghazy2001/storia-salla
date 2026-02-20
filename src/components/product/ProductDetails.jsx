@@ -64,7 +64,7 @@ const ProductDetails = () => {
               console.log("[Storia] Nuclear Fetch Success:", res.data);
               const d = res.data;
 
-              if (d.regular_price || d.options || d.variants) {
+              if (d.regular_price || d.options || d.variants || d.skus) {
                 const regPrice = Number(d.regular_price || d.price);
                 const curPrice = Number(d.price);
 
@@ -74,15 +74,21 @@ const ProductDetails = () => {
 
                 if (!enrichedVariants || enrichedVariants.length === 0) {
                   const rawOptions = d.options || [];
-                  const rawVariants = d.variants || [];
+                  const rawVariants = d.variants || d.skus || [];
 
-                  // Try to find Size Option
+                  console.log(
+                    `[Storia] Healing: Found ${rawOptions.length} options, ${rawVariants.length} variants`,
+                  );
+
+                  // Try to find Size Option (Aggressive Search)
                   const sizeOpt = rawOptions.find((o) => {
                     const n = String(o.name || o.label || "").toLowerCase();
                     return (
                       n.includes("مقاس") ||
                       n.includes("size") ||
-                      n.includes("قياس")
+                      n.includes("قياس") ||
+                      n.includes("القياس") ||
+                      n.includes("النوع")
                     );
                   });
 
@@ -90,6 +96,10 @@ const ProductDetails = () => {
                     const vals =
                       sizeOpt.values ||
                       (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
+                    console.log(
+                      `[Storia] Found Size Option: ${sizeOpt.name}, Values: ${vals.length}`,
+                    );
+
                     enrichedSizes = vals.map((v) =>
                       (v.name || v.label || "").trim(),
                     );
@@ -105,6 +115,9 @@ const ProductDetails = () => {
                       valueId: v.id,
                     }));
                   } else if (rawVariants.length > 0) {
+                    console.log(
+                      "[Storia] Found Variants but no specific Size Option. Mapping generic variants.",
+                    );
                     enrichedVariants = rawVariants.map((v) => ({
                       size: (v.name || v.label || v.sku || "").trim(),
                       price: Number(v.price || curPrice),
