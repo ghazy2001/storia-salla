@@ -1246,8 +1246,11 @@ class SallaService {
             let targetOptionId = null;
             if (errorData) {
               const errStr = JSON.stringify(errorData);
+              // V13: Smarter sniffing - require 6+ digits or explicit options match
               const optMatch =
-                errStr.match(/options\.(\d+)/) || errStr.match(/(\d{6,})/);
+                errStr.match(/options\.(\d+)/) ||
+                errStr.match(/fields\.(\d+)/) ||
+                errStr.match(/(\d{6,})/);
               if (optMatch) {
                 targetOptionId = optMatch[1];
                 logNotes.push(`SniffedID:${targetOptionId}`);
@@ -1380,7 +1383,7 @@ class SallaService {
             // 4. PRECISE DIRECT FETCH (Slug Discovery ✨)
             if (!rb || isHollow(rb)) {
               logNotes.push("Direct:Attempting...");
-              const storeId = sm.config?.store_id || "";
+              const storeId = sm.config?.store_id || "131484278";
               const headers = {
                 Accept: "application/json",
                 "Store-Identifier": storeId,
@@ -1421,7 +1424,7 @@ class SallaService {
             // 5. V10 SURGEON HTML SCRAPER (Slug-First)
             if (!rb || isHollow(rb)) {
               logNotes.push("V10:SurgeonEngaged...");
-              const storeId = sm.config?.store_id || "";
+              const storeId = sm.config?.store_id || "131484278";
               const headers = {
                 Accept: "application/json, text/html",
                 "Store-Identifier": storeId,
@@ -1433,9 +1436,10 @@ class SallaService {
 
               const patterns = [
                 slugUrl,
+                window.location.pathname, // V13: URL-Based Discovery 🕵️
                 `/p/${pid}`,
                 `/product/${pid}`,
-                `/p${pid}`,
+                `/product/${pid}/`,
               ].filter(Boolean);
 
               for (const p of patterns) {
@@ -1541,6 +1545,7 @@ class SallaService {
                 if (!obj || depth > 10) return out;
                 if (
                   obj.id &&
+                  obj.id != pid && // V13: Prevent ID Collision! 🛡️
                   (obj.name || obj.label) &&
                   (obj.values || obj.data || Array.isArray(obj.data))
                 )
@@ -1655,7 +1660,7 @@ class SallaService {
               diagnosis += " | Hunter failed. No data found.";
             }
           } catch (repairErr) {
-            diagnosis += ` | Fatal: ${repairErr.message}`;
+            diagnosis += ` | Fatal Repair Error: ${repairErr.message}`;
           }
         }
 
