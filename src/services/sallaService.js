@@ -1367,11 +1367,26 @@ class SallaService {
               logNotes.push("Cache:Mining...");
               const mine = (obj, depth = 0) => {
                 if (!obj || depth > 5) return null;
-                if (obj.id == pid && !isHollow(obj)) return obj;
+                try {
+                  // Basic check
+                  if (obj.id == pid && !isHollow(obj)) return obj;
+                } catch {
+                  return null;
+                }
+
                 for (let k in obj) {
-                  if (obj[k] && typeof obj[k] === "object" && k !== "this") {
-                    const res = mine(obj[k], depth + 1);
-                    if (res) return res;
+                  try {
+                    // Skip 'this', 'document', and other potentially problematic roots
+                    if (k === "this" || k === "document" || k === "window")
+                      continue;
+
+                    const val = obj[k];
+                    if (val && typeof val === "object") {
+                      const res = mine(val, depth + 1);
+                      if (res) return res;
+                    }
+                  } catch {
+                    continue;
                   }
                 }
                 return null;
@@ -1388,11 +1403,28 @@ class SallaService {
               logNotes.push("Hunter:Engaged...");
               const hunt = (obj, id, depth = 0) => {
                 if (!obj || depth > 8) return null;
-                if (obj.id == id && (obj.values || obj.data)) return obj;
+                try {
+                  if (obj.id == id && (obj.values || obj.data)) return obj;
+                } catch {
+                  return null;
+                }
+
                 for (let key in obj) {
-                  if (obj[key] && typeof obj[key] === "object") {
-                    const res = hunt(obj[key], id, depth + 1);
-                    if (res) return res;
+                  try {
+                    if (
+                      key === "this" ||
+                      key === "document" ||
+                      key === "window"
+                    )
+                      continue;
+
+                    const val = obj[key];
+                    if (val && typeof val === "object") {
+                      const res = hunt(val, id, depth + 1);
+                      if (res) return res;
+                    }
+                  } catch {
+                    continue;
                   }
                 }
                 return null;
