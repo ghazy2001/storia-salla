@@ -90,13 +90,18 @@ const ProductDetails = () => {
 
             let d = res?.data;
 
-            // 3. JIT SLUG FETCHER (V7): Directly fetch the product URL to find hidden data
+            // 3. JIT SLUG FETCHER (V8 Surgeon): Probing HTML for hidden attributes and scripts
             const jitSlugFetch = async () => {
               const url = product.url || product.slug || `/p/${sallaId}`;
-              console.log(`[Storia] V7: JIT Slug Fetching from ${url}...`);
-              const res = await fetch(url).catch(() => null);
+              console.log(`[Storia] V8: JIT Surgeon Probing ${url}...`);
+              const storeId = window.salla?.config?.store_id || "";
+              const res = await fetch(url, {
+                headers: { "Store-Identifier": storeId },
+              }).catch(() => null);
               if (res && res.ok) {
-                const text = await res.text();
+                const text = (await res.ok) ? await res.text() : "";
+
+                // Strategy A: JSON.parse Script Blocks
                 const scripts =
                   text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
                 for (let s of scripts) {
@@ -104,9 +109,9 @@ const ProductDetails = () => {
                     .replace(/<script.*?>/i, "")
                     .replace(/<\/script>/i, "")
                     .trim();
-                  const jsonMatch = content.match(/{[\s\S]*?}/);
-                  if (jsonMatch) {
-                    try {
+                  try {
+                    const jsonMatch = content.match(/{[\s\S]*?}/);
+                    if (jsonMatch) {
                       const parsed = JSON.parse(jsonMatch[0]);
                       const probe = (item) => {
                         if (!item || typeof item !== "object") return null;
@@ -116,7 +121,11 @@ const ProductDetails = () => {
                         )
                           return item;
                         for (let k in item) {
-                          if (item[k] && typeof item[k] === "object") {
+                          if (
+                            item[k] &&
+                            typeof item[k] === "object" &&
+                            k !== "parent"
+                          ) {
                             const found = probe(item[k]);
                             if (found) return found;
                           }
@@ -125,13 +134,37 @@ const ProductDetails = () => {
                       };
                       const found = probe(parsed);
                       if (found) {
-                        console.warn("[Storia] V7: JIT Scraper SUCCESS!");
+                        console.warn(
+                          "[Storia] V8: JIT Scraper SUCCESS (Script)!",
+                        );
                         processDiscovery(found);
                         return true;
                       }
-                    } catch {
-                      /* ignore */
                     }
+                  } catch {
+                    /* ignore */
+                  }
+                }
+
+                // Strategy B: Data Attributes
+                const productJsonMatch =
+                  text.match(/data-product=["']({.*?})["']/i) ||
+                  text.match(/data-product-data=["']({.*?})["']/i);
+                if (productJsonMatch) {
+                  try {
+                    const unescaped = productJsonMatch[1]
+                      .replace(/&quot;/g, '"')
+                      .replace(/&amp;/g, "&");
+                    const parsed = JSON.parse(unescaped);
+                    if (parsed && parsed.id == sallaId) {
+                      console.warn(
+                        "[Storia] V8: JIT Scraper SUCCESS (Attribute)!",
+                      );
+                      processDiscovery(parsed);
+                      return true;
+                    }
+                  } catch {
+                    /* ignore */
                   }
                 }
               }

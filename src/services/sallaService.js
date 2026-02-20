@@ -1333,9 +1333,15 @@ class SallaService {
               }
             }
 
-            // 5. V7 BRUTE-FORCE HTML SCRAPER (Single-Page-App Context Fix)
+            // 5. V8 SURGEON HTML SCRAPER (DOM & Attribute Archeology)
             if (!rb || isHollow(rb)) {
-              logNotes.push("V7:BruteScraping...");
+              logNotes.push("V8:SurgeonEngaged...");
+              const storeId = sm.config?.store_id || "";
+              const headers = {
+                Accept: "application/json, text/html",
+                "Store-Identifier": storeId,
+              };
+
               let relativeUrl = null;
               if (rb?.url) {
                 try {
@@ -1353,65 +1359,87 @@ class SallaService {
               ].filter(Boolean);
 
               for (const p of patterns) {
-                log(`[Storia] V7 Scraper: Trying ${p}...`);
-                const htmlRes = await fetch(p).catch(() => null);
+                log(`[Storia] V8 Scraper: Probing ${p}...`);
+                const htmlRes = await fetch(p, { headers }).catch(() => null);
                 if (htmlRes && htmlRes.ok) {
                   const text = await htmlRes.text();
 
-                  // Strategy A: JSON.parse Script Blocks
-                  const scriptPatterns =
+                  // Strategy A: JSON-LD & Scripts (Enhanced V7)
+                  const scripts =
                     text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
-                  log(
-                    `[Storia] V7 Scraper: Found ${scriptPatterns.length} scripts to probe.`,
-                  );
-
-                  for (let s of scriptPatterns) {
+                  for (let s of scripts) {
                     const content = s
                       .replace(/<script.*?>/i, "")
                       .replace(/<\/script>/i, "")
                       .trim();
-                    if (!content || content.length < 50) continue; // Skip tiny scripts
+                    if (!content || content.length < 50) continue;
 
-                    // Try to extract JSON from variables or raw blocks
-                    const jsonMatch = content.match(/{[\s\S]*?}/);
-                    if (jsonMatch) {
-                      try {
-                        // Use a very permissive extraction for window variables
-                        let jsonStr = jsonMatch[0];
-                        if (
-                          content.includes("window.product") ||
-                          content.includes("window.Salla")
-                        ) {
-                          const cleanMatch = content.match(/=(.*);/s);
-                          if (cleanMatch) jsonStr = cleanMatch[1].trim();
-                        }
-
-                        const parsed = JSON.parse(jsonStr);
-                        // Search the parsed object (it might be the product itself or an envelope)
+                    try {
+                      const jsonMatch = content.match(/{[\s\S]*?}/);
+                      if (jsonMatch) {
+                        const parsed = JSON.parse(jsonMatch[0]);
                         const probe = (item) => {
                           if (!item || typeof item !== "object") return null;
                           if (item.id == pid && !isHollow(item)) return item;
                           for (let k in item) {
-                            if (item[k] && typeof item[k] === "object") {
+                            if (
+                              item[k] &&
+                              typeof item[k] === "object" &&
+                              k !== "parent"
+                            ) {
                               const r = probe(item[k]);
                               if (r) return r;
                             }
                           }
                           return null;
                         };
-
                         const found = probe(parsed);
                         if (found) {
                           rb = found;
-                          logNotes.push(`V7:Found(ScriptData)!`);
+                          logNotes.push("V8:Found(Script)!");
                           break;
                         }
-                      } catch {
-                        /* parse fail */
                       }
+                    } catch {
+                      /* skip */
                     }
                   }
                   if (rb && !isHollow(rb)) break;
+
+                  // Strategy B: DATA-ATTRIBUTES (The Surgeon)
+                  log(`[Storia] V8: Probing attributes for ID ${pid}...`);
+                  const productJsonMatch =
+                    text.match(/data-product=["']({.*?})["']/i) ||
+                    text.match(/data-product-data=["']({.*?})["']/i);
+                  if (productJsonMatch) {
+                    try {
+                      const unescaped = productJsonMatch[1]
+                        .replace(/&quot;/g, '"')
+                        .replace(/&amp;/g, "&");
+                      const parsed = JSON.parse(unescaped);
+                      if (parsed && parsed.id == pid) {
+                        rb = parsed;
+                        logNotes.push("V8:Found(Attr)!");
+                        break;
+                      }
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+
+                  // Strategy C: Specific Option Hunter in HTML
+                  if (targetOptionId) {
+                    const optMatch = text.match(
+                      new RegExp(
+                        `data-option-id=["']${targetOptionId}["']`,
+                        "i",
+                      ),
+                    );
+                    if (optMatch) {
+                      logNotes.push("V8:HTML:OptionSeen!");
+                      // If we see the option but can't find the full object, at least we know it exists.
+                    }
+                  }
                 }
               }
             }
