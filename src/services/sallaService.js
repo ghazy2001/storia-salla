@@ -881,6 +881,28 @@ class SallaService {
           sizes = sizeVariants.map((v) => v.size).filter((s) => s);
         }
 
+        // CRITICAL FIX: If main product didn't have sale info, but variants DO, lift it up.
+        // Salla API often gives "price": 405 (sale price) on main object but hides "regular_price" in variants.
+        if (!isOnSale && sizeVariants.length > 0) {
+          // Try to find a variant that matches the main current price
+          const matchingVariant =
+            sizeVariants.find((v) => Math.abs(v.price - amount) < 0.1) ||
+            sizeVariants[0];
+
+          if (matchingVariant && matchingVariant.isOnSale) {
+            log(
+              `[Storia] Found sale info in variant, updating main product:`,
+              matchingVariant,
+            );
+            regularPrice = matchingVariant.regularPrice;
+            salePrice = matchingVariant.salePrice;
+            isOnSale = true;
+
+            // Update format strings
+            priceStr = formatPrice(salePrice);
+          }
+        }
+
         // 6. Map Category
         const categoryName =
           targetProduct.categories && targetProduct.categories.length > 0
