@@ -130,62 +130,8 @@ const ProductInfo = ({
       )}
 
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
-        {/* V11: NATIVE GHOST PROXY 👻 */}
-        <div
-          style={{
-            position: "absolute",
-            opacity: 0,
-            pointerEvents: "none",
-            zIndex: -1,
-          }}
-        >
-          {(() => {
-            const variant = product.sizeVariants?.find(
-              (v) => v.size === selectedSize,
-            );
-            return (
-              <>
-                {variant?.variantId && (
-                  <input
-                    type="hidden"
-                    name="variants"
-                    value={variant.variantId}
-                    id="salla-native-variant-input"
-                  />
-                )}
-                {variant?.optionId && (
-                  <input
-                    type="hidden"
-                    name={`options[${variant.optionId}]`}
-                    value={variant.valueId}
-                    id="salla-native-option-input"
-                  />
-                )}
-                <salla-add-product-button
-                  id="native-salla-add-button"
-                  product-id={product.sallaProductId || product.id}
-                  amount="1"
-                />
-              </>
-            );
-          })()}
-        </div>
-
         <button
-          onClick={() => {
-            const nativeBtn = document.getElementById(
-              "native-salla-add-button",
-            );
-            if (nativeBtn) {
-              console.log("[Storia] V11: Triggering Native Salla Logic...");
-              // Try direct click on the custom element
-              nativeBtn.click();
-              // Fallback: Notify success if Salla doesn't show a toast
-              setTimeout(() => handleAddToCart(), 500);
-            } else {
-              handleAddToCart();
-            }
-          }}
+          onClick={handleAddToCart}
           disabled={(() => {
             if (selectedSize) {
               const variant = product.sizeVariants?.find(
