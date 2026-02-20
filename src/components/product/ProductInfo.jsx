@@ -18,6 +18,7 @@ const ProductInfo = ({
   setSelectedSize,
   handleAddToCart,
   theme,
+  isDiscovering,
 }) => {
   return (
     <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
@@ -96,10 +97,12 @@ const ProductInfo = ({
       </p>
 
       {/* Size Selection */}
-      {product.sizes && product.sizes.length > 0 && (
+      {(product.sizes && product.sizes.length > 0) || isDiscovering ? (
         <div className="mb-8 w-full max-w-md ml-auto lg:ml-auto">
           <label className="block text-sm font-medium text-brand-charcoal mb-3">
-            اختر المقاس
+            {isDiscovering && (!product.sizes || product.sizes.length === 0)
+              ? "جارٍ تحميل المقاسات..."
+              : "اختر المقاس"}
           </label>
           <div className="flex gap-3 flex-wrap">
             {product.sizes.map((size) => {
@@ -132,7 +135,7 @@ const ProductInfo = ({
             })}
           </div>
         </div>
-      )}
+      ) : null}
 
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
         <button

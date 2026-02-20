@@ -864,6 +864,7 @@ class SallaService {
         const rawVariants = findRawItems(targetProduct, ["variants", "skus"]);
 
         // Try to find ANY option that looks like a size
+        // 🔍 V18 Ultra Mapping: Find size option with fallback
         let sizeOption = rawOptions.find((opt) => {
           const name = translate(opt.name || opt.label || "").toLowerCase();
           return (
@@ -874,6 +875,19 @@ class SallaService {
             name.includes("اللون")
           );
         });
+
+        // 🛡️ Fallback: If no standard name found, take the first option that has values
+        if (!sizeOption && rawOptions.length > 0) {
+          sizeOption = rawOptions.find(
+            (opt) =>
+              (opt.values && opt.values.length > 0) ||
+              (opt.data && opt.data.length > 0),
+          );
+          if (sizeOption)
+            log(
+              `[Storia] No standard size name found, falling back to option: ${translate(sizeOption.name || sizeOption.label)}`,
+            );
+        }
 
         // Fallback: Use the first option that has values
         if (!sizeOption && rawOptions.length > 0) {
