@@ -7,6 +7,7 @@ export const products = [
     description: "",
     category: "cloche",
     sallaProductId: 205379656,
+    sizes: ["S", "M", "L", "XL"],
     image: "/assets/products/p01/p01_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p01/p01_1.jpg" },
@@ -24,6 +25,7 @@ export const products = [
     description: "",
     category: "cloche",
     sallaProductId: 421404226,
+    sizes: ["S", "M", "L", "XL"],
     image: "/assets/products/p02/p02_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p02/p02_1.jpg" },
@@ -40,6 +42,7 @@ export const products = [
     description: "",
     category: "bisht",
     sallaProductId: 596619591,
+    sizes: ["S", "M", "L", "XL"],
     image: "/assets/products/p03/p03_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p03/p03_1.jpg" },

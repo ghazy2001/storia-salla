@@ -28,32 +28,61 @@ const ProductDetails = () => {
   const [isDiscovering, setIsDiscovering] = useState(false);
 
   // 2. Final Product Data (Base + Enriched)
+  // V18 Fix: Merge sizes intelligently. If discovery returns empty sizes, keep the base ones.
   const displayProduct = useMemo(() => {
     if (!baseProduct) return null;
     if (!enrichedData) return baseProduct;
-    return { ...baseProduct, ...enrichedData };
+
+    const merged = { ...baseProduct, ...enrichedData };
+    // Safety Net: If enriched size array is empty, use the base product's sizes
+    if (!merged.sizes || merged.sizes.length === 0) {
+      merged.sizes = baseProduct.sizes || [];
+    }
+    return merged;
   }, [baseProduct, enrichedData]);
 
   // 3. V18 Fidelity Plus Discovery
   useEffect(() => {
     const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
-    if (!sallaId || sallaId < 100) return; // Skip if it's just a local ID without mapping
+    if (!sallaId || sallaId < 100) return;
 
     let isMounted = true;
     setIsDiscovering(true);
 
     const discover = async () => {
       try {
-        console.log(`[Storia] V18 Discovery START for ${sallaId}`);
-        const details = await sallaService.getProductDetails(sallaId);
+        console.log(`[Storia] V18 High-Res Discovery START for ${sallaId}`);
+
+        // Strategy A: sallaService (REST + SDK)
+        let details = await sallaService
+          .getProductDetails(sallaId)
+          .catch(() => null);
+
+        // Strategy B: Direct SDK Scavenge (Special Salla SPA Call)
+        if (!details && window.salla?.api?.fetch) {
+          try {
+            console.log(`[Storia] Trying SDK direct fetch for ${sallaId}...`);
+            const res = await window.salla.api.fetch("product.details", {
+              id: sallaId,
+            });
+            if (res?.data) {
+              const raw = Array.isArray(res.data) ? res.data[0] : res.data;
+              // Map it using sallaService's process method
+              const mapped = await sallaService._processSallaProducts([raw]);
+              if (mapped && mapped.length > 0) details = mapped[0];
+            }
+          } catch (e) {
+            console.warn("[Storia] SDK Fetch Error:", e);
+          }
+        }
 
         if (!isMounted) return;
 
         if (details) {
-          console.log(`[Storia] V18 Discovery COMPLETE for ${sallaId}:`, {
+          console.log(`[Storia] V18 High-Res Discovery SUCCESS:`, {
+            id: sallaId,
             sizes: details.sizes,
             isOnSale: details.isOnSale,
-            salePrice: details.salePrice,
           });
 
           setEnrichedData({
@@ -72,7 +101,7 @@ const ProductDetails = () => {
           }
         }
       } catch (err) {
-        console.error("[Storia] V18 Discovery Error:", err);
+        console.error("[Storia] V18 High-Res Discovery Failed:", err);
       } finally {
         if (isMounted) setIsDiscovering(false);
       }
@@ -82,18 +111,13 @@ const ProductDetails = () => {
     return () => {
       isMounted = false;
     };
-  }, [
-    baseProduct?.id,
-    baseProduct?.sallaProductId,
-    baseProduct?.name,
-    baseProduct?.description,
-  ]);
+  }, [baseProduct?.sallaProductId, baseProduct?.id]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productId]);
 
-  // 4. Cart Logic
+  // Handle add to cart with proper size/variant mapping
   const handleAddToCart = useCallback(async () => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
@@ -127,7 +151,7 @@ const ProductDetails = () => {
       }
     }
 
-    console.log("[Storia] Cart Payload:", payload);
+    console.log("[Storia] Cart Payload Post-Validation:", payload);
 
     try {
       if (window.salla && window.salla.cart) {
@@ -135,28 +159,26 @@ const ProductDetails = () => {
         dispatch(fetchCartFromSalla());
         setShowToast(true);
       } else {
-        // Native fallback
         const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
         if (nativeBtn) nativeBtn.click();
         else alert("عذراً، نظام السلة غير متوفر حالياً");
       }
     } catch (err) {
       console.error("[Storia] Add to cart failed:", err);
-      // If validation error, try native
-      if (err?.response?.status === 422) {
-        const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
-        if (nativeBtn) {
-          nativeBtn.click();
-          return;
-        }
+      // If validation error (422), it means Salla is picky about the options
+      // We trigger the native button which will ALWAYS open the Salla native picker
+      const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
+      if (nativeBtn) {
+        console.log(
+          "[Storia] 422 Error: Falling back to Native Salla Picker...",
+        );
+        nativeBtn.click();
+      } else {
+        alert("يرجى التأكد من اختيار المقاس الصحيح عذراً، حدث خطأ.");
       }
-      alert(
-        "حدث خطأ أثناء الإضافة للسلة. يرجى اختيار المقاس والمحاولة مرة أخرى.",
-      );
     }
   }, [displayProduct, selectedSize, dispatch]);
 
-  // 5. Render states
   if (!baseProduct && products.length > 0) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-32">
@@ -176,7 +198,7 @@ const ProductDetails = () => {
   if (!displayProduct) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-32 animate-pulse">
-        <p className="text-lg opacity-60">جارٍ تحميل المنتج...</p>
+        <p className="text-lg opacity-60">جارٍ تحميل تفاصيل المنتج...</p>
       </div>
     );
   }
@@ -210,8 +232,6 @@ const ProductDetails = () => {
           isDiscovering={isDiscovering}
         />
       </div>
-
-      {/* Debug Section Area if needed */}
     </div>
   );
 };
