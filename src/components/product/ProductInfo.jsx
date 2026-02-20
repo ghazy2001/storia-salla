@@ -59,23 +59,23 @@ const ProductInfo = ({
 
             return (
               <div className="flex flex-row items-center gap-3 w-full justify-end">
-                {discountPercent > 0 && (
-                  <span className="bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded text-[10px] font-bold">
-                    وفر %{discountPercent}
-                  </span>
-                )}
                 <span className="text-xl text-gray-400 line-through decoration-gray-400/50 decoration-1">
                   {format(currentRegularPrice)}
                 </span>
                 <span className="text-3xl font-black tracking-widest text-brand-gold">
                   {format(currentSalePrice)}
                 </span>
+                {discountPercent > 0 && (
+                  <span className="bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded text-[10px] font-bold">
+                    وفر %{discountPercent}
+                  </span>
+                )}
               </div>
             );
           }
 
           return (
-            <div className="w-full text-left">
+            <div className="w-full text-right">
               <p className="text-3xl font-black tracking-widest text-brand-gold">
                 {format(currentRegularPrice)}
               </p>

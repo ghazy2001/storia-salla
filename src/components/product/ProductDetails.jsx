@@ -57,13 +57,33 @@ const ProductDetails = () => {
               .catch(() => null);
             if (res && res.data) {
               console.log("Client-Side Fetch Success:", res.data);
-              // Extract price info
               const d = res.data;
               if (d.regular_price) {
+                const regPrice = Number(d.regular_price);
+                const curPrice = Number(d.price);
+
+                // Build enriched variants if they exist
+                let enrichedVariants = null;
+                if (product.sizeVariants) {
+                  enrichedVariants = product.sizeVariants.map((v) => {
+                    // If variant matches the current price, give it the same regular price
+                    if (Math.abs(Number(v.price) - curPrice) < 0.1) {
+                      return {
+                        ...v,
+                        regularPrice: regPrice,
+                        salePrice: curPrice,
+                        isOnSale: true,
+                      };
+                    }
+                    return v;
+                  });
+                }
+
                 setEnrichedPriceInfo({
-                  regularPrice: d.regular_price,
-                  salePrice: d.sale_price || d.price,
-                  isOnSale: true, // If we found a regular price, assume sale logic applies
+                  regularPrice: regPrice,
+                  salePrice: curPrice,
+                  isOnSale: true,
+                  sizeVariants: enrichedVariants || product.sizeVariants,
                 });
               }
             }
