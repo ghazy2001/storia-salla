@@ -590,18 +590,39 @@ class SallaService {
             // Moved to LAST resort to avoid 400 errors for invalid IDs
             if (b) {
               if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
+
+              // CRITICAL FIX: Unwrap 'data' if Salla returns { status: 200, data: { ... } }
+              const richData = b.data || b;
+
               // Update name from enriched data (bulk fetch often returns stale names)
-              const enrichedName = translate(b.name);
+              const enrichedName = translate(richData.name);
               if (enrichedName && enrichedName.length > 0) {
                 targetProduct.name = enrichedName;
               }
-              if (isEnriched(b.options)) targetProduct.options = b.options;
-              if (isEnriched(b.variants)) targetProduct.variants = b.variants;
-              if (isEnriched(b.skus)) targetProduct.skus = b.skus;
-              if (isEnriched(b.images)) targetProduct.images = b.images;
-              if (isEnriched(b.media)) targetProduct.media = b.media; // Capture media as well
-              if (isEnriched(b.urls)) targetProduct.urls = b.urls; // Capture URLs just in case
-              if (getDesc(b)) description = getDesc(b);
+              if (isEnriched(richData.options))
+                targetProduct.options = richData.options;
+              if (isEnriched(richData.variants))
+                targetProduct.variants = richData.variants;
+              if (isEnriched(richData.skus)) targetProduct.skus = richData.skus;
+              if (isEnriched(richData.images))
+                targetProduct.images = richData.images;
+              if (isEnriched(richData.media))
+                targetProduct.media = richData.media; // Capture media as well
+              if (isEnriched(richData.urls)) targetProduct.urls = richData.urls; // Capture URLs just in case
+              if (getDesc(richData)) description = getDesc(richData);
+
+              // CRITICAL FIX: Copy Price Fields from Enriched Data
+              // The listing product often lacks 'regular_price', but the detailed API has it.
+              if (richData.regular_price !== undefined)
+                targetProduct.regular_price = richData.regular_price;
+              if (richData.sale_price !== undefined)
+                targetProduct.sale_price = richData.sale_price;
+              if (richData.price !== undefined)
+                targetProduct.price = richData.price;
+              if (richData.promotion !== undefined)
+                targetProduct.promotion = richData.promotion;
+              if (richData.is_on_sale !== undefined)
+                targetProduct.is_on_sale = richData.is_on_sale;
             }
           } catch (err) {
             log("[Storia] Detail fetch error:", p.id, err.message);
