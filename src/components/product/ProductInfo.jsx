@@ -160,11 +160,11 @@ const ProductInfo = ({
           })()}
         </button>
 
-        {/* 🌿 V14: The "Natural" Ghost Button Proxy */}
+        {/* 🌿 V14: The "Natural Way" Ghost Button Proxy */}
         <div style={{ display: "none" }}>
           <salla-add-product-button
-            id={`native-cart-btn-${product.id}`}
-            product-id={product.id}
+            id={`native-cart-btn-${product.sallaProductId || product.id}`}
+            product-id={product.sallaProductId || product.id}
             quantity="1"
           ></salla-add-product-button>
         </div>

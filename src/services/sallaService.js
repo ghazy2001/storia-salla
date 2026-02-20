@@ -1081,112 +1081,19 @@ class SallaService {
       payload.options = options.options;
     }
 
-    // AUTO-FALLBACK: If product has required options but none provided, pick first available
+    // AUTO-FALLBACK: If product has    // V15: The Silent Way 🔇
+    // No background fetches, no JIT loops, no network noise.
+    // If data is missing, the Native Handover will handle it.
+
+    // Final failsafe for basic numeric payload
     if (
       !payload.variant_id &&
       (!payload.options || Object.keys(payload.options).length === 0)
     ) {
       let prod =
         window.__STORIA_PRODUCTS__ && window.__STORIA_PRODUCTS__[productId];
-
-      // JIT FETCH: If we still don't have variants, try a last-second detail fetch
-      if (
-        !prod ||
-        !prod.mapped ||
-        !prod.mapped.sizeVariants ||
-        prod.mapped.sizeVariants.length === 0
-      ) {
-        log(
-          "[Storia] No variants found in registry. Attempting JIT fetch for product:",
-          productId,
-        );
-        try {
-          const sm = window.salla || this.salla;
-          const pid = parseInt(String(productId).split("/")[0]) || productId;
-          let rb = null;
-
-          // SDK JIT
-          if (sm && sm.api?.fetch) {
-            const res = await sm.api
-              .fetch("product.details", { id: pid })
-              .catch(() => null);
-            rb = res?.data || res?.product || (res?.id ? res : null);
-          }
-
-          // REST JIT
-          if (!rb) {
-            const paths = [
-              `/api/v1/products/${pid}`,
-              `/products/${pid}.json`,
-            ].filter(Boolean);
-            for (const u of paths) {
-              const r = await fetch(u).catch(() => null);
-              if (r && r.ok) {
-                const d = await r.json();
-                rb = d?.data || d?.product || d;
-                if (rb) break;
-              }
-            }
-          }
-
-          if (rb) {
-            // Temporary mapping for failsafe
-            const rawOptions =
-              (rb.options &&
-                (Array.isArray(rb.options)
-                  ? rb.options
-                  : Object.values(rb.options))) ||
-              [];
-
-            // 1. Try Size Option
-            let sizeOpt = rawOptions.find((o) => {
-              const n = String(o.name || o.label || "").toLowerCase();
-              return (
-                n.includes("مقاس") || n.includes("size") || n.includes("قياس")
-              );
-            });
-
-            // 2. Fallback to FIRST available option if ANY exist
-            if (!sizeOpt && rawOptions.length > 0) {
-              sizeOpt = rawOptions.find(
-                (o) =>
-                  o.values?.length > 0 || (o.data && Array.isArray(o.data)),
-              );
-            }
-
-            if (sizeOpt) {
-              const vals =
-                sizeOpt.values ||
-                (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
-              if (vals.length > 0) {
-                const first = vals[0];
-                payload.options = { [sizeOpt.id]: first.id };
-                log(
-                  "[Storia] JIT Failsafe Success (Options):",
-                  payload.options,
-                );
-              }
-            } else if (rb.variants && rb.variants.length > 0) {
-              payload.variant_id = rb.variants[0].id;
-              log(
-                "[Storia] JIT Failsafe Success (Variant):",
-                payload.variant_id,
-              );
-            }
-          }
-        } catch (e) {
-          console.error("[Storia] JIT Fetch failed", e);
-        }
-      }
-
-      // Standard failsafe if JIT didn't set payload yet
-      if (
-        !payload.variant_id &&
-        (!payload.options || Object.keys(payload.options).length === 0) &&
-        prod?.mapped?.sizeVariants?.length > 0
-      ) {
+      if (prod?.mapped?.sizeVariants?.length > 0) {
         const def = prod.mapped.sizeVariants[0];
-        log("[Storia] Failsafe activated: No selection provided, using:", def);
         if (def.variantId) {
           payload.variant_id = def.variantId;
         } else if (def.optionId && def.valueId) {
