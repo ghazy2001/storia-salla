@@ -588,6 +588,24 @@ class SallaService {
 
             // METHOD 3: Storefront Public AJAX API (Most Reliable for Images but causes 400s)
             // Moved to LAST resort to avoid 400 errors for invalid IDs
+            if (!b) {
+              try {
+                if (config.enableLogging)
+                  log(`Attempting Method 3 (Storefront API) for ${pid}...`);
+                // Try standard Salla storefront endpoint
+                const r = await fetch(`/api/v1/products/${pid}`).catch(
+                  () => null,
+                );
+                if (r && r.ok) {
+                  const d = await r.json();
+                  b = d.data || d.product || d;
+                  if (config.enableLogging) log(`Method 3 Success!`, b);
+                }
+              } catch (e) {
+                log(`Method 3 failed: ${e.message}`);
+              }
+            }
+
             if (b) {
               if (config.enableLogging) log(`SDK enrichment for ${pid}`, b);
 
