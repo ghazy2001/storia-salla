@@ -52,14 +52,26 @@ const ProductInfo = ({
           };
 
           if (isOnSale) {
+            const discountPercent = Math.round(
+              ((currentRegularPrice - currentSalePrice) / currentRegularPrice) *
+                100,
+            );
+
             return (
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold tracking-widest text-brand-gold">
-                  {format(currentSalePrice)}
-                </span>
-                <span className="text-xl text-gray-400 line-through decoration-gray-400/50">
-                  {format(currentRegularPrice)}
-                </span>
+              <div className="flex flex-col items-start gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl font-black tracking-widest text-brand-gold">
+                    {format(currentSalePrice)}
+                  </span>
+                  <span className="text-xl text-gray-300 line-through decoration-gray-300/50 decoration-2">
+                    {format(currentRegularPrice)}
+                  </span>
+                </div>
+                {discountPercent > 0 && (
+                  <span className="bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
+                    وفر {discountPercent}%
+                  </span>
+                )}
               </div>
             );
           }

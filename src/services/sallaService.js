@@ -618,8 +618,14 @@ class SallaService {
         // Helper to extract numeric value from potentially complex object
         const getVal = (val) => {
           if (!val && val !== 0) return 0;
-          if (typeof val === "object") return val.amount || 0;
-          return val;
+          let raw = val;
+          if (typeof val === "object") raw = val.amount || 0;
+          // Ensure we work with numbers
+          if (typeof raw === "string") {
+            // Remove currency symbols or commas if present, though usually Salla sends raw numbers as strings
+            return parseFloat(raw.replace(/[^\d.-]/g, "")) || 0;
+          }
+          return raw;
         };
 
         amount = getVal(targetProduct.price);
