@@ -1,9 +1,57 @@
-import React, { useState } from "react";
+import React from "react";
 
+/**
+ * CarouselInfo Component - V20.2 UI Refinement
+ * Simplified UI for the store listing: removed sizes, fixed currency, and added regular price.
+ */
 const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
-  const [selectedSize, setSelectedSize] = useState(() => {
-    return product.sizes && product.sizes.length > 0 ? product.sizes[0] : null;
-  });
+  // Ultra-safe parsing for numeric calculation to avoid NaN
+  const safeParse = (val) => {
+    if (!val) return 0;
+    const cleaned = String(val).replace(/[^\d.]/g, "");
+    return parseFloat(cleaned) || 0;
+  };
+
+  // Helper to render price correctly without repeats
+  const renderPrice = (priceVal) => {
+    if (!priceVal) return "";
+    let str = String(priceVal).trim();
+
+    // Normalize by removing all currency symbols and adding it back once
+    const numericPart = str.replace(/ر\.س/g, "").replace(/SAR/g, "").trim();
+    if (!numericPart) return str;
+
+    return `${numericPart} ر.س`;
+  };
+
+  const regPrice = safeParse(product.regularPrice);
+  const curPrice = safeParse(product.salePrice || product.price);
+  const sallaId = product.sallaProductId || product.id;
+
+  // New Native Proxy handler for "Add to Cart" button in carousel
+  const handleNativeAddToCart = () => {
+    console.log(
+      "[Storia] V20.2: Proxying Carousel Add to Cart for ID:",
+      sallaId,
+    );
+
+    // Trigger the hidden native Salla button for this product
+    const nativeBtn = document.querySelector(
+      `salla-add-product-button[product-id="${sallaId}"]`,
+    );
+    if (nativeBtn) {
+      // Look for the actual button inside the custom element shadow or directly
+      const btn = nativeBtn.querySelector("button") || nativeBtn;
+      btn.click();
+    } else {
+      // Fallback to manual hook if native button not found
+      onAddToCart &&
+        onAddToCart({
+          product: product,
+          quantity: 1,
+        });
+    }
+  };
 
   return (
     <div
@@ -13,45 +61,23 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
       <h2 className="text-3xl lg:text-5xl font-sans text-brand-charcoal mb-4">
         {product.name}
       </h2>
-      <p className="text-brand-gold text-2xl font-sans mb-6 font-medium">
-        {(() => {
-          if (selectedSize && product.sizeVariants?.length > 0) {
-            const variant = product.sizeVariants.find(
-              (v) => v.size === selectedSize,
-            );
-            if (variant) return variant.price;
-          }
-          return product.price;
-        })()}{" "}
-        ر.س
-      </p>
+
+      <div className="flex items-center gap-4 mb-6">
+        <span className="text-brand-gold text-2xl font-sans font-medium">
+          {renderPrice(product.salePrice || product.price)}
+        </span>
+        {product.isOnSale && regPrice > curPrice && (
+          <span className="text-lg text-brand-charcoal/40 line-through font-sans">
+            {renderPrice(product.regularPrice)}
+          </span>
+        )}
+      </div>
+
       <p className="text-brand-charcoal/70 text-lg leading-relaxed max-w-xl mb-8">
         {product.description}
       </p>
 
-      {/* Available Sizes */}
-      {product.sizes && product.sizes.length > 0 && (
-        <div className="mb-8">
-          <p className="text-sm text-brand-charcoal/60 mb-3">
-            المقاسات المتاحة:
-          </p>
-          <div className="flex gap-3 flex-wrap">
-            {product.sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`px-6 py-2 border rounded-sm transition-all duration-300 ${
-                  selectedSize === size
-                    ? "bg-brand-gold text-white border-brand-gold"
-                    : "bg-transparent text-brand-charcoal border-brand-charcoal/20 hover:border-brand-gold hover:text-brand-gold"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Manual Sizes selection removed as requested */}
 
       <div className="flex gap-4">
         <button
@@ -62,39 +88,18 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
         </button>
 
         <button
-          onClick={() => {
-            // Get price and options for selected size if available
-            let price = product.price;
-            let syncData = {}; // Can contain variant_id or options object
-
-            if (selectedSize && product.sizeVariants?.length > 0) {
-              const variant = product.sizeVariants.find(
-                (v) => v.size === selectedSize,
-              );
-              if (variant) {
-                price = variant.price;
-                // Priority 1: SKU-based variant_id
-                if (variant.variantId) {
-                  syncData.variantId = variant.variantId;
-                }
-                // Priority 2: Custom Options (e.g. { [optionId]: valueId })
-                else if (variant.optionId && variant.valueId) {
-                  syncData.options = { [variant.optionId]: variant.valueId };
-                }
-              }
-            }
-
-            onAddToCart &&
-              onAddToCart({
-                product: { ...product, price },
-                quantity: 1,
-                size: syncData,
-              });
-          }}
+          onClick={handleNativeAddToCart}
           className="px-8 py-3 border border-brand-charcoal text-brand-charcoal hover:bg-brand-gold hover:border-brand-gold hover:text-white transition-all duration-300 text-lg font-medium rounded-sm"
         >
           إضافة للسلة
         </button>
+      </div>
+
+      {/* Salla Native Button Proxy - THE ENGINE for this listing item */}
+      <div className="opacity-0 pointer-events-none absolute left-0 top-0 overflow-hidden w-px h-px">
+        <salla-add-product-button
+          product-id={sallaId}
+        ></salla-add-product-button>
       </div>
     </div>
   );
