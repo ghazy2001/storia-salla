@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
-import { useAddToCart } from "../../hooks/useCart";
+// Native-first: Salla's own button handles cart operations
 import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
@@ -22,28 +22,13 @@ const ProductDetails = () => {
 
   const [activeMedia, setActiveMedia] = useState(0);
   const [showToast, setShowToast] = useState(false);
-  // Initialize selected size state
-  const [selectedSize, setSelectedSize] = useState(() =>
-    product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
-  );
+  const [selectedSize, setSelectedSize] = useState("");
 
   const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
-  const { addToCart } = useAddToCart();
 
   const displayProduct = enrichedPriceInfo
     ? { ...product, ...enrichedPriceInfo }
     : product;
-
-  // Reset selected size when product changes or sizes are enriched
-  useEffect(() => {
-    if (displayProduct?.sizes && displayProduct.sizes.length > 0) {
-      if (selectedSize !== displayProduct.sizes[0]) {
-        setSelectedSize(displayProduct.sizes[0]);
-      }
-    } else if (selectedSize !== "") {
-      setSelectedSize("");
-    }
-  }, [displayProduct?.id, displayProduct?.sizes, selectedSize]);
 
   useEffect(() => {
     const sallaId = product?.sallaProductId || product?.id;
@@ -213,76 +198,36 @@ const ProductDetails = () => {
     );
   }
 
-  const handleAddToCart = async () => {
-    // USE ENRICHED DATA
-    const workingProduct = displayProduct;
+  const handleAddToCart = () => {
+    // V17: Native-First Strategy 🦾
+    // Always use Salla's native button - it handles size selection, validation, and cart addition
+    const sallaId = displayProduct.sallaProductId || displayProduct.id;
+    const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
 
-    if (
-      !selectedSize &&
-      workingProduct.sizes &&
-      workingProduct.sizes.length > 0
-    ) {
-      alert("الرجاء اختيار المقاس");
-      return;
-    }
-
-    // Check Stock
-    if (selectedSize && workingProduct.sizeVariants?.length > 0) {
-      const variant = workingProduct.sizeVariants.find(
-        (v) => v.size === selectedSize,
-      );
-      if (variant && variant.isOutOfStock) {
-        alert("عذراً، هذا المقاس نفذت كميته");
-        return;
-      }
-    } else if (workingProduct.isOutOfStock) {
-      alert("عذراً، هذا المنتج نفذت كميته");
-      return;
-    }
-
-    // Get options for selected size if available
-    let syncData = {
-      sallaProductId: workingProduct.sallaProductId || workingProduct.id,
-    };
-
-    if (selectedSize && workingProduct.sizeVariants?.length > 0) {
-      const variant = workingProduct.sizeVariants.find(
-        (v) => String(v.size).trim() === String(selectedSize).trim(),
-      );
-      if (variant) {
-        // Priority 1: Variant ID
-        if (variant.variantId || variant.sallaVariantId) {
-          syncData.variantId = variant.variantId || variant.sallaVariantId;
-        }
-        // Priority 2: Custom Options
-        else if (variant.optionId && variant.valueId) {
-          syncData.options = { [variant.optionId]: variant.valueId };
-        }
-      }
-    }
-
-    // Sync with Salla backend
-    const result = await addToCart(
-      workingProduct,
-      1,
-      syncData.variantId || { options: syncData.options },
-    );
-
-    // 🌿 V14: The Natural Handover
-    if (result && result.isValidation) {
+    if (nativeBtn) {
       console.log(
-        "[Storia] Discovery Blindness or Validation Error. Triggering Native Proxy...",
+        `[Storia] V17: Triggering native Salla button for product ${sallaId}`,
       );
-      const sallaId = workingProduct.sallaProductId || workingProduct.id;
-      const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
-      if (nativeBtn) {
-        nativeBtn.click();
-        return; // Let Salla's native popup take over
+      nativeBtn.click();
+    } else {
+      console.warn(
+        `[Storia] Native button not found for ${sallaId}, trying SDK fallback...`,
+      );
+      // Fallback: try SDK directly
+      if (window.salla && window.salla.cart) {
+        window.salla.cart
+          .addItem({
+            id: Number(sallaId),
+            quantity: 1,
+          })
+          .then(() => {
+            setShowToast(true);
+          })
+          .catch((err) => {
+            console.error("[Storia] SDK cart fallback failed:", err);
+            alert("عذراً، حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.");
+          });
       }
-    }
-
-    if (result && result.success) {
-      setShowToast(true);
     }
   };
 
