@@ -44,16 +44,18 @@ export const useAddToCart = () => {
             `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
               `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}${diagnosisInfo}`,
           );
+          return { success: false };
         } else {
           // Success! Refresh cart from Salla to get accurate count/total
           dispatch(fetchCartFromSalla());
+          return { success: true, data: result.data };
         }
-      } catch {
+      } catch (e) {
         alert("حدث خطأ أثناء الاتصال بسلة.");
+        return { success: false, error: e.message };
       }
-    } else {
-      // Salla Backend not enabled or SDK not ready - silently ignore
     }
+    return { success: false, error: "Salla not available" };
   };
 
   return { addToCart };

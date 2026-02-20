@@ -67,28 +67,29 @@ const ProductDetails = () => {
                 Object.keys(d),
               );
 
-              // RECURSIVE SCANNER: Find any array that looks like options or variants
-              const findArrays = (obj, depth = 0) => {
+              // DATA ARCHEOLOGIST: Find ANY array containing option-like or variant-like structures
+              const scavenge = (obj, depth = 0) => {
                 let found = { options: [], variants: [] };
-                if (!obj || depth > 4) return found;
+                if (!obj || depth > 5) return found;
 
                 Object.entries(obj).forEach(([key, val]) => {
                   if (Array.isArray(val) && val.length > 0) {
-                    const k = key.toLowerCase();
                     const first = val[0];
-                    const isOpt =
-                      k.includes("opt") ||
-                      (first.name && (first.values || first.data));
-                    const isVar =
-                      k.includes("var") ||
-                      k.includes("sku") ||
-                      first.sku ||
-                      first.price;
+                    if (typeof first !== "object") return;
 
-                    if (isOpt) found.options.push(...val);
-                    if (isVar) found.variants.push(...val);
+                    // Does it look like an OPTION? (Array of things with values/data)
+                    const isOption =
+                      first.id &&
+                      (first.name || first.label) &&
+                      (first.values || first.data || Array.isArray(first.data));
+                    // Does it look like a VARIANT? (Array of things with sku/price/id)
+                    const isVariant =
+                      first.id && (first.sku || first.price || first.sku_id);
+
+                    if (isOption) found.options.push(...val);
+                    if (isVariant) found.variants.push(...val);
                   } else if (val && typeof val === "object") {
-                    const inner = findArrays(val, depth + 1);
+                    const inner = scavenge(val, depth + 1);
                     found.options.push(...inner.options);
                     found.variants.push(...inner.variants);
                   }
@@ -96,14 +97,14 @@ const ProductDetails = () => {
                 return found;
               };
 
-              const discovery = findArrays(d);
+              const discovery = scavenge(d);
               if (discovery.options.length > 0)
                 console.log(
-                  `[Storia] DISCOVERY: Found ${discovery.options.length} potential options via scan.`,
+                  `[Storia] ARCHEOLOGY: Found ${discovery.options.length} options scattered in data.`,
                 );
               if (discovery.variants.length > 0)
                 console.log(
-                  `[Storia] DISCOVERY: Found ${discovery.variants.length} potential variants via scan.`,
+                  `[Storia] ARCHEOLOGY: Found ${discovery.variants.length} variants scattered in data.`,
                 );
 
               const rawOptions = d.options || discovery.options || [];
@@ -124,7 +125,7 @@ const ProductDetails = () => {
 
                 if (!enrichedVariants || enrichedVariants.length === 0) {
                   console.log(
-                    `[Storia] Healing Mode: Found ${rawOptions.length} options, ${rawVariants.length} variants`,
+                    `[Storia] Healing Mode: Finding sizes in discovery sets...`,
                   );
 
                   // Aggressive Size Search
@@ -144,7 +145,7 @@ const ProductDetails = () => {
                       sizeOpt.values ||
                       (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
                     console.log(
-                      `[Storia] Discovery Success: ${sizeOpt.name} (${vals.length} values)`,
+                      `[Storia] HEAL SUCCESS: Found Size Option "${sizeOpt.name}" with ${vals.length} values.`,
                     );
 
                     enrichedSizes = vals.map((v) =>
@@ -163,10 +164,11 @@ const ProductDetails = () => {
                     }));
                   } else if (rawVariants.length > 0) {
                     console.log(
-                      "[Storia] Mapping generic variants from discover.",
+                      "[Storia] HEAL WARNING: No size opt found, mapping variants directly.",
                     );
                     enrichedVariants = rawVariants.map((v) => ({
-                      size: (v.name || v.label || v.sku || "").trim(),
+                      size:
+                        (v.name || v.label || v.sku || "").trim() || "Default",
                       price: Number(v.price || curPrice),
                       regularPrice: Number(
                         v.regular_price || v.price || regPrice || curPrice,
@@ -179,7 +181,7 @@ const ProductDetails = () => {
                       .filter(Boolean);
                   }
                 } else {
-                  // Just update prices for existing variants
+                  // Price only update
                   enrichedVariants = product.sizeVariants.map((v) => {
                     if (Math.abs(Number(v.price) - curPrice) < 0.1) {
                       return {
@@ -305,8 +307,14 @@ const ProductDetails = () => {
     }
 
     // Sync with Salla backend
-    await addToCartWithSync({ ...workingProduct, price }, 1, syncData);
-    setShowToast(true);
+    const result = await addToCartWithSync(
+      { ...workingProduct, price },
+      1,
+      syncData,
+    );
+    if (result && result.success) {
+      setShowToast(true);
+    }
   };
 
   return (

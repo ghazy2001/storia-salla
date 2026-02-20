@@ -1274,17 +1274,33 @@ class SallaService {
             if (rb) {
               console.log(`[Storia] REPAIR: Keys=${Object.keys(rb).join(",")}`);
 
-              const findRecursive = (obj, depth = 0) => {
+              const archeology = (obj, depth = 0) => {
                 let out = { o: [], v: [] };
-                if (!obj || depth > 3) return out;
+                if (!obj || depth > 5) return out;
                 Object.entries(obj).forEach(([k, val]) => {
                   if (Array.isArray(val) && val.length > 0) {
-                    const key = k.toLowerCase();
-                    if (key.includes("opt")) out.o.push(...val);
-                    if (key.includes("var") || key.includes("sku"))
-                      out.v.push(...val);
+                    const first = val[0];
+                    if (typeof first === "object") {
+                      // OPTION detected by structure
+                      if (
+                        first.id &&
+                        (first.name || first.label) &&
+                        (first.values ||
+                          first.data ||
+                          Array.isArray(first.data))
+                      ) {
+                        out.o.push(...val);
+                      }
+                      // VARIANT detected by structure
+                      if (
+                        first.id &&
+                        (first.sku || first.price || first.sku_id)
+                      ) {
+                        out.v.push(...val);
+                      }
+                    }
                   } else if (val && typeof val === "object") {
-                    const inner = findRecursive(val, depth + 1);
+                    const inner = archeology(val, depth + 1);
                     out.o.push(...inner.o);
                     out.v.push(...inner.v);
                   }
@@ -1292,7 +1308,7 @@ class SallaService {
                 return out;
               };
 
-              const discovered = findRecursive(rb);
+              const discovered = archeology(rb);
               const ros =
                 (rb.options &&
                   (Array.isArray(rb.options)
@@ -1303,6 +1319,9 @@ class SallaService {
               const vs = rb.variants || rb.skus || discovered.v || [];
 
               diagnosis += ` | Found ${ros.length} opts, ${vs.length} vars.`;
+              if (ros.length === 0) {
+                diagnosis += ` | RootKeys: ${Object.keys(rb).join(",").slice(0, 100)}`;
+              }
 
               const pickedOptions = {};
               // 1. Find a Size-like option first
@@ -1355,7 +1374,8 @@ class SallaService {
                 diagnosis += " | Retrying with Variant.";
                 return await attemptAdd(repairedPayload, true);
               } else {
-                diagnosis += " | No actionable options/variants discovered.";
+                diagnosis +=
+                  " | No actionable discovered. Structure Blindness!";
               }
             } else {
               diagnosis += " | All repair fetches failed.";
