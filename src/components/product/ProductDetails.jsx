@@ -180,17 +180,20 @@ const ProductDetails = () => {
     // 2. ACTIVE SYNC: Start polling to force Redux update even if events fail
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
 
+    // Immediate first poll
+    dispatch(fetchCartFromSalla());
+
     let pollCount = 0;
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
-      console.log("[Storia] Active Sync Polling...", pollCount);
+      console.log("[Storia] Active Sync Polling (Speed Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
-      if (pollCount >= 6) {
-        // Poll every 2s for 12s
+      if (pollCount >= 20) {
+        // Poll every 500ms for 10s
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
-    }, 2000);
+    }, 500);
 
     console.log(
       "[Storia] V22: Triggering Native Button & Active Sync for ID:",
