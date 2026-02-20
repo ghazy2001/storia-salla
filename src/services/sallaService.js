@@ -651,15 +651,32 @@ class SallaService {
         }
 
         // Case C: Promotion object
-        if (
-          !isOnSale &&
-          targetProduct.promotion &&
-          targetProduct.promotion.price
-        ) {
-          const rawPromo = getVal(targetProduct.promotion.price);
-          if (rawPromo > 0 && rawPromo < regularPrice) {
-            salePrice = rawPromo;
-            isOnSale = true;
+        if (!isOnSale && targetProduct.promotion) {
+          // Check for explicit promotion price
+          if (targetProduct.promotion.price) {
+            const rawPromo = getVal(targetProduct.promotion.price);
+            if (rawPromo > 0 && rawPromo < regularPrice) {
+              salePrice = rawPromo;
+              isOnSale = true;
+            }
+          }
+
+          // Fallback: If we still don't have a regular price but we have a "saving amount"
+          // Salla sometimes sends { amount: 175, ... } as the DISCOUNT AMOUNT in the promotion object
+          if (!isOnSale && targetProduct.promotion.amount) {
+            const savingAmount = getVal(targetProduct.promotion.amount);
+            if (savingAmount > 0) {
+              // If we have a saving, then Regular = Current + Saving
+              // But wait, 'amount' (current price) is the Sale Price in this context?
+              // Usually 'price' is the final price.
+              salePrice = amount;
+              regularPrice = amount + savingAmount;
+              isOnSale = true;
+              console.log(
+                "[Storia] Derived regular price from promotion saving:",
+                regularPrice,
+              );
+            }
           }
         }
 
