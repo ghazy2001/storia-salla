@@ -58,27 +58,25 @@ const ProductInfo = ({
             );
 
             return (
-              <div className="flex flex-col items-start gap-2 w-full">
-                <div className="flex items-center gap-3">
-                  <span className="text-3xl font-black tracking-widest text-brand-gold">
-                    {format(currentSalePrice)}
-                  </span>
-                  <span className="text-xl text-gray-300 line-through decoration-gray-300/50 decoration-2">
-                    {format(currentRegularPrice)}
-                  </span>
-                </div>
+              <div className="flex flex-row items-center gap-3 w-full justify-end">
                 {discountPercent > 0 && (
-                  <span className="bg-red-50 text-red-600 border border-red-100 px-3 py-1 rounded-full text-xs font-bold tracking-wider">
-                    وفر {discountPercent}%
+                  <span className="bg-red-50 text-red-600 border border-red-100 px-2 py-0.5 rounded text-[10px] font-bold">
+                    وفر %{discountPercent}
                   </span>
                 )}
+                <span className="text-xl text-gray-400 line-through decoration-gray-400/50 decoration-1">
+                  {format(currentRegularPrice)}
+                </span>
+                <span className="text-3xl font-black tracking-widest text-brand-gold">
+                  {format(currentSalePrice)}
+                </span>
               </div>
             );
           }
 
           return (
-            <div className="w-full">
-              <p className="text-2xl font-bold tracking-widest text-brand-gold">
+            <div className="w-full text-left">
+              <p className="text-3xl font-black tracking-widest text-brand-gold">
                 {format(currentRegularPrice)}
               </p>
             </div>

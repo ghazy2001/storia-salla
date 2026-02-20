@@ -190,7 +190,7 @@ const ProductDetails = () => {
       <div className="max-w-[1920px] mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
         {/* Gallery Section */}
         <ProductGallery
-          product={product}
+          product={displayProduct}
           activeMedia={activeMedia}
           setActiveMedia={setActiveMedia}
         />

@@ -912,6 +912,14 @@ class SallaService {
             }
           }
 
+          // INHERITANCE FIX: If main product is on sale and this variant
+          // matches the effective sale price, but hasn't explicitly set isOnSale
+          if (!vIsOnSale && isOnSale && Math.abs(vPrice - salePrice) < 0.1) {
+            vRegularPrice = regularPrice;
+            vSalePrice = vPrice;
+            vIsOnSale = true;
+          }
+
           return {
             size: translate(v.name || v.label || v.sku || "").trim(),
             price: vPrice, // This is the "effective" price
