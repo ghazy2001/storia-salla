@@ -1,19 +1,26 @@
 import React from "react";
 
 /**
- * ProductInfo Component
+ * ProductInfo Component - V19 Native Proxy Edition
  * Renders product title, price, descriptions and add to cart section.
+ * Size selection is handled by Salla's native popup, so we remove custom buttons.
  */
-const ProductInfo = ({
-  product,
-  selectedSize,
-  setSelectedSize,
-  handleAddToCart,
-  theme,
-  isDiscovering,
-}) => {
-  // Use theme if needed, otherwise ignore to fix lint
+const ProductInfo = ({ product, handleAddToCart, theme }) => {
   const isGoldTheme = theme === "gold" || !theme;
+
+  // Ultra-safe parsing for discount calculation to avoid NaN
+  const safeParse = (val) => {
+    if (!val) return 0;
+    const cleaned = String(val).replace(/[^\d.]/g, "");
+    return parseFloat(cleaned) || 0;
+  };
+
+  const regPrice = safeParse(product.regularPrice);
+  const curPrice = safeParse(product.salePrice || product.price);
+  const discount =
+    regPrice > curPrice && regPrice > 0
+      ? Math.round(((regPrice - curPrice) / regPrice) * 100)
+      : 0;
 
   return (
     <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
@@ -28,31 +35,15 @@ const ProductInfo = ({
           >
             {product.salePrice || product.price} ر.س
           </span>
-          {product.isOnSale &&
-            product.regularPrice > (product.salePrice || product.price) && (
-              <span className="text-xl text-brand-charcoal/40 line-through font-sans">
-                {product.regularPrice} ر.س
-              </span>
-            )}
+          {product.isOnSale && regPrice > curPrice && (
+            <span className="text-xl text-brand-charcoal/40 line-through font-sans">
+              {product.regularPrice} ر.س
+            </span>
+          )}
         </div>
-        {product.isOnSale && (
+        {product.isOnSale && discount > 0 && (
           <span className="bg-red-50 text-red-500 text-xs px-2 py-1 rounded-full font-bold">
-            وفر{" "}
-            {(() => {
-              const reg = parseFloat(
-                String(product.regularPrice).replace(/[^\d.]/g, ""),
-              );
-              const sale = parseFloat(
-                String(product.salePrice || product.price).replace(
-                  /[^\d.]/g,
-                  "",
-                ),
-              );
-              if (!reg || isNaN(reg) || !sale || isNaN(sale) || reg <= sale)
-                return 0;
-              return Math.round(((reg - sale) / reg) * 100);
-            })()}
-            %
+            وفر {discount}%
           </span>
         )}
       </div>
@@ -61,94 +52,14 @@ const ProductInfo = ({
         {product.description}
       </p>
 
-      {/* Size Selection */}
-      {(product.sizes && product.sizes.length > 0) || isDiscovering ? (
-        <div className="mb-8 w-full max-w-md ml-auto lg:ml-auto">
-          <label className="block text-sm font-medium text-brand-charcoal mb-3">
-            {isDiscovering && (!product.sizes || product.sizes.length === 0)
-              ? "جارٍ تحميل المقاسات..."
-              : "المقاس"}
-          </label>
-          <div className="flex gap-3 flex-wrap">
-            {product.sizes && product.sizes.length > 0
-              ? product.sizes.map((size) => {
-                  const variant = product.sizeVariants?.find(
-                    (v) => String(v.size).trim() === String(size).trim(),
-                  );
-                  const isOutOfStock = variant?.isOutOfStock;
-
-                  return (
-                    <button
-                      key={size}
-                      onClick={() => !isOutOfStock && setSelectedSize(size)}
-                      disabled={isOutOfStock}
-                      className={`px-6 py-3 border-2 rounded-lg font-medium transition-all relative ${
-                        isOutOfStock
-                          ? "border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50"
-                          : selectedSize === size
-                            ? "border-brand-gold bg-brand-gold text-white"
-                            : "border-brand-charcoal/20 text-brand-charcoal hover:border-brand-gold"
-                      }`}
-                    >
-                      {size}
-                      {isOutOfStock && (
-                        <span className="absolute -top-2 -left-2 bg-gray-100 text-gray-400 text-[10px] px-1 rounded border border-gray-200">
-                          نفذت
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-              : isDiscovering
-                ? // Loading skeletons for buttons
-                  [1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="w-16 h-12 bg-gray-100 animate-pulse rounded-lg border-2 border-gray-50"
-                    ></div>
-                  ))
-                : null}
-          </div>
-        </div>
-      ) : null}
+      {/* Manual Size Selection is removed as Salla handles it via native picker popup */}
 
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
         <button
           onClick={handleAddToCart}
-          disabled={(() => {
-            if (product.sizes && product.sizes.length > 0) {
-              const variant = product.sizeVariants?.find(
-                (v) => String(v.size).trim() === String(selectedSize).trim(),
-              );
-              return !selectedSize || (variant && variant.isOutOfStock);
-            }
-            return false;
-          })()}
-          className={`w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg ${
-            (() => {
-              if (product.sizes && product.sizes.length > 0) {
-                const variant = product.sizeVariants?.find(
-                  (v) => String(v.size).trim() === String(selectedSize).trim(),
-                );
-                return !selectedSize || (variant && variant.isOutOfStock);
-              }
-              return false;
-            })()
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed shadow-none"
-              : "bg-brand-charcoal text-white hover:bg-black hover:scale-[1.02] active:scale-[0.98]"
-          }`}
+          className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg bg-brand-charcoal text-white hover:bg-black hover:scale-[1.02] active:scale-[0.98]"
         >
-          {(() => {
-            if (product.sizes && product.sizes.length > 0) {
-              const variant = product.sizeVariants?.find(
-                (v) => String(v.size).trim() === String(selectedSize).trim(),
-              );
-              if (!selectedSize) return "اختر المقاس أولاً";
-              if (variant && variant.isOutOfStock) return "نفذت الكمية";
-              return "إضافة للسلة";
-            }
-            return "إضافة للسلة";
-          })()}
+          إضافة للسلة
         </button>
 
         <div className="grid grid-cols-2 gap-4 mt-4">
@@ -163,8 +74,7 @@ const ProductInfo = ({
         </div>
       </div>
 
-      {/* Salla Native Button Proxy - THE SAFETY VALVE */}
-      {/* Keeping it in DOM but visually hidden so it's clickable by script */}
+      {/* Salla Native Button Proxy - THE ENGINE */}
       <div className="opacity-0 pointer-events-none absolute left-0 top-0 overflow-hidden w-px h-px">
         <salla-add-product-button
           product-id={product.sallaProductId || product.id}
