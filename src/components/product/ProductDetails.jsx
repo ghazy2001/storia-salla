@@ -72,25 +72,64 @@ const ProductDetails = () => {
     window.scrollTo(0, 0);
   }, [productId]);
 
-  // 4. Cart Logic - THE PURE NATIVE PROXY
-  // No more manual size validation! Salla handles it in the native popup.
+  // 4. Cart Logic - THE PURE NATIVE PROXY (Hardening V2)
   useEffect(() => {
-    // Listen for Salla's native "item added" event to show our Toast
-    const handleSallaCartAdd = (event) => {
-      console.log("[Storia] Salla Cart Event detected:", event);
+    let isMounted = true;
+    let retryCount = 0;
+    let isAttached = false;
+
+    const handleCartSuccess = (event) => {
+      console.log("[Storia] Salla Cart Success Event:", event);
       setShowToast(true);
-      // Refresh local cart state to update header count etc.
       dispatch(fetchCartFromSalla());
     };
 
-    if (window.salla) {
-      window.salla.event.on("cart::add-item", handleSallaCartAdd);
+    const attachListeners = () => {
+      if (!isMounted) return false;
+
+      if (window.salla && window.salla.event) {
+        // Listen to all possible variants to ensure compatibility
+        window.salla.event.on("cart::add-item", handleCartSuccess);
+        window.salla.event.on("cart::added", handleCartSuccess);
+
+        console.log("[Storia] Salla Event Listeners attached successfully.");
+        isAttached = true;
+        return true;
+      }
+      return false;
+    };
+
+    const cleanup = () => {
+      if (isAttached && window.salla && window.salla.event) {
+        try {
+          window.salla.event.off("cart::add-item", handleCartSuccess);
+          window.salla.event.off("cart::added", handleCartSuccess);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+
+    // Try immediately
+    if (!attachListeners()) {
+      // If salla not ready, retry for 10 seconds
+      const interval = setInterval(() => {
+        retryCount++;
+        if (attachListeners() || retryCount > 20) {
+          clearInterval(interval);
+        }
+      }, 500);
+
+      return () => {
+        clearInterval(interval);
+        isMounted = false;
+        cleanup();
+      };
     }
 
     return () => {
-      if (window.salla) {
-        window.salla.event.off("cart::add-item", handleSallaCartAdd);
-      }
+      isMounted = false;
+      cleanup();
     };
   }, [dispatch]);
 

@@ -187,11 +187,11 @@ const ProductListing = ({ goToStore, onProductSelect }) => {
                     <div className="flex flex-col items-start">
                       {product.isOnSale ? (
                         <div className="flex items-center gap-2 mb-2 justify-start">
-                          <span className="text-sm text-gray-400 line-through decoration-gray-400/50">
-                            {product.regularPrice || product.price}
-                          </span>
                           <span className="text-lg font-bold text-brand-gold">
                             {product.salePrice}
+                          </span>
+                          <span className="text-sm text-gray-400 line-through decoration-gray-400/50">
+                            {product.regularPrice || product.price}
                           </span>
                         </div>
                       ) : (
