@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import React, { useEffect, useState, useCallback } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { useParams, useNavigate } from "react-router-dom";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
-// Native-first: Salla's own button handles cart operations
+import { fetchCartFromSalla } from "../../store/slices/cartSlice";
+import sallaService from "../../services/sallaService";
 import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
@@ -11,6 +12,7 @@ import ProductInfo from "./ProductInfo";
 const ProductDetails = () => {
   const { id: productId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const products = useSelector(selectProducts);
   const theme = useSelector(selectTheme);
 
@@ -23,150 +25,153 @@ const ProductDetails = () => {
   const [activeMedia, setActiveMedia] = useState(0);
   const [showToast, setShowToast] = useState(false);
   const [selectedSize, setSelectedSize] = useState("");
+  const [enrichedData, setEnrichedData] = useState(null);
 
-  const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
-
-  const displayProduct = enrichedPriceInfo
-    ? { ...product, ...enrichedPriceInfo }
+  // Merge enriched data with base product
+  const displayProduct = enrichedData
+    ? { ...product, ...enrichedData }
     : product;
 
+  // V17: Fetch full product details (with sizes) from Salla SDK
   useEffect(() => {
     const sallaId = product?.sallaProductId || product?.id;
     if (!sallaId) return;
-    // Skip if we already have good data from Redux
-    if (product?.isOnSale && product?.regularPrice && product?.salePrice)
+
+    // Skip if we already have sizes from Redux
+    if (product?.sizes && product.sizes.length > 0) {
+      console.log(
+        `[Storia] V17: Product ${sallaId} already has ${product.sizes.length} sizes from Redux`,
+      );
       return;
+    }
 
-    // V17: Deep Integration 🦾
-    const discover = async () => {
+    let cancelled = false;
+
+    const fetchDetails = async () => {
       try {
-        // STRATEGY 1: Check __STORIA_PRODUCTS__ global cache (instant, zero network)
-        const cached = window.__STORIA_PRODUCTS__?.[sallaId]?.mapped;
-        if (cached && cached.isOnSale) {
-          console.log(`[Storia] V17: Cache hit for ${sallaId}`);
-          setEnrichedPriceInfo({
-            regularPrice: cached.regularPrice || cached.rawRegularPrice,
-            salePrice: cached.salePrice || cached.rawSalePrice,
-            isOnSale: cached.isOnSale,
-            sizes: cached.sizes || [],
-            sizeVariants: cached.sizeVariants || [],
+        console.log(
+          `[Storia] V17: Fetching full details for product ${sallaId}...`,
+        );
+        const details = await sallaService.getProductDetails(sallaId);
+
+        if (cancelled) return;
+
+        if (details) {
+          console.log(`[Storia] V17: Got details for ${sallaId}:`, {
+            sizes: details.sizes,
+            sizeVariantsCount: details.sizeVariants?.length,
+            isOnSale: details.isOnSale,
+            regularPrice: details.regularPrice,
+            salePrice: details.salePrice,
           });
-          return;
-        }
 
-        // STRATEGY 2: Use Salla SDK (official API, single request)
-        const sm = window.salla;
-        const productManager = sm?.product || sm?.api?.product;
-        if (productManager && typeof productManager.get === "function") {
-          console.log(`[Storia] V17: SDK fetch for ${sallaId}...`);
-          const res = await productManager.get(sallaId).catch(() => null);
-          const d = res?.data || (res?.id ? res : null);
+          setEnrichedData({
+            regularPrice: details.regularPrice || details.rawRegularPrice,
+            salePrice: details.salePrice || details.rawSalePrice,
+            rawRegularPrice: details.rawRegularPrice,
+            rawSalePrice: details.rawSalePrice,
+            isOnSale: details.isOnSale,
+            sizes: details.sizes || [],
+            sizeVariants: details.sizeVariants || [],
+          });
 
-          if (d) {
-            const translate = (val) => {
-              if (!val) return "";
-              if (typeof val === "string") return val;
-              return val.ar || val.en || Object.values(val)[0] || "";
-            };
-
-            const getVal = (v) => {
-              if (v === null || v === undefined) return 0;
-              if (typeof v === "number") return v;
-              return Number(v.amount) || Number(v) || 0;
-            };
-
-            const amount = getVal(d.price);
-            let regularPrice = getVal(d.regular_price) || amount;
-            let salePrice = amount;
-            let isOnSale = regularPrice > salePrice;
-
-            // Map size options
-            let sizeVariants = [];
-            let sizes = [];
-            const rawOptions = d.options || [];
-            const rawVariants = d.variants || d.skus || [];
-
-            const sizeOpt =
-              rawOptions.find((o) => {
-                const n = translate(o.name || o.label).toLowerCase();
-                return (
-                  n.includes("مقاس") || n.includes("size") || n.includes("قياس")
-                );
-              }) || (rawOptions.length > 0 ? rawOptions[0] : null);
-
-            if (sizeOpt) {
-              const vals =
-                sizeOpt.values ||
-                (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
-              sizes = vals.map((v) => translate(v.name || v.label).trim());
-              sizeVariants = vals.map((v) => ({
-                size: translate(v.name || v.label).trim(),
-                price: getVal(v.price) || amount,
-                regularPrice:
-                  getVal(v.regular_price) || getVal(v.price) || regularPrice,
-                salePrice: getVal(v.sale_price) || getVal(v.price) || salePrice,
-                isOnSale: isOnSale,
-                variantId: v.id,
-                optionId: sizeOpt.id,
-                valueId: v.id,
-              }));
-            } else if (rawVariants.length > 0) {
-              sizeVariants = rawVariants.map((v) => ({
-                size: translate(v.name || v.label || v.sku).trim() || "Default",
-                price: getVal(v.price) || amount,
-                regularPrice:
-                  getVal(v.regular_price) || getVal(v.price) || regularPrice,
-                isOnSale: isOnSale,
-                variantId: v.id,
-              }));
-              sizes = sizeVariants.map((v) => v.size).filter(Boolean);
-            }
-
-            // If variants have sale info but main doesn't, lift it up
-            if (!isOnSale && sizeVariants.length > 0) {
-              const sv = sizeVariants.find((v) => v.regularPrice > v.price);
-              if (sv) {
-                regularPrice = sv.regularPrice;
-                salePrice = sv.price;
-                isOnSale = true;
-              }
-            }
-
-            if (isOnSale || sizes.length > 0) {
-              console.log(
-                `[Storia] V17 Discovery: price ${regularPrice} → ${salePrice}, ${sizes.length} sizes`,
-              );
-              setEnrichedPriceInfo({
-                regularPrice,
-                salePrice,
-                isOnSale,
-                sizes: sizes.length > 0 ? sizes : undefined,
-                sizeVariants:
-                  sizeVariants.length > 0 ? sizeVariants : undefined,
-              });
-            }
+          // Auto-select first size
+          if (details.sizes && details.sizes.length > 0) {
+            setSelectedSize(details.sizes[0]);
           }
         }
       } catch (err) {
-        console.warn("[Storia] V17 Discovery Error:", err);
+        console.warn("[Storia] V17: fetchDetails failed:", err);
       }
     };
 
-    // Run immediately and retry once after SDK lazy-loads
-    discover();
-    const timer = setTimeout(discover, 2500);
-    return () => clearTimeout(timer);
-  }, [
-    product?.id,
-    product?.sallaProductId,
-    product?.isOnSale,
-    product?.regularPrice,
-    product?.salePrice,
-  ]);
+    // Wait a bit for SDK to initialize, then fetch
+    const timer = setTimeout(fetchDetails, 1000);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [product?.id, product?.sallaProductId, product?.sizes]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productId]);
+
+  // Handle add to cart with proper size/variant mapping
+  const handleAddToCart = useCallback(async () => {
+    const wp = displayProduct;
+    const sallaId = wp.sallaProductId || wp.id;
+
+    // Validate size selection
+    if (wp.sizes && wp.sizes.length > 0 && !selectedSize) {
+      alert("الرجاء اختيار المقاس");
+      return;
+    }
+
+    // Check stock
+    if (selectedSize && wp.sizeVariants?.length > 0) {
+      const variant = wp.sizeVariants.find((v) => v.size === selectedSize);
+      if (variant?.isOutOfStock) {
+        alert("عذراً، هذا المقاس نفذت كميته");
+        return;
+      }
+    }
+
+    // Build cart payload
+    const payload = {
+      id: Number(sallaId),
+      quantity: 1,
+    };
+
+    // Add variant/option data if a size is selected
+    if (selectedSize && wp.sizeVariants?.length > 0) {
+      const variant = wp.sizeVariants.find(
+        (v) => String(v.size).trim() === String(selectedSize).trim(),
+      );
+      if (variant) {
+        if (variant.variantId || variant.sallaVariantId) {
+          payload.variant_id = variant.variantId || variant.sallaVariantId;
+        } else if (variant.optionId && variant.valueId) {
+          payload.options = { [variant.optionId]: variant.valueId };
+        }
+      }
+    }
+
+    console.log("[Storia] V17 Add to Cart payload:", payload);
+
+    try {
+      // Use SDK directly for cart operations
+      if (window.salla && window.salla.cart) {
+        const result = await window.salla.cart.addItem(payload);
+        console.log("[Storia] Cart addItem success:", result);
+        dispatch(fetchCartFromSalla());
+        setShowToast(true);
+      } else {
+        // Fallback: try the native button
+        const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
+        if (nativeBtn) {
+          nativeBtn.click();
+        } else {
+          alert("عذراً، خدمة السلة غير متوفرة حالياً.");
+        }
+      }
+    } catch (err) {
+      console.error("[Storia] Add to cart error:", err);
+      const statusCode = err?.response?.status || err?.status;
+
+      if (statusCode === 422 || statusCode === 400) {
+        // Validation error - try native button as fallback
+        console.log("[Storia] 422/400 - trying native button...");
+        const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
+        if (nativeBtn) {
+          nativeBtn.click();
+          return;
+        }
+      }
+
+      alert("عذراً، حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.");
+    }
+  }, [displayProduct, selectedSize, dispatch]);
 
   if (products.length === 0) {
     return (
@@ -197,39 +202,6 @@ const ProductDetails = () => {
       </div>
     );
   }
-
-  const handleAddToCart = () => {
-    // V17: Native-First Strategy 🦾
-    // Always use Salla's native button - it handles size selection, validation, and cart addition
-    const sallaId = displayProduct.sallaProductId || displayProduct.id;
-    const nativeBtn = document.getElementById(`native-cart-btn-${sallaId}`);
-
-    if (nativeBtn) {
-      console.log(
-        `[Storia] V17: Triggering native Salla button for product ${sallaId}`,
-      );
-      nativeBtn.click();
-    } else {
-      console.warn(
-        `[Storia] Native button not found for ${sallaId}, trying SDK fallback...`,
-      );
-      // Fallback: try SDK directly
-      if (window.salla && window.salla.cart) {
-        window.salla.cart
-          .addItem({
-            id: Number(sallaId),
-            quantity: 1,
-          })
-          .then(() => {
-            setShowToast(true);
-          })
-          .catch((err) => {
-            console.error("[Storia] SDK cart fallback failed:", err);
-            alert("عذراً، حدث خطأ أثناء الإضافة للسلة. حاول مرة أخرى.");
-          });
-      }
-    }
-  };
 
   return (
     <div className="min-h-screen bg-brand-offwhite text-brand-charcoal pt-24 pb-12">

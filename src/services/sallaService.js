@@ -1055,6 +1055,75 @@ class SallaService {
   }
 
   /**
+   * Fetch detailed product data (with sizes/options) for a single product
+   * Uses the same mapping logic as _processSallaProducts
+   * @param {number|string} sallaProductId - Salla product ID
+   * @returns {object|null} Fully mapped product with sizes, variants, prices
+   */
+  async getProductDetails(sallaProductId) {
+    if (!this.isAvailable()) {
+      log("[Storia] SDK not available for getProductDetails");
+      return null;
+    }
+
+    try {
+      const productManager =
+        this.salla.product || (this.salla.api ? this.salla.api.product : null);
+
+      if (!productManager) {
+        log("[Storia] No product manager available");
+        return null;
+      }
+
+      let rawProduct = null;
+
+      // Try .get() first (individual product fetch with full options)
+      if (typeof productManager.get === "function") {
+        try {
+          const res = await productManager.get(sallaProductId);
+          if (res?.data) rawProduct = res.data;
+          else if (res?.id) rawProduct = res;
+        } catch (e) {
+          log("[Storia] product.get() failed:", e);
+        }
+      }
+
+      // Fallback to .fetch() with product ID
+      if (!rawProduct && typeof productManager.fetch === "function") {
+        try {
+          const res = await productManager.fetch({ id: sallaProductId });
+          if (res?.data) {
+            rawProduct = Array.isArray(res.data) ? res.data[0] : res.data;
+          }
+        } catch (e) {
+          log("[Storia] product.fetch({id}) failed:", e);
+        }
+      }
+
+      if (!rawProduct) {
+        log(`[Storia] Could not fetch product ${sallaProductId}`);
+        return null;
+      }
+
+      // Use existing mapping logic
+      const mapped = await this._processSallaProducts([rawProduct]);
+      if (mapped && mapped.length > 0) {
+        log(`[Storia] getProductDetails(${sallaProductId}) SUCCESS:`, {
+          sizes: mapped[0].sizes,
+          sizeVariants: mapped[0].sizeVariants?.length,
+          isOnSale: mapped[0].isOnSale,
+        });
+        return mapped[0];
+      }
+
+      return null;
+    } catch (error) {
+      console.error("[Storia] getProductDetails error:", error);
+      return null;
+    }
+  }
+
+  /**
    * Add item to Salla cart
    *
    * @param {number} productId - Salla product ID
