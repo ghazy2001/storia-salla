@@ -28,7 +28,6 @@ const ProductDetails = () => {
   );
 
   // Reset selected size when product changes or sizes are enriched
-  // Reset selected size when product changes
   useEffect(() => {
     if (product?.sizes && product.sizes.length > 0) {
       // Only update if different to avoid loops
@@ -40,6 +39,49 @@ const ProductDetails = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product?.id, product?.sizes]);
+
+  // CLIENT-SIDE PRICE FETCH (The "Nuclear" Option)
+  // If regular price is missing, directly ask Salla API from the browser
+  const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
+
+  useEffect(() => {
+    if (product && !product.regularPrice && product.id) {
+      console.log("Client-Side Fetch: Missing regular price, fetching...");
+
+      const fetchDetails = async () => {
+        try {
+          // Try to use Salla SDK directly in browser
+          if (window.salla && window.salla.api && window.salla.api.product) {
+            const res = await window.salla.api.product
+              .getDetails(product.id)
+              .catch(() => null);
+            if (res && res.data) {
+              console.log("Client-Side Fetch Success:", res.data);
+              // Extract price info
+              const d = res.data;
+              if (d.regular_price) {
+                setEnrichedPriceInfo({
+                  regularPrice: d.regular_price,
+                  salePrice: d.sale_price || d.price,
+                  isOnSale: true, // If we found a regular price, assume sale logic applies
+                });
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Client-Side Fetch Error:", e);
+        }
+      };
+
+      // Small delay to ensure Salla is ready
+      setTimeout(fetchDetails, 1000);
+    }
+  }, [product]);
+
+  // Merge enriched info if available
+  const displayProduct = enrichedPriceInfo
+    ? { ...product, ...enrichedPriceInfo }
+    : product;
 
   const { addToCart: addToCartWithSync } = useAddToCart();
 
@@ -155,7 +197,7 @@ const ProductDetails = () => {
 
         {/* Product Info */}
         <ProductInfo
-          product={product}
+          product={displayProduct}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
           handleAddToCart={handleAddToCart}
