@@ -84,15 +84,34 @@ const ProductInfo = ({
         })()}
       </div>
 
-      {/* DEBUG: Temporarily hidden - remove in production */}
-      {/* <div className="text-xs text-left bg-gray-100 p-2 mb-4 dir-ltr font-mono h-24 overflow-auto">
-         DEBUG:
-         Price: {JSON.stringify(product.price)}
-         Sale: {JSON.stringify(product.salePrice)}
-         Reg: {JSON.stringify(product.regularPrice)}
-         OnSale: {JSON.stringify(product.isOnSale)}
-         Var: {JSON.stringify(product.sizeVariants)}
-      </div> */}
+      {/* DEBUG: Temporary - removing in next step */}
+      <div className="text-xs text-left bg-gray-100 p-2 mb-4 dir-ltr font-mono border border-red-300">
+        <strong>DEBUG DIAGNOSTIC:</strong>
+        <br />
+        Raw Price: {JSON.stringify(product.rawPrice)}
+        <br />
+        Raw Regular: {JSON.stringify(product.rawRegularPrice)}
+        <br />
+        Raw Sale: {JSON.stringify(product.rawSalePrice)}
+        <br />
+        IsOnSale: {JSON.stringify(product.isOnSale)}
+        <br />
+        ---
+        <br />
+        Calculated Reg: {product.regularPrice}
+        <br />
+        Calculated Sale: {product.salePrice}
+        <br />
+        ---
+        <br />
+        Full Price Obj: {JSON.stringify(product.rawSallaData?.price)}
+        <br />
+        Full Reg Obj: {JSON.stringify(product.rawSallaData?.regular_price)}
+        <br />
+        Full Sale Obj: {JSON.stringify(product.rawSallaData?.sale_price)}
+        <br />
+        Promotion: {JSON.stringify(product.rawSallaData?.promotion)}
+      </div>
 
       <div className="w-20 h-[1px] bg-brand-charcoal/20 mb-8 ml-auto lg:ml-auto"></div>
 
