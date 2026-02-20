@@ -58,13 +58,6 @@ const ProductInfo = ({
             );
 
             return (
-          if (isOnSale) {
-            const discountPercent = Math.round(
-              ((currentRegularPrice - currentSalePrice) / currentRegularPrice) *
-                100,
-            );
-
-            return (
               <div className="flex flex-col items-start gap-2 w-full">
                 <div className="flex items-center gap-3">
                   <span className="text-3xl font-black tracking-widest text-brand-gold">
