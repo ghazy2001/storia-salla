@@ -27,20 +27,84 @@ const ProductDetails = () => {
     product?.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
   );
 
+  const [enrichedPriceInfo, setEnrichedPriceInfo] = useState(null);
+  const { addToCart } = useAddToCart();
+
   // Reset selected size when product changes or sizes are enriched
   useEffect(() => {
-    if (product?.sizes && product.sizes.length > 0) {
-      // Only update if different to avoid loops
-      if (selectedSize !== product.sizes[0]) {
-        setSelectedSize(product.sizes[0]);
+    if (displayProduct?.sizes && displayProduct.sizes.length > 0) {
+      if (selectedSize !== displayProduct.sizes[0]) {
+        setSelectedSize(displayProduct.sizes[0]);
       }
     } else if (selectedSize !== "") {
       setSelectedSize("");
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product?.id, product?.sizes]);
+  }, [displayProduct?.id, displayProduct?.sizes, selectedSize]);
 
-  const { addToCart } = useAddToCart();
+  useEffect(() => {
+    const sallaId = product?.sallaProductId || product?.id;
+    if (!sallaId) return;
+
+    // V16: Silent Scavenger (Zero Network) 🌓
+    const scavenge = () => {
+      try {
+        const sm = window.salla;
+        let rb = null;
+
+        // 1. Check Salla internal config
+        if (sm?.config?.products) {
+          rb = Object.values(sm.config.products).find((p) => p.id == sallaId);
+        }
+
+        // 2. Check current page product
+        if (!rb && window.product?.id == sallaId) rb = window.product;
+
+        // 3. Scan DOM for data-product attributes
+        if (!rb) {
+          const productEl =
+            document.querySelector(`[data-product-id="${sallaId}"]`) ||
+            document.querySelector(`[data-product*="${sallaId}"]`);
+          if (productEl) {
+            const raw =
+              productEl.getAttribute("data-product") ||
+              productEl.getAttribute("data-product-data");
+            if (raw) {
+              try {
+                rb = JSON.parse(raw);
+              } catch (e) {}
+            }
+          }
+        }
+
+        if (rb) {
+          const regPrice = Number(rb.regular_price || rb.price);
+          const salePrice = Number(rb.price);
+
+          if (regPrice > salePrice) {
+            console.log(
+              `[Storia] V16 Hybrid: Scavenged slashed price ${regPrice}`,
+            );
+            setEnrichedPriceInfo({
+              regularPrice: regPrice,
+              salePrice: salePrice,
+              isOnSale: true,
+            });
+          }
+        }
+      } catch (err) {
+        console.warn("[Storia] V16 Scavenge failed", err);
+      }
+    };
+
+    scavenge();
+    // Re-check after a short delay to account for Salla script lazy-loading
+    const timer = setTimeout(scavenge, 1500);
+    return () => clearTimeout(timer);
+  }, [product?.id, product?.sallaProductId]);
+
+  const displayProduct = enrichedPriceInfo
+    ? { ...product, ...enrichedPriceInfo }
+    : product;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -78,7 +142,7 @@ const ProductDetails = () => {
 
   const handleAddToCart = async () => {
     // USE ENRICHED DATA
-    const workingProduct = product;
+    const workingProduct = displayProduct;
 
     if (
       !selectedSize &&
