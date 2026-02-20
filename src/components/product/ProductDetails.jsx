@@ -61,22 +61,45 @@ const ProductDetails = () => {
               .catch(() => null);
 
             let d = res?.data;
-            if (window.product && window.product.id == sallaId) {
+
+            // V3 SNIFFER: Hunt for Salla's native product object in the global namespace
+            const globalSniff = () => {
+              if (window.product && window.product.id == sallaId)
+                return window.product;
+              if (
+                window.salla_config?.product &&
+                window.salla_config.product.id == sallaId
+              )
+                return window.salla_config.product;
+              // Deep hunt in window (Last resort)
+              for (let key in window) {
+                if (
+                  key.includes("product") &&
+                  window[key] &&
+                  window[key].id == sallaId
+                )
+                  return window[key];
+              }
+              return null;
+            };
+
+            const sniffed = globalSniff();
+            if (sniffed) {
               console.log(
-                "[Storia] Discovery Success: Found in Global Context (window.product)",
+                "[Storia] Archeology V3: Found High-Fidelity data in Global Context.",
               );
-              d = window.product;
+              d = sniffed;
             }
 
             if (d && (d.regular_price || d.options || d.variants || d.skus)) {
               console.log(
-                "[Storia] DEBUG: Raw SDK Object Keys:",
+                "[Storia] DEBUG: Discovery Object Keys:",
                 Object.keys(d),
               );
 
               const scavenge = (obj, depth = 0) => {
                 let found = { options: [], variants: [] };
-                if (!obj || depth > 7) return found;
+                if (!obj || depth > 10) return found;
 
                 Object.values(obj).forEach((val) => {
                   if (Array.isArray(val) && val.length > 0) {
@@ -104,11 +127,11 @@ const ProductDetails = () => {
               const discovery = scavenge(d);
               if (discovery.options.length > 0)
                 console.log(
-                  `[Storia] ARCHEOLOGY: Found ${discovery.options.length} options scattered.`,
+                  `[Storia] ARCHEOLOGY V3: Discovered ${discovery.options.length} hidden options.`,
                 );
               if (discovery.variants.length > 0)
                 console.log(
-                  `[Storia] ARCHEOLOGY: Found ${discovery.variants.length} variants scattered.`,
+                  `[Storia] ARCHEOLOGY V3: Discovered ${discovery.variants.length} hidden variants.`,
                 );
 
               const rawOptions = d.options || discovery.options || [];
@@ -149,7 +172,7 @@ const ProductDetails = () => {
                       sizeOpt.values ||
                       (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
                     console.log(
-                      `[Storia] HEAL SUCCESS: Found Size Option "${sizeOpt.name}" (${vals.length} values).`,
+                      `[Storia] HEAL SUCCESS: Unlocked Size Option "${sizeOpt.name}" (${vals.length} values).`,
                     );
 
                     enrichedSizes = vals.map((v) =>
@@ -168,7 +191,7 @@ const ProductDetails = () => {
                     }));
                   } else if (rawVariants.length > 0) {
                     console.log(
-                      "[Storia] HEAL WARNING: Mapping variants directly.",
+                      "[Storia] ARCHEOLOGY: Attempting direct variant mapping.",
                     );
                     enrichedVariants = rawVariants.map((v) => ({
                       size:
