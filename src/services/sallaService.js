@@ -1209,7 +1209,7 @@ class SallaService {
 
         if ((isValidation || isAbaya2) && !isRetry) {
           log(
-            `[Storia] ${statusCode} Trigger detected. Attempting Reactive Repair (V43)...`,
+            `[Storia] ${statusCode} Trigger detected. Attempting Reactive Repair (V44)...`,
           );
 
           try {
@@ -1218,30 +1218,34 @@ class SallaService {
             let rb = null;
             let logNotes = [];
 
-            // 1. Sniff the error for specific missing Option IDs
-            let precisionId = null;
+            // 1. SNIFF ERROR: Look for specific missing Option IDs in Salla's detailed error message
+            let targetOptionId = null;
             if (errorData?.errors) {
               const errKeys = Object.keys(errorData.errors);
-              const optErr = errKeys.find((k) => k.startsWith("options."));
-              if (optErr) {
-                precisionId = optErr.split(".")[1];
-                logNotes.push(`SniffedMissingOpt:${precisionId}`);
-              } else if (errorData.message?.includes("options.")) {
-                const match = errorData.message.match(/options\.(\d+)/);
-                if (match) {
-                  precisionId = match[1];
-                  logNotes.push(`SniffedMsgOpt:${precisionId}`);
-                }
+              // Salla format: "options.123456": ["The options.123456 field is required."]
+              const optMatch = errKeys.find((k) => k.startsWith("options."));
+              if (optMatch) {
+                targetOptionId = optMatch.split(".")[1];
+                logNotes.push(`SniffedID:${targetOptionId}`);
+              }
+            } else if (errorData?.message?.includes("options.")) {
+              const match = errorData.message.match(/options\.(\d+)/);
+              if (match) {
+                targetOptionId = match[1];
+                logNotes.push(`SniffedMsgID:${targetOptionId}`);
               }
             }
 
-            // 2. High-Precision Local Fallback
-            if (window.product?.id == pid) {
+            // 2. SEARCH GLOBAL CONTEXT (window.product is often standard Salla)
+            if (window.product && window.product.id == pid) {
               rb = window.product;
-              logNotes.push("Global:Found(window.product)!");
+              logNotes.push("Found:window.product!");
+            } else if (window.salla_config?.product?.id == pid) {
+              rb = window.salla_config.product;
+              logNotes.push("Found:salla_config!");
             }
 
-            // 3. SDK Attempt
+            // 3. SDK FETCH (Fallback if globals missing)
             if (!rb) {
               logNotes.push("SDK:Attempting...");
               const target =
@@ -1255,34 +1259,24 @@ class SallaService {
               }
             }
 
-            // 4. Multi-Domain Direct Fetch
-            if (!rb) {
-              logNotes.push("Direct:Attempting...");
-              const storeId = sm.config?.store_id || "";
-              const headers = {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-              };
-              if (storeId) headers["Store-Identifier"] = storeId;
-
-              const urls = [
-                `https://api.salla.dev/store/v1/products/${pid}`,
-                `https://api.salla.sa/store/v1/products/${pid}`,
-                `https://s.salla.sa/products/${pid}.json`,
-              ];
-
-              for (const url of urls) {
-                const r = await fetch(url, { headers }).catch(() => null);
-                if (r && r.ok) {
-                  const d = await r.json();
-                  rb = d?.data || d?.product || (d?.id ? d : null);
-                  if (rb) {
-                    logNotes.push(
-                      `Direct:Found(${url.includes("api.salla.sa") ? "sa" : url.includes(".json") ? "json" : "dev"})!`,
-                    );
-                    break;
+            // 4. PRECISION HUNTER: If we have a TargetID but no RB, search the WHOLE window object
+            if (!rb && targetOptionId) {
+              logNotes.push("Hunter:Engaged...");
+              const hunt = (obj, id, depth = 0) => {
+                if (!obj || depth > 8) return null;
+                if (obj.id == id && (obj.values || obj.data)) return obj;
+                for (let key in obj) {
+                  if (obj[key] && typeof obj[key] === "object") {
+                    const res = hunt(obj[key], id, depth + 1);
+                    if (res) return res;
                   }
                 }
+                return null;
+              };
+              const found = hunt(window, targetOptionId);
+              if (found) {
+                rb = { options: [found] };
+                logNotes.push("Hunter:Success!");
               }
             }
 
@@ -1293,13 +1287,13 @@ class SallaService {
 
               const archeology = (obj, depth = 0) => {
                 let out = { o: [], v: [] };
-                if (!obj || depth > 6) return out;
+                if (!obj || depth > 10) return out;
 
-                // Check if obj itself is an option
+                // Check if obj itself is an option structure
                 if (
                   obj.id &&
                   (obj.name || obj.label) &&
-                  (obj.values || obj.data)
+                  (obj.values || obj.data || Array.isArray(obj.data))
                 ) {
                   out.o.push(obj);
                 }
@@ -1347,10 +1341,10 @@ class SallaService {
 
               const pickedOptions = {};
 
-              // 1. Precision Match (The key we sniffed from the error)
-              if (precisionId) {
+              // 1. Target ID Match (from sniff)
+              if (targetOptionId) {
                 const target = ros.find(
-                  (o) => String(o.id) === String(precisionId),
+                  (o) => String(o.id) === String(targetOptionId),
                 );
                 if (target) {
                   const vals =
@@ -1363,7 +1357,7 @@ class SallaService {
                 }
               }
 
-              // 2. Size Discovery (Traditional)
+              // 2. Size Discovery (if precision failed)
               if (Object.keys(pickedOptions).length === 0) {
                 const sizeLike = ros.find((o) => {
                   const n = String(o.name || o.label || "").toLowerCase();
@@ -1386,16 +1380,16 @@ class SallaService {
                 }
               }
 
-              // 3. Last Resort Fallback
-              ros.forEach((opt) => {
-                if (!pickedOptions[Number(opt.id)]) {
+              // 3. Last Resort: Fill ALL required options with first values
+              if (Object.keys(pickedOptions).length === 0) {
+                ros.forEach((opt) => {
                   const vals =
                     opt.values || (Array.isArray(opt.data) ? opt.data : []);
                   if (vals.length > 0) {
                     pickedOptions[Number(opt.id)] = Number(vals[0].id);
                   }
-                }
-              });
+                });
+              }
 
               if (Object.keys(pickedOptions).length > 0) {
                 const repairedPayload = {
@@ -1403,7 +1397,7 @@ class SallaService {
                   quantity: Number(currentPayload.quantity),
                   options: pickedOptions,
                 };
-                diagnosis += " | Retrying with discovered options.";
+                diagnosis += " | Retrying with Silent Repair.";
                 return await attemptAdd(repairedPayload, true);
               } else if (vs.length > 0) {
                 const repairedPayload = {
@@ -1411,21 +1405,21 @@ class SallaService {
                   quantity: Number(currentPayload.quantity),
                   variant_id: Number(vs[0].id),
                 };
-                diagnosis += " | Retrying with discovered variant.";
+                diagnosis += " | Retrying with Variant Repair.";
                 return await attemptAdd(repairedPayload, true);
               } else {
                 diagnosis +=
                   " | No actionable discovered. Structure Blindness!";
               }
             } else {
-              diagnosis += " | All repair attempts failed to find data.";
+              diagnosis += " | Hunter failed. No data found.";
             }
           } catch (repairErr) {
-            diagnosis += ` | Fatal Error: ${repairErr.message}`;
-            console.error("[Storia] Nuclear reconstruction failed:", repairErr);
+            diagnosis += ` | Fatal: ${repairErr.message}`;
           }
         }
-        throw error; // Rethrow to main catch
+
+        throw new Error(diagnosis || error.message);
       }
     };
 
