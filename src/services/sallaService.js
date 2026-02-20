@@ -1279,16 +1279,38 @@ class SallaService {
                     ? rb.options
                     : Object.values(rb.options))) ||
                 [];
-              const vs = rb.variants || [];
+              const vs = rb.variants || rb.skus || [];
               diagnosis += ` | Found ${ros.length} opts, ${vs.length} vars.`;
 
-              ros.forEach((opt) => {
+              // 1. Find a Size-like option first
+              const sizeLike = ros.find((o) => {
+                const n = String(o.name || o.label || "").toLowerCase();
+                return (
+                  n.includes("مقاس") ||
+                  n.includes("size") ||
+                  n.includes("قياس") ||
+                  n.includes("قياسات")
+                );
+              });
+
+              if (sizeLike) {
                 const vals =
-                  opt.values || (Array.isArray(opt.data) ? opt.data : []);
+                  sizeLike.values ||
+                  (Array.isArray(sizeLike.data) ? sizeLike.data : []);
                 if (vals.length > 0) {
-                  pickedOptions[Number(opt.id)] = Number(vals[0].id);
-                } else if (opt.required) {
-                  pickedOptions[Number(opt.id)] = "Auto-Filled";
+                  pickedOptions[Number(sizeLike.id)] = Number(vals[0].id);
+                  diagnosis += ` | Auto-picked size opt ${sizeLike.id}`;
+                }
+              }
+
+              // 2. Fallback: Fill ALL required options with first value
+              ros.forEach((opt) => {
+                if (!pickedOptions[Number(opt.id)]) {
+                  const vals =
+                    opt.values || (Array.isArray(opt.data) ? opt.data : []);
+                  if (vals.length > 0) {
+                    pickedOptions[Number(opt.id)] = Number(vals[0].id);
+                  }
                 }
               });
 
