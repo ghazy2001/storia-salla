@@ -16,10 +16,8 @@ import LoginModal from "../admin/LoginModal";
 import Toast from "../common/Toast";
 import ContactForm from "../common/ContactForm";
 import TrackOrder from "../common/TrackOrder";
-import { useCartSync } from "../../hooks/useCartSync";
 
 const GlobalOverlays = () => {
-  useCartSync(); // Activate universal cart watcher
   const dispatch = useDispatch();
   const theme = useSelector(selectTheme);
   const contactFormOpen = useSelector(selectContactFormOpen);

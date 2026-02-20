@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useSelector } from "react-redux";
 import { selectProducts } from "../../store/slices/productSlice";
 import ProductCarousel from "./ProductCarousel";
-import { useCartSync } from "../../hooks/useCartSync";
+import { useAddToCart } from "../../hooks/useCart";
+import Toast from "../common/Toast";
 import { selectCategories } from "../../store/slices/productSlice";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -14,19 +15,21 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const products = useSelector(selectProducts);
   const categories = useSelector(selectCategories);
   const [filter, setFilter] = useState(initialFilter);
-  const [visibleProducts, setVisibleProducts] = useState([]);
-  const { triggerPoll } = useCartSync();
+  const [visibleProducts, setVisibleProducts] = useState([]); // Initialize with empty array
+  const [showToast, setShowToast] = useState(false);
+  const { addToCart: addToCartWithSync } = useAddToCart();
 
   // Sync internal filter state when initialFilter prop changes (e.g. from Navbar)
   useEffect(() => {
     setFilter(initialFilter);
   }, [initialFilter]);
 
-  const handleAddToCart = useCallback(() => {
-    // Trigger global polling engine
-    triggerPoll();
-    console.log("[Storia Store] Triggering addition via Sync Hook");
-  }, [triggerPoll]);
+  const handleAddToCart = async (payload) => {
+    // payload is already { product, quantity, size } from CarouselInfo
+    const { product, quantity, size } = payload;
+    await addToCartWithSync(product, quantity, size);
+    setShowToast(true);
+  };
 
   useEffect(() => {
     // Filter products with animation
@@ -97,6 +100,15 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
       {/* Product Carousels List */}
       <div ref={containerRef} className="flex flex-col gap-12">
+        <Toast
+          message="تمت إضافة المنتج إلى السلة بنجاح"
+          isVisible={showToast}
+          onClose={() => setShowToast(false)}
+          action={{
+            label: "عرض السلة >>",
+            onClick: () => (window.location.href = "/cart"),
+          }}
+        />
         {visibleProducts.map((product) => (
           <ProductCarousel
             key={product.id}

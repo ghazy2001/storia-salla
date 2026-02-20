@@ -201,14 +201,10 @@ const BestSellers = () => {
 
             {/* Navigation & Info */}
             <div
-              dir="rtl"
-              className={`flex justify-between items-center px-8 mt-6 gap-12 ${textColorClass}`}
+              className={`flex flex-row-reverse justify-between items-center px-8 mt-6 gap-12 ${textColorClass}`}
             >
-              <div
-                className="flex-grow text-right"
-                style={{ direction: "rtl" }}
-              >
-                <div className="flex items-center gap-3 mb-2 flex-wrap justify-start">
+              <div className="w-full text-right">
+                <div className="flex items-center gap-3 mb-2 flex-wrap justify-end">
                   {(() => {
                     const syncedProduct = products.find(
                       (p) => String(p.id) === String(featuredConfig.id),
