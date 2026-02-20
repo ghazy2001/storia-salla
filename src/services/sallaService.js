@@ -1333,9 +1333,9 @@ class SallaService {
               }
             }
 
-            // 5. AGGRESSIVE HTML SURFACE SCRAPER
+            // 5. V7 BRUTE-FORCE HTML SCRAPER (Single-Page-App Context Fix)
             if (!rb || isHollow(rb)) {
-              logNotes.push("HTML:Scraping...");
+              logNotes.push("V7:BruteScraping...");
               let relativeUrl = null;
               if (rb?.url) {
                 try {
@@ -1351,30 +1351,67 @@ class SallaService {
                 `/product/p${pid}`,
                 `/product/${pid}`,
               ].filter(Boolean);
+
               for (const p of patterns) {
+                log(`[Storia] V7 Scraper: Trying ${p}...`);
                 const htmlRes = await fetch(p).catch(() => null);
                 if (htmlRes && htmlRes.ok) {
                   const text = await htmlRes.text();
-                  const match =
-                    text.match(/window\.product\s*=\s*({.*?});/s) ||
-                    text.match(
-                      /<script id="product-data" type="application\/json">({.*?})<\/script>/s,
-                    ) ||
-                    text.match(
-                      /<script.*?type="application\/json".*?>({.*?})<\/script>/s,
-                    );
-                  if (match) {
-                    try {
-                      const parsed = JSON.parse(match[1]);
-                      if (parsed && !isHollow(parsed)) {
-                        rb = parsed;
-                        logNotes.push(`HTML:FoundData!`);
-                        break;
+
+                  // Strategy A: JSON.parse Script Blocks
+                  const scriptPatterns =
+                    text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
+                  log(
+                    `[Storia] V7 Scraper: Found ${scriptPatterns.length} scripts to probe.`,
+                  );
+
+                  for (let s of scriptPatterns) {
+                    const content = s
+                      .replace(/<script.*?>/i, "")
+                      .replace(/<\/script>/i, "")
+                      .trim();
+                    if (!content || content.length < 50) continue; // Skip tiny scripts
+
+                    // Try to extract JSON from variables or raw blocks
+                    const jsonMatch = content.match(/{[\s\S]*?}/);
+                    if (jsonMatch) {
+                      try {
+                        // Use a very permissive extraction for window variables
+                        let jsonStr = jsonMatch[0];
+                        if (
+                          content.includes("window.product") ||
+                          content.includes("window.Salla")
+                        ) {
+                          const cleanMatch = content.match(/=(.*);/s);
+                          if (cleanMatch) jsonStr = cleanMatch[1].trim();
+                        }
+
+                        const parsed = JSON.parse(jsonStr);
+                        // Search the parsed object (it might be the product itself or an envelope)
+                        const probe = (item) => {
+                          if (!item || typeof item !== "object") return null;
+                          if (item.id == pid && !isHollow(item)) return item;
+                          for (let k in item) {
+                            if (item[k] && typeof item[k] === "object") {
+                              const r = probe(item[k]);
+                              if (r) return r;
+                            }
+                          }
+                          return null;
+                        };
+
+                        const found = probe(parsed);
+                        if (found) {
+                          rb = found;
+                          logNotes.push(`V7:Found(ScriptData)!`);
+                          break;
+                        }
+                      } catch {
+                        /* parse fail */
                       }
-                    } catch {
-                      /* ignore */
                     }
                   }
+                  if (rb && !isHollow(rb)) break;
                 }
               }
             }

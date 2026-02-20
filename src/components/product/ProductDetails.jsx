@@ -90,23 +90,54 @@ const ProductDetails = () => {
 
             let d = res?.data;
 
-            // 2. HIGH-VELOCITY SNIFFER: Check globals repeatedly for late population
-            const velocitySniff = (attempts = 0) => {
-              const sniff = () => {
-                if (window.product && window.product.id == sallaId)
-                  return window.product;
-                if (window.salla_config?.product?.id == sallaId)
-                  return window.salla_config.product;
-                return null;
-              };
-              const found = sniff();
-              if (found && (found.options || found.variants)) {
-                processDiscovery(found);
-              } else if (attempts < 10) {
-                setTimeout(() => velocitySniff(attempts + 1), 500);
+            // 3. JIT SLUG FETCHER (V7): Directly fetch the product URL to find hidden data
+            const jitSlugFetch = async () => {
+              const url = product.url || product.slug || `/p/${sallaId}`;
+              console.log(`[Storia] V7: JIT Slug Fetching from ${url}...`);
+              const res = await fetch(url).catch(() => null);
+              if (res && res.ok) {
+                const text = await res.text();
+                const scripts =
+                  text.match(/<script.*?>([\s\S]*?)<\/script>/gi) || [];
+                for (let s of scripts) {
+                  const content = s
+                    .replace(/<script.*?>/i, "")
+                    .replace(/<\/script>/i, "")
+                    .trim();
+                  const jsonMatch = content.match(/{[\s\S]*?}/);
+                  if (jsonMatch) {
+                    try {
+                      const parsed = JSON.parse(jsonMatch[0]);
+                      const probe = (item) => {
+                        if (!item || typeof item !== "object") return null;
+                        if (
+                          item.id == sallaId &&
+                          (item.options || item.variants)
+                        )
+                          return item;
+                        for (let k in item) {
+                          if (item[k] && typeof item[k] === "object") {
+                            const found = probe(item[k]);
+                            if (found) return found;
+                          }
+                        }
+                        return null;
+                      };
+                      const found = probe(parsed);
+                      if (found) {
+                        console.warn("[Storia] V7: JIT Scraper SUCCESS!");
+                        processDiscovery(found);
+                        return true;
+                      }
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                }
               }
+              return false;
             };
-            velocitySniff();
+            jitSlugFetch();
 
             const processDiscovery = (discoveryData) => {
               if (!discoveryData) return;
@@ -151,15 +182,6 @@ const ProductDetails = () => {
                 };
 
                 const discovery = scavenge(discoveryData);
-                if (discovery.options.length > 0)
-                  console.log(
-                    `[Storia] ARCHEOLOGY V3: Discovered ${discovery.options.length} hidden options.`,
-                  );
-                if (discovery.variants.length > 0)
-                  console.log(
-                    `[Storia] ARCHEOLOGY V3: Discovered ${discovery.variants.length} hidden variants.`,
-                  );
-
                 const rawOptions =
                   discoveryData.options || discovery.options || [];
                 const rawVariants =
@@ -178,8 +200,8 @@ const ProductDetails = () => {
                   );
                   const curPrice = Number(discoveryData.price);
 
-                  let enrichedSizes = product.sizes;
-                  let enrichedVariants = product.sizeVariants;
+                  let enrichedSizes = product.sizes || [];
+                  let enrichedVariants = product.sizeVariants || [];
 
                   if (!enrichedVariants || enrichedVariants.length === 0) {
                     console.log(
@@ -192,7 +214,8 @@ const ProductDetails = () => {
                         n.includes("size") ||
                         n.includes("قياس") ||
                         n.includes("القياس") ||
-                        n.includes("النوع")
+                        n.includes("النوع") ||
+                        n.includes("الطول")
                       );
                     });
 
@@ -201,7 +224,7 @@ const ProductDetails = () => {
                         sizeOpt.values ||
                         (Array.isArray(sizeOpt.data) ? sizeOpt.data : []);
                       console.log(
-                        `[Storia] HEAL SUCCESS: Unlocked Size Option "${sizeOpt.name}" (${vals.length} values).`,
+                        `[Storia] HEAL SUCCESS: Unlocked Option "${sizeOpt.name}" (${vals.length} values).`,
                       );
                       enrichedSizes = vals.map((v) =>
                         (v.name || v.label || "").trim(),
@@ -237,7 +260,7 @@ const ProductDetails = () => {
                         .filter(Boolean);
                     }
                   } else {
-                    enrichedVariants = product.sizeVariants.map((v) => {
+                    enrichedVariants = (product.sizeVariants || []).map((v) => {
                       if (Math.abs(Number(v.price) - curPrice) < 0.1) {
                         return {
                           ...v,
@@ -254,8 +277,8 @@ const ProductDetails = () => {
                     regularPrice: regPrice,
                     salePrice: curPrice,
                     isOnSale: true,
-                    sizes: enrichedSizes || product.sizes,
-                    sizeVariants: enrichedVariants || product.sizeVariants,
+                    sizes: enrichedSizes,
+                    sizeVariants: enrichedVariants,
                   });
                 }
               }
@@ -271,7 +294,7 @@ const ProductDetails = () => {
       // Faster initial trigger
       setTimeout(fetchDetails, 500);
     }
-  }, [product?.id, product?.sizes, setEnrichedPriceInfo]);
+  }, [product?.id, product?.sizes, setEnrichedPriceInfo, product]);
 
   // Merge enriched info if available
   const displayProduct = enrichedPriceInfo
