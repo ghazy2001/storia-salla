@@ -332,7 +332,7 @@ const ProductDetails = () => {
     ? { ...product, ...enrichedPriceInfo }
     : product;
 
-  const { addToCart: addToCartWithSync } = useAddToCart();
+  const { addToCart } = useAddToCart();
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -395,8 +395,7 @@ const ProductDetails = () => {
       return;
     }
 
-    // Get price and options for selected size if available
-    let price = workingProduct.price;
+    // Get options for selected size if available
     let syncData = {
       sallaProductId: workingProduct.sallaProductId || workingProduct.id,
     };
@@ -406,7 +405,6 @@ const ProductDetails = () => {
         (v) => String(v.size).trim() === String(selectedSize).trim(),
       );
       if (variant) {
-        price = variant.price;
         // Priority 1: Variant ID
         if (variant.variantId || variant.sallaVariantId) {
           syncData.variantId = variant.variantId || variant.sallaVariantId;
@@ -419,11 +417,26 @@ const ProductDetails = () => {
     }
 
     // Sync with Salla backend
-    const result = await addToCartWithSync(
-      { ...workingProduct, price },
+    const result = await addToCart(
+      workingProduct,
       1,
-      syncData,
+      syncData.variantId || { options: syncData.options },
     );
+
+    // 🌿 V14: The Natural Handover
+    if (result && result.isValidation) {
+      console.log(
+        "[Storia] Discovery Blindness or Validation Error. Triggering Native Proxy...",
+      );
+      const nativeBtn = document.getElementById(
+        `native-cart-btn-${workingProduct.id}`,
+      );
+      if (nativeBtn) {
+        nativeBtn.click();
+        return; // Let Salla's native popup take over
+      }
+    }
+
     if (result && result.success) {
       setShowToast(true);
     }

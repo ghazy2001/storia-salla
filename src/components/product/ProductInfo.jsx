@@ -159,6 +159,15 @@ const ProductInfo = ({
             return "إضافة للسلة";
           })()}
         </button>
+
+        {/* 🌿 V14: The "Natural" Ghost Button Proxy */}
+        <div style={{ display: "none" }}>
+          <salla-add-product-button
+            id={`native-cart-btn-${product.id}`}
+            product-id={product.id}
+            quantity="1"
+          ></salla-add-product-button>
+        </div>
       </div>
 
       {/* Extra details matches RTL layout */}

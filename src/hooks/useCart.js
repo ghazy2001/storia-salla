@@ -36,17 +36,18 @@ export const useAddToCart = () => {
         if (!result.success) {
           const isDiagnostic =
             window.__STORIA_DIAGNOSTIC__ || result.diagnostic;
-          const debugInfo = result.debugPayload
-            ? `\nPayload: ${JSON.stringify(result.debugPayload)}`
-            : "";
-          const diagnosisInfo = result.diagnosis
-            ? `\nDiagnosis: ${result.diagnosis}`
-            : "";
+
+          if (result.isValidation) {
+            console.log(
+              "[Storia] 422/400 Validation Error. Hook signaling component.",
+            );
+            return { success: false, isValidation: true };
+          }
 
           if (isDiagnostic) {
             alert(
               `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
-                `السبب: ${result.error || "عطأ غير معروف"}${debugInfo}${diagnosisInfo}`,
+                `السبب: ${result.error || "عطأ غير معروف"}`,
             );
           } else {
             console.warn(`[Storia] Add to Cart Failed: ${result.error}`, {
