@@ -1236,6 +1236,13 @@ class SallaService {
 
             // 1. SNIFF ERROR: Look for specific missing Option IDs in Salla's detailed error message
             let targetOptionId = null;
+            if (errorData) {
+              console.log(
+                "[Storia] 422 ERROR BODY:",
+                JSON.stringify(errorData, null, 2),
+              );
+            }
+
             if (errorData?.errors) {
               const errKeys = Object.keys(errorData.errors);
               const optMatch = errKeys.find((k) => k.startsWith("options."));
@@ -1249,13 +1256,36 @@ class SallaService {
                 targetOptionId = match[1];
                 logNotes.push(`SniffedMsgID:${targetOptionId}`);
               } else {
-                // Secondary check for any ID in the message if it refers to options
                 const idMatch = errorData.message.match(/\d{5,}/);
                 if (idMatch) {
                   targetOptionId = idMatch[0];
                   logNotes.push(`FuzzySniffed:${targetOptionId}`);
                 }
               }
+            }
+
+            // 1.1 CONSOLE HIJACKER: Native Salla scripts often log the full product object. Intercept them.
+            if ([1252773325, 205379656].includes(pid)) {
+              logNotes.push("Hijacker:Active...");
+              const originalLog = console.log;
+              // Temporarily hijack log for 500ms to see if standard SDK triggers a log we can catch
+              console.log = (...args) => {
+                args.forEach((arg) => {
+                  if (
+                    arg &&
+                    typeof arg === "object" &&
+                    arg.id == pid &&
+                    !isHollow(arg)
+                  ) {
+                    rb = arg;
+                    logNotes.push("Hijacker:Captured!");
+                  }
+                });
+                originalLog.apply(console, args);
+              };
+              setTimeout(() => {
+                console.log = originalLog;
+              }, 2000);
             }
 
             // 2. SEARCH GLOBAL CONTEXT
@@ -1302,7 +1332,7 @@ class SallaService {
                 `https://api.salla.dev/store/v1/products/${pid}`,
                 `https://api.salla.sa/store/v1/products/${pid}`,
                 `https://s.salla.sa/products/${pid}.json`,
-                `https://${window.location.host}/api/v1/products/${pid}`,
+                `/api/v1/products/${pid}`,
               ];
 
               for (const url of urls) {
@@ -1324,12 +1354,18 @@ class SallaService {
             // 5. AGGRESSIVE HTML SURFACE SCRAPER (Nuclear Fallback)
             if (!rb || isHollow(rb)) {
               logNotes.push("HTML:Scraping...");
-              // Try multiple URL patterns including the one returned by Salla if any
+              // Extract relative path from rb.url if available to avoid CORS
+              let relativeUrl = null;
+              if (rb?.url) {
+                try {
+                  relativeUrl = new URL(rb.url).pathname;
+                } catch {
+                  relativeUrl = rb.url;
+                }
+              }
               const patterns = [
-                rb?.url,
+                relativeUrl,
                 `/p/${pid}`,
-                `/p${pid}`,
-                `/product/p${pid}`,
                 `/product/${pid}`,
               ].filter(Boolean);
 
@@ -1379,7 +1415,6 @@ class SallaService {
                     // Skip 'this', 'document', and other potentially problematic roots
                     if (k === "this" || k === "document" || k === "window")
                       continue;
-
                     const val = obj[k];
                     if (val && typeof val === "object") {
                       const res = mine(val, depth + 1);
@@ -1408,7 +1443,6 @@ class SallaService {
                 } catch {
                   return null;
                 }
-
                 for (let key in obj) {
                   try {
                     if (
@@ -1417,7 +1451,6 @@ class SallaService {
                       key === "window"
                     )
                       continue;
-
                     const val = obj[key];
                     if (val && typeof val === "object") {
                       const res = hunt(val, id, depth + 1);
