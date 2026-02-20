@@ -629,6 +629,12 @@ class SallaService {
           }
         }
 
+        // 3. Map Price & Sale Info
+        let amount = 0;
+        let currency = "SAR";
+        let regularPrice = 0;
+        let salePrice = null;
+        let isOnSale = false;
         let priceStr = "";
 
         // Helper to extract numeric value from potentially complex object
