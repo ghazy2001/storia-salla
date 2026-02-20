@@ -1203,11 +1203,11 @@ class SallaService {
           statusCode == 422 ||
           statusCode == 400 ||
           JSON.stringify(errorData || {}).includes("invalid_fields");
-
         const isDiagnosticMode = [1252773325, 205379656].includes(
           Number(idToUse),
         );
-        diagnosis = `Detected: status=${statusCode}, validation=${isValidation}, diagnostic=${isDiagnosticMode}, retry=${isRetry}`;
+
+        diagnosis = `Trigger: Detected: status=${statusCode}, validation=${isValidation}, diagnostic=${isDiagnosticMode}, retry=${isRetry}`;
 
         if ((isValidation || isDiagnosticMode) && !isRetry) {
           log(
@@ -1220,55 +1220,35 @@ class SallaService {
             let rb = null;
             let logNotes = [];
 
-            // HELPER: Check if a product object is actually useful (has options/variants)
-            const isHollow = (obj) => {
-              if (!obj) return true;
-              const ros =
-                (obj.options &&
-                  (Array.isArray(obj.options)
-                    ? obj.options
-                    : Object.values(obj.options))) ||
-                [];
-              const vs = obj.variants || obj.skus || [];
-              // If it has no options/variants and no data archeology found anything yet, it's hollow
-              return ros.length === 0 && vs.length === 0;
-            };
-
-            // 1. SNIFF ERROR: Look for specific missing Option IDs in Salla's detailed error message
+            // 1. SNIFF ERROR: Look for specific missing Option IDs
             let targetOptionId = null;
             if (errorData) {
-              console.log(
-                "[Storia] 422 ERROR BODY:",
-                JSON.stringify(errorData, null, 2),
-              );
-            }
-
-            if (errorData?.errors) {
-              const errKeys = Object.keys(errorData.errors);
-              const optMatch = errKeys.find((k) => k.startsWith("options."));
+              const errStr = JSON.stringify(errorData);
+              const optMatch =
+                errStr.match(/options\.(\d+)/) || errStr.match(/(\d{6,})/);
               if (optMatch) {
-                targetOptionId = optMatch.split(".")[1];
+                targetOptionId = optMatch[1];
                 logNotes.push(`SniffedID:${targetOptionId}`);
               }
-            } else if (errorData?.message?.includes("options.")) {
-              const match = errorData.message.match(/options\.(\d+)/);
-              if (match) {
-                targetOptionId = match[1];
-                logNotes.push(`SniffedMsgID:${targetOptionId}`);
-              } else {
-                const idMatch = errorData.message.match(/\d{5,}/);
-                if (idMatch) {
-                  targetOptionId = idMatch[0];
-                  logNotes.push(`FuzzySniffed:${targetOptionId}`);
-                }
-              }
             }
 
-            // 1.1 CONSOLE HIJACKER: Native Salla scripts often log the full product object. Intercept them.
+            // HELPER: Check if a product object is actually useful
+            const isHollow = (o) => {
+              if (!o) return true;
+              const missingData =
+                (!o.options || o.options.length === 0) &&
+                (!o.variants || o.variants.length === 0) &&
+                (!o.skus || o.skus.length === 0);
+              const missingPrice = !o.regular_price && !o.price;
+              if (targetOptionId && (!o.options || o.options.length === 0))
+                return true;
+              return missingPrice && missingData;
+            };
+
+            // 1.1 CONSOLE HIJACKER: Intercept native logs
             if ([1252773325, 205379656].includes(pid)) {
               logNotes.push("Hijacker:Active...");
               const originalLog = console.log;
-              // Temporarily hijack log for 500ms to see if standard SDK triggers a log we can catch
               console.log = (...args) => {
                 args.forEach((arg) => {
                   if (
@@ -1297,7 +1277,7 @@ class SallaService {
               logNotes.push("Found:salla_config!");
             }
 
-            // 3. SDK FETCH (Stop ONLY if NOT hollow)
+            // 3. SDK FETCH
             if (!rb || isHollow(rb)) {
               logNotes.push("SDK:Attempting...");
               const target =
@@ -1312,13 +1292,17 @@ class SallaService {
                   rb = fetched;
                   logNotes.push("SDK:Found(Full)!");
                 } else if (fetched) {
-                  rb = fetched; // Hold on to it, but keep looking
+                  rb = fetched;
                   logNotes.push("SDK:Found(Hollow)!");
+                  console.log(
+                    `[Storia] Hollow SDK Keys:`,
+                    Object.keys(fetched),
+                  );
                 }
               }
             }
 
-            // 4. MULTI-DOMAIN DIRECT FETCH (Only if still hollow)
+            // 4. MULTI-DOMAIN DIRECT FETCH
             if (!rb || isHollow(rb)) {
               logNotes.push("Direct:Attempting...");
               const storeId = sm.config?.store_id || "";
@@ -1327,14 +1311,12 @@ class SallaService {
                 "Content-Type": "application/json",
               };
               if (storeId) headers["Store-Identifier"] = storeId;
-
               const urls = [
-                `https://api.salla.dev/store/v1/products/${pid}`,
-                `https://api.salla.sa/store/v1/products/${pid}`,
                 `https://s.salla.sa/products/${pid}.json`,
                 `/api/v1/products/${pid}`,
+                `/p${pid}.json`,
+                `/p/${pid}.json`,
               ];
-
               for (const url of urls) {
                 const r = await fetch(url, { headers }).catch(() => null);
                 if (r && r.ok) {
@@ -1351,10 +1333,9 @@ class SallaService {
               }
             }
 
-            // 5. AGGRESSIVE HTML SURFACE SCRAPER (Nuclear Fallback)
+            // 5. AGGRESSIVE HTML SURFACE SCRAPER
             if (!rb || isHollow(rb)) {
               logNotes.push("HTML:Scraping...");
-              // Extract relative path from rb.url if available to avoid CORS
               let relativeUrl = null;
               if (rb?.url) {
                 try {
@@ -1365,15 +1346,15 @@ class SallaService {
               }
               const patterns = [
                 relativeUrl,
+                `/p${pid}`,
                 `/p/${pid}`,
+                `/product/p${pid}`,
                 `/product/${pid}`,
               ].filter(Boolean);
-
               for (const p of patterns) {
                 const htmlRes = await fetch(p).catch(() => null);
                 if (htmlRes && htmlRes.ok) {
                   const text = await htmlRes.text();
-                  // Hunt for common Salla JSON data patterns
                   const match =
                     text.match(/window\.product\s*=\s*({.*?});/s) ||
                     text.match(
@@ -1398,22 +1379,25 @@ class SallaService {
               }
             }
 
-            // 6. CACHE MINING: Search window.salla for hidden variants
+            // 6. CACHE MINING
             if (!rb || isHollow(rb)) {
               logNotes.push("Cache:Mining...");
               const mine = (obj, depth = 0) => {
-                if (!obj || depth > 5) return null;
+                if (!obj || depth > 6) return null;
                 try {
-                  // Basic check
                   if (obj.id == pid && !isHollow(obj)) return obj;
                 } catch {
                   return null;
                 }
-
                 for (let k in obj) {
                   try {
-                    // Skip 'this', 'document', and other potentially problematic roots
-                    if (k === "this" || k === "document" || k === "window")
+                    if (
+                      k === "this" ||
+                      k === "document" ||
+                      k === "window" ||
+                      k === "parent" ||
+                      k === "frames"
+                    )
                       continue;
                     const val = obj[k];
                     if (val && typeof val === "object") {
@@ -1433,7 +1417,7 @@ class SallaService {
               }
             }
 
-            // 7. PRECISION HUNTER: If we still have no RB but have a TargetID, search the WHOLE window object
+            // 7. PRECISION HUNTER
             if (!rb && targetOptionId) {
               logNotes.push("Hunter:Engaged...");
               const hunt = (obj, id, depth = 0) => {
@@ -1469,24 +1453,18 @@ class SallaService {
               }
             }
 
-            diagnosis = `Trigger: ${diagnosis}. Logic: ${logNotes.join(" | ")}`;
+            diagnosis = `${diagnosis}. Logic: ${logNotes.join(" | ")}`;
 
             if (rb) {
-              console.log(`[Storia] REPAIR: Keys=${Object.keys(rb).join(",")}`);
-
               const archeology = (obj, depth = 0) => {
                 let out = { o: [], v: [] };
                 if (!obj || depth > 10) return out;
-
-                // Check if obj itself is an option structure
                 if (
                   obj.id &&
                   (obj.name || obj.label) &&
                   (obj.values || obj.data || Array.isArray(obj.data))
-                ) {
+                )
                   out.o.push(obj);
-                }
-
                 Object.values(obj).forEach((val) => {
                   if (Array.isArray(val) && val.length > 0) {
                     const first = val[0];
@@ -1497,17 +1475,15 @@ class SallaService {
                         (first.values ||
                           first.data ||
                           Array.isArray(first.data))
-                      ) {
+                      )
                         out.o.push(...val);
-                      }
                       if (
                         first.id &&
                         (first.sku || first.price || first.sku_id)
-                      ) {
+                      )
                         out.v.push(...val);
-                      }
                     }
-                  } else if (val && typeof val === "object" && val !== null) {
+                  } else if (val && typeof val === "object") {
                     const inner = archeology(val, depth + 1);
                     out.o.push(...inner.o);
                     out.v.push(...inner.v);
@@ -1529,8 +1505,6 @@ class SallaService {
               diagnosis += ` | Found ${ros.length} opts, ${vs.length} vars.`;
 
               const pickedOptions = {};
-
-              // 1. Target ID Match (from sniff)
               if (targetOptionId) {
                 const target = ros.find(
                   (o) => String(o.id) === String(targetOptionId),
@@ -1546,7 +1520,6 @@ class SallaService {
                 }
               }
 
-              // 2. Size Discovery (if precision failed)
               if (Object.keys(pickedOptions).length === 0) {
                 const sizeLike = ros.find((o) => {
                   const n = String(o.name || o.label || "").toLowerCase();
@@ -1557,7 +1530,6 @@ class SallaService {
                     n.includes("القياس")
                   );
                 });
-
                 if (sizeLike) {
                   const vals =
                     sizeLike.values ||
@@ -1569,7 +1541,6 @@ class SallaService {
                 }
               }
 
-              // 3. Last Resort: Fill ALL required options with first values
               if (Object.keys(pickedOptions).length === 0) {
                 ros.forEach((opt) => {
                   const vals =
@@ -1621,15 +1592,11 @@ class SallaService {
       return await attemptAdd(payload);
     } catch (error) {
       console.error("[Storia] Error adding to Salla cart:", error);
-
       let errorMsg = error.message || "Failed to add to cart";
-
       try {
         const res = error.response;
         if (res && res.data) {
           const d = res.data;
-          log("[Storia] Raw Salla error data:", d);
-
           const extract = (obj) => {
             if (!obj) return null;
             if (typeof obj === "string") return obj;
@@ -1638,9 +1605,7 @@ class SallaService {
             if (typeof obj === "object") {
               if (obj.ar || obj.en) return obj.ar || obj.en;
               const fs = ["message", "error", "msg", "title"];
-              for (const f of fs) {
-                if (obj[f]) return extract(obj[f]);
-              }
+              for (const f of fs) if (obj[f]) return extract(obj[f]);
               if (obj.errors)
                 return Object.values(obj.errors)
                   .flat()
@@ -1651,7 +1616,6 @@ class SallaService {
             }
             return String(obj);
           };
-
           const sallaMsg = extract(d);
           if (sallaMsg) errorMsg = sallaMsg;
         }
