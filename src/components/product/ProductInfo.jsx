@@ -6,8 +6,6 @@ import React from "react";
  * Streamlined to remove redundant currency labels and info boxes.
  */
 const ProductInfo = ({ product, handleAddToCart, theme }) => {
-  const isGoldTheme = theme === "gold" || !theme;
-
   // Ultra-safe parsing for numeric calculation to avoid NaN
   const safeParse = (val) => {
     if (!val) return 0;
