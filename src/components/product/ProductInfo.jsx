@@ -58,7 +58,12 @@ const ProductInfo = ({
             );
 
             return (
-              <div className="flex flex-col items-start gap-2">
+              <div className="flex flex-col items-start gap-2 border-l-4 border-green-500 pl-4 bg-green-50/50 p-2 w-full">
+                {/* FORCE VISUAL TEST LABEL */}
+                <div className="text-[10px] text-green-600 font-mono tracking-tighter mb-1 opacity-70">
+                  [DEBUG: PRICE CONTAINER ACTIVE]
+                </div>
+
                 <div className="flex items-center gap-3">
                   <span className="text-3xl font-black tracking-widest text-brand-gold">
                     {format(currentSalePrice)}
@@ -77,9 +82,19 @@ const ProductInfo = ({
           }
 
           return (
-            <p className="text-2xl font-bold tracking-widest text-brand-gold">
-              {format(currentRegularPrice)}
-            </p>
+            <div className="mb-2 p-2 border-l-4 border-gray-300 w-full">
+              <div className="text-[10px] text-gray-400 font-mono tracking-tighter mb-1 opacity-70">
+                [DEBUG: NORMAL PRICE VIEW]
+              </div>
+              <p className="text-2xl font-bold tracking-widest text-brand-gold">
+                {format(currentRegularPrice)}
+              </p>
+              {/* Show why it's not on sale if helpful */}
+              <p className="text-[10px] text-red-400 mt-1">
+                (Not On Sale: Reg={currentRegularPrice} Sale={currentSalePrice}{" "}
+                IsSale={isOnSale ? "Y" : "N"})
+              </p>
+            </div>
           );
         })()}
       </div>
