@@ -592,14 +592,16 @@ class SallaService {
               try {
                 if (config.enableLogging)
                   log(`Attempting Method 3 (Storefront API) for ${pid}...`);
-                // Try standard Salla storefront endpoint
-                const r = await fetch(`/api/v1/products/${pid}`).catch(
-                  () => null,
-                );
+                // PROD FIX: Use the full Salla Storefront URL, not local proxy
+                const r = await fetch(
+                  `https://api.salla.dev/store/v1/products/${pid}`,
+                ).catch(() => null);
                 if (r && r.ok) {
                   const d = await r.json();
                   b = d.data || d.product || d;
                   if (config.enableLogging) log(`Method 3 Success!`, b);
+                } else {
+                  log(`Method 3 Fetch Stats:`, r ? r.status : "Network Error");
                 }
               } catch (e) {
                 log(`Method 3 failed: ${e.message}`);
