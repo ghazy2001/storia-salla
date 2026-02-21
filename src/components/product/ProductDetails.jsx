@@ -37,6 +37,56 @@ const ProductDetails = () => {
     return { ...baseProduct, ...enrichedData };
   }, [baseProduct, enrichedData]);
 
+  // DEBUG: Log what's available in window.salla
+  useEffect(() => {
+    const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
+    if (!sallaId || sallaId < 100) return;
+
+    const debugSalla = () => {
+      const sm = window.salla;
+      if (!sm) {
+        console.log("[Storia DEBUG] window.salla NOT available");
+        return;
+      }
+      console.log("[Storia DEBUG] window.salla keys:", Object.keys(sm));
+      console.log(
+        "[Storia DEBUG] salla.product:",
+        sm.product ? Object.keys(sm.product) : "N/A",
+      );
+      console.log(
+        "[Storia DEBUG] salla.api:",
+        sm.api ? Object.keys(sm.api) : "N/A",
+      );
+      console.log(
+        "[Storia DEBUG] salla.event:",
+        sm.event ? Object.keys(sm.event) : "N/A",
+      );
+
+      // Check web component
+      const btn = document.querySelector(
+        `salla-add-product-button[product-id="${sallaId}"]`,
+      );
+      console.log("[Storia DEBUG] salla-add-product-button found:", !!btn);
+      if (btn) {
+        console.log("[Storia DEBUG] btn keys:", Object.keys(btn));
+        console.log("[Storia DEBUG] btn.product:", btn.product);
+        console.log(
+          "[Storia DEBUG] btn.shadowRoot:",
+          btn.shadowRoot ? "exists" : "null",
+        );
+        if (btn.shadowRoot) {
+          console.log(
+            "[Storia DEBUG] shadowRoot innerHTML:",
+            btn.shadowRoot.innerHTML.substring(0, 500),
+          );
+        }
+      }
+    };
+
+    setTimeout(debugSalla, 2000);
+    setTimeout(debugSalla, 5000);
+  }, [baseProduct?.id, baseProduct?.sallaProductId]);
+
   // 3. Fetch product sizes from Salla web component DOM
   useEffect(() => {
     const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
