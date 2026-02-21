@@ -66,40 +66,40 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         {product.description}
       </p>
 
-      {/* Size Selector — uses real Salla sizes */}
-      {hasSizes && (
-        <div className="w-full mb-6 flex flex-col items-end">
-          <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right w-full">
-            المقاس
-            {selectedSize && (
-              <span className="mr-2 text-brand-gold font-black">
-                : {selectedSize}
-              </span>
-            )}
-          </p>
-          <div className="flex flex-wrap gap-3 justify-end w-full">
-            {sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => setSelectedSize(size)}
-                className={`
-                  min-w-[3rem] h-12 px-4 rounded-xl border-2 font-sans font-bold text-sm
-                  transition-all duration-200
-                  ${
-                    selectedSize === size
-                      ? "border-brand-gold bg-brand-gold text-white shadow-md scale-105"
-                      : "border-brand-charcoal/20 bg-white text-brand-charcoal hover:border-brand-gold hover:text-brand-gold"
-                  }
-                `}
-              >
-                {size}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
+        {/* Size Selector — uses real Salla sizes */}
+        {hasSizes && (
+          <div className="mb-2">
+            <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right">
+              المقاس
+              {selectedSize && (
+                <span className="mr-2 text-brand-gold font-black">
+                  : {selectedSize}
+                </span>
+              )}
+            </p>
+            <div className="flex flex-wrap gap-3 justify-end">
+              {sizes.map((size) => (
+                <button
+                  key={size}
+                  onClick={() => setSelectedSize(size)}
+                  className={`
+                    min-w-[3rem] h-12 px-4 rounded-xl border-2 font-sans font-bold text-sm
+                    transition-all duration-200
+                    ${
+                      selectedSize === size
+                        ? "border-brand-gold bg-brand-gold text-white shadow-md scale-105"
+                        : "border-brand-charcoal/20 bg-white text-brand-charcoal hover:border-brand-gold hover:text-brand-gold"
+                    }
+                  `}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <button
           onClick={onAddToCart}
           className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
