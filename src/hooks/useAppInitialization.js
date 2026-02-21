@@ -96,26 +96,6 @@ export const useAppInitialization = () => {
         window.salla.event.on("cart::updated", handleSallaCartUpdate);
         window.salla.event.on("cart::added", handleSallaCartUpdate);
         window.salla.event.on("cart::deleted", handleSallaCartUpdate);
-
-        // V21 Diagnostic: Salla Event Sniffer 🕵️
-        // Capture everything related to cart to find hidden failure events
-        const sallaCartEvents = [
-          "cart::add-item",
-          "cart::added",
-          "cart::add-item-failed",
-          "cart::addItem-failed",
-          "cart::not-available",
-          "cart::error",
-          "cart::addItem-error",
-          "addItem-failed",
-          "addItem-error",
-        ];
-
-        sallaCartEvents.forEach((evt) => {
-          window.salla.event.on(evt, (data) => {
-            console.warn(`[Storia Sniffer] Event Caught: ${evt}`, data);
-          });
-        });
       } catch {
         // Ignore Salla event subscription errors
       }

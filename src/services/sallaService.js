@@ -1244,17 +1244,12 @@ class SallaService {
 
         // V14: The Natural Handover 🌿
         if (statusCode === 422 || statusCode === 400) {
-          const sallaMsg =
-            error.response?.data?.message ||
-            error.data?.message ||
-            error.message;
           log(
-            `[Storia] Salla refusal (${statusCode}): ${sallaMsg}. Signaling Handover.`,
+            `[Storia] Salla requires validation (${statusCode}). Signaling Native Handover.`,
           );
-          const cleanError = new Error(sallaMsg || "Validation Required");
+          const cleanError = new Error("Validation Required");
           cleanError.isValidation = true;
           cleanError.statusCode = statusCode;
-          cleanError.originalMessage = sallaMsg;
           throw cleanError;
         }
 
@@ -1269,17 +1264,14 @@ class SallaService {
         return {
           success: false,
           isValidation: true,
-          error: error.originalMessage || "الرجاء اختيار الخيارات المطلوبة",
+          error: "الرجاء اختيار الخيارات المطلوبة",
         };
       }
 
       console.error("[Storia] Error adding to Salla cart:", error);
-      const sallaErrorMsg =
-        error.response?.data?.message || error.data?.message || error.message;
-
       return {
         success: false,
-        error: sallaErrorMsg || "عذراً، تعذر إضافة المنتج للسلة (قد يكون نفد)",
+        error: error.message || "Failed to add to cart",
       };
     }
   }

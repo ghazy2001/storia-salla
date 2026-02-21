@@ -10,7 +10,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
 import { fetchCartFromSalla } from "../../store/slices/cartSlice";
-import { useAddToCart } from "../../hooks/useCart";
 import sallaService from "../../services/sallaService";
 import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
@@ -122,19 +121,10 @@ const ProductDetails = () => {
     };
 
     const handleCartError = (event) => {
-      console.error("[Storia] Cart Error Trap!", event);
+      console.error("[Storia] Cart Error Trap!", event?.detail);
       if (isMounted) {
-        // Aggressive extraction from various Salla JS SDK formats
         const errorMsg =
-          event?.detail?.message ||
-          event?.detail?.error ||
-          event?.message ||
-          (event?.detail && typeof event.detail === "string"
-            ? event.detail
-            : null) ||
-          (typeof event === "string" ? event : null) ||
-          "عذراً، تعذر إضافة المنتج للسلة (قد يكون نفد)";
-
+          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
         setToastConfig({
           isVisible: true,
           message: errorMsg,
@@ -155,37 +145,15 @@ const ProductDetails = () => {
       document.addEventListener("cart::add-item", handleCartSync);
       document.addEventListener("cart::added", handleCartSync);
 
-      // FAILURE listeners - THE "ULTIMATE" NET 🕸️
-      const failureEvents = [
-        "cart::add-item-failed",
-        "cart::addItem-failed",
-        "cart::add-item-error",
-        "cart::addItem-error",
-        "cart::not-available",
-        "cart::error",
-        "salla-cart-add-item-failed",
-        "salla-cart-error",
-        "addItem-failed",
-        "addItem-error",
-      ];
-
-      failureEvents.forEach((evt) =>
-        document.addEventListener(evt, handleCartError),
-      );
+      // FAILURE listeners
+      document.addEventListener("cart::add-item-failed", handleCartError);
+      document.addEventListener("cart::not-available", handleCartError);
 
       if (window.salla && window.salla.event) {
         window.salla.event.on("cart::add-item", handleCartSync);
         window.salla.event.on("cart::added", handleCartSync);
-
-        // Match SDK specific listeners
-        failureEvents.forEach((evt) => {
-          try {
-            window.salla.event.on(evt, handleCartError);
-          } catch {
-            /* skip */
-          }
-        });
-
+        window.salla.event.on("cart::add-item-failed", handleCartError);
+        window.salla.event.on("cart::not-available", handleCartError);
         isSallaEventAttached = true;
         return true;
       }
@@ -193,35 +161,18 @@ const ProductDetails = () => {
     };
 
     const cleanup = () => {
-      const allEvents = [
-        "salla-cart-updated",
-        "cart::add-item",
-        "cart::added",
-        "cart::add-item-failed",
-        "cart::addItem-failed",
-        "cart::add-item-error",
-        "cart::addItem-error",
-        "cart::not-available",
-        "cart::error",
-        "salla-cart-add-item-failed",
-        "salla-cart-error",
-        "addItem-failed",
-        "addItem-error",
-      ];
-
-      allEvents.forEach((evt) =>
-        document.removeEventListener(evt, handleCartError),
-      );
+      document.removeEventListener("salla-cart-updated", handleCartSync);
+      document.removeEventListener("cart::add-item", handleCartSync);
+      document.removeEventListener("cart::added", handleCartSync);
+      document.removeEventListener("cart::add-item-failed", handleCartError);
+      document.removeEventListener("cart::not-available", handleCartError);
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
-          allEvents.forEach((evt) => {
-            try {
-              window.salla.event.off(evt, handleCartError);
-            } catch {
-              /* skip */
-            }
-          });
+          window.salla.event.off("cart::add-item", handleCartSync);
+          window.salla.event.off("cart::added", handleCartSync);
+          window.salla.event.off("cart::add-item-failed", handleCartError);
+          window.salla.event.off("cart::not-available", handleCartError);
         } catch {
           /* ignore */
         }
@@ -245,32 +196,37 @@ const ProductDetails = () => {
       cleanup();
     };
   }, [dispatch]);
-  const { addToCart } = useAddToCart();
 
-  const handleAddToCart = useCallback(async () => {
+  const handleAddToCart = useCallback(() => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
-    // 1. Initial Polling & UI Setup
+    // 1. Record click for fallbacks
     lastClickTimeRef.current = Date.now();
+
+    // 2. ACTIVE SYNC: Start polling to force Redux update even if events fail
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
 
-    // Initial sync jumpstart
+    // Immediate first poll
     dispatch(fetchCartFromSalla());
 
-    // Turbo Polling (Sync only)
     let pollCount = 0;
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
+      console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
-      if (pollCount >= 30) {
+      // Poll every 250ms for 5s (total 20 attempts)
+      if (pollCount >= 20) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
     }, 250);
 
-    // 2. Trigger the native Salla button.
-    // This handles size selection popups natively.
+    console.log("[Storia] V23: Turbo Polling & Event Trap for ID:", sallaId);
+
+    // Trigger the native Salla button.
+    // This will open Salla's selection popup if sizes are needed,
+    // or add directly if not. This is 100% reliable.
     const nativeBtn =
       document.querySelector(`[product-id="${sallaId}"] button`) ||
       document.querySelector(
@@ -278,44 +234,14 @@ const ProductDetails = () => {
       );
 
     if (nativeBtn) {
-      // Check if native button is disabled (Out of stock)
-      const isBtnDisabled =
-        nativeBtn.hasAttribute("disabled") ||
-        nativeBtn.querySelector("button")?.disabled;
-
-      if (isBtnDisabled) {
-        setToastConfig({
-          isVisible: true,
-          message: "عذراً، هذا المنتج غير متوفر حالياً",
-          type: "error",
-        });
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-        return;
-      }
-
       nativeBtn.click();
-      // Success/Failure is handled by the event listeners in useEffect
+      // Toast and refresh are now handled by the event listener above
+      // to ensure they only happen on SUCCESSFUL addition.
     } else {
-      console.warn(
-        "[Storia] Native Salla button not found, trying manual add...",
-      );
-      const result = await addToCart(displayProduct, 1);
-      if (!result.success && result.error) {
-        setToastConfig({
-          isVisible: true,
-          message: result.error,
-          type: "error",
-        });
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      }
+      console.error("[Storia] Native Salla button not found!");
+      alert("عذراً، نظام السلة غير متوفر حالياً.");
     }
-  }, [displayProduct, dispatch, addToCart]);
+  }, [displayProduct, dispatch]);
 
   if (!baseProduct && products.length > 0) {
     return (

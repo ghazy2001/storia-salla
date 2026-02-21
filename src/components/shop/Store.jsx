@@ -67,19 +67,10 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     };
 
     const handleCartError = (event) => {
-      console.error("[Store] Salla Cart Error Trap!", event);
+      console.error("[Store] Salla Cart Error Trap!", event?.detail);
       if (isMounted) {
-        // Aggressive extraction from various Salla JS SDK formats
         const errorMsg =
-          event?.detail?.message ||
-          event?.detail?.error ||
-          event?.message ||
-          (event?.detail && typeof event.detail === "string"
-            ? event.detail
-            : null) ||
-          (typeof event === "string" ? event : null) ||
-          "عذراً، تعذر إضافة المنتج للسلة (قد يكون نفد)";
-
+          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
         setToastConfig({
           isVisible: true,
           message: errorMsg,
@@ -100,37 +91,15 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
       document.addEventListener("cart::add-item", handleCartSync);
       document.addEventListener("cart::added", handleCartSync);
 
-      // FAILURE TRAPS - THE "ULTIMATE" NET 🕸️
-      const failureEvents = [
-        "cart::add-item-failed",
-        "cart::addItem-failed",
-        "cart::add-item-error",
-        "cart::addItem-error",
-        "cart::not-available",
-        "cart::error",
-        "salla-cart-add-item-failed",
-        "salla-cart-error",
-        "addItem-failed",
-        "addItem-error",
-      ];
-
-      failureEvents.forEach((evt) =>
-        document.addEventListener(evt, handleCartError),
-      );
+      // FAILURE TRAPS
+      document.addEventListener("cart::add-item-failed", handleCartError);
+      document.addEventListener("cart::not-available", handleCartError);
 
       if (window.salla && window.salla.event) {
         window.salla.event.on("cart::add-item", handleCartSync);
         window.salla.event.on("cart::added", handleCartSync);
-
-        // Match SDK specific listeners
-        failureEvents.forEach((evt) => {
-          try {
-            window.salla.event.on(evt, handleCartError);
-          } catch {
-            /* skip */
-          }
-        });
-
+        window.salla.event.on("cart::add-item-failed", handleCartError);
+        window.salla.event.on("cart::not-available", handleCartError);
         isSallaEventAttached = true;
         return true;
       }
@@ -138,35 +107,18 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     };
 
     const cleanup = () => {
-      const allEvents = [
-        "salla-cart-updated",
-        "cart::add-item",
-        "cart::added",
-        "cart::add-item-failed",
-        "cart::addItem-failed",
-        "cart::add-item-error",
-        "cart::addItem-error",
-        "cart::not-available",
-        "cart::error",
-        "salla-cart-add-item-failed",
-        "salla-cart-error",
-        "addItem-failed",
-        "addItem-error",
-      ];
-
-      allEvents.forEach((evt) =>
-        document.removeEventListener(evt, handleCartError),
-      );
+      document.removeEventListener("salla-cart-updated", handleCartSync);
+      document.removeEventListener("cart::add-item", handleCartSync);
+      document.removeEventListener("cart::added", handleCartSync);
+      document.removeEventListener("cart::add-item-failed", handleCartError);
+      document.removeEventListener("cart::not-available", handleCartError);
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
-          allEvents.forEach((evt) => {
-            try {
-              window.salla.event.off(evt, handleCartError);
-            } catch {
-              /* skip */
-            }
-          });
+          window.salla.event.off("cart::add-item", handleCartSync);
+          window.salla.event.off("cart::added", handleCartSync);
+          window.salla.event.off("cart::add-item-failed", handleCartError);
+          window.salla.event.off("cart::not-available", handleCartError);
         } catch {
           /* ignore */
         }
@@ -218,42 +170,8 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
-      const result = await addToCartWithSync(product, quantity, size);
-      if (!result.success && result.error) {
-        setToastConfig({
-          isVisible: true,
-          message: result.error,
-          type: "error",
-        });
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      }
-    } else {
-      // For click proxy, we should also check if the native button is disabled after a small delay
-      // because CarouselMedia might have a disabled button
-      setTimeout(() => {
-        const sallaId = product.sallaProductId || product.id;
-        const nativeBtn = document.querySelector(
-          `salla-add-product-button[product-id="${sallaId}"]`,
-        );
-        const isBtnDisabled =
-          nativeBtn?.hasAttribute("disabled") ||
-          nativeBtn?.querySelector("button")?.disabled;
-
-        if (isBtnDisabled) {
-          setToastConfig({
-            isVisible: true,
-            message: "عذراً، هذا المنتج غير متوفر حالياً",
-            type: "error",
-          });
-          if (pollingIntervalRef.current) {
-            clearInterval(pollingIntervalRef.current);
-            pollingIntervalRef.current = null;
-          }
-        }
-      }, 100);
+      await addToCartWithSync(product, quantity, size);
+      // Waiter will handle toast
     }
   };
   // --- END TURBO WATCHER ---
