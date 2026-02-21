@@ -34,39 +34,19 @@ export const useAddToCart = () => {
         );
 
         if (!result.success) {
-          const isDiagnostic =
-            window.__STORIA_DIAGNOSTIC__ || result.diagnostic;
-
-          if (result.isValidation) {
-            console.log(
-              "[Storia] 422/400 Validation Error. Hook signaling component.",
-            );
-            return { success: false, isValidation: true };
-          }
-
-          if (isDiagnostic) {
-            alert(
-              `فشل إضافة المنتج (${product.name}) لسلة سلة.\n\n` +
-                `السبب: ${result.error || "عطأ غير معروف"}`,
-            );
-          } else {
-            console.warn(`[Storia] Add to Cart Failed: ${result.error}`, {
-              debug: result.debugPayload,
-              diagnosis: result.diagnosis,
-            });
-            alert(
-              `عذراً، لم نتمكن من إضافة المنتج (${product.name}) للسلة. يرجى المحاولة مرة أخرى لاحقاً.`,
-            );
-          }
-          return { success: false };
+          const errorMsg = result.error || "عذراً، تعذر إضافة المنتج للسلة";
+          console.warn(`[Storia] Add to Cart Failed: ${errorMsg}`, {
+            debug: result.debugPayload,
+            diagnosis: result.diagnosis,
+          });
+          return { success: false, error: errorMsg };
         } else {
-          // Success! Refresh cart from Salla to get accurate count/total
           dispatch(fetchCartFromSalla());
           return { success: true, data: result.data };
         }
       } catch (e) {
-        alert("حدث خطأ أثناء الاتصال بسلة.");
-        return { success: false, error: e.message };
+        console.error("[Storia] Cart Connection Error:", e);
+        return { success: false, error: "حدث خطأ أثناء الاتصال بسلة" };
       }
     }
     return { success: false, error: "Salla not available" };

@@ -170,8 +170,18 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
-      await addToCartWithSync(product, quantity, size);
-      // Waiter will handle toast
+      const result = await addToCartWithSync(product, quantity, size);
+      if (!result.success && result.error) {
+        setToastConfig({
+          isVisible: true,
+          message: result.error,
+          type: "error",
+        });
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
     }
   };
   // --- END TURBO WATCHER ---

@@ -10,6 +10,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { selectProducts } from "../../store/slices/productSlice";
 import { selectTheme } from "../../store/slices/uiSlice";
 import { fetchCartFromSalla } from "../../store/slices/cartSlice";
+import { useAddToCart } from "../../hooks/useCart";
 import sallaService from "../../services/sallaService";
 import Toast from "../common/Toast";
 import ProductGallery from "./ProductGallery";
@@ -196,37 +197,32 @@ const ProductDetails = () => {
       cleanup();
     };
   }, [dispatch]);
+  const { addToCart } = useAddToCart();
 
-  const handleAddToCart = useCallback(() => {
+  const handleAddToCart = useCallback(async () => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
-    // 1. Record click for fallbacks
+    // 1. Initial Polling & UI Setup
     lastClickTimeRef.current = Date.now();
-
-    // 2. ACTIVE SYNC: Start polling to force Redux update even if events fail
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
 
-    // Immediate first poll
+    // Initial sync jumpstart
     dispatch(fetchCartFromSalla());
 
+    // Turbo Polling (Sync only)
     let pollCount = 0;
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
-      console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
-      // Poll every 250ms for 5s (total 20 attempts)
-      if (pollCount >= 20) {
+      if (pollCount >= 30) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
     }, 250);
 
-    console.log("[Storia] V23: Turbo Polling & Event Trap for ID:", sallaId);
-
-    // Trigger the native Salla button.
-    // This will open Salla's selection popup if sizes are needed,
-    // or add directly if not. This is 100% reliable.
+    // 2. Trigger the native Salla button.
+    // This handles size selection popups natively.
     const nativeBtn =
       document.querySelector(`[product-id="${sallaId}"] button`) ||
       document.querySelector(
@@ -235,13 +231,25 @@ const ProductDetails = () => {
 
     if (nativeBtn) {
       nativeBtn.click();
-      // Toast and refresh are now handled by the event listener above
-      // to ensure they only happen on SUCCESSFUL addition.
+      // Success/Failure is handled by the event listeners in useEffect
     } else {
-      console.error("[Storia] Native Salla button not found!");
-      alert("عذراً، نظام السلة غير متوفر حالياً.");
+      console.warn(
+        "[Storia] Native Salla button not found, trying manual add...",
+      );
+      const result = await addToCart(displayProduct, 1);
+      if (!result.success && result.error) {
+        setToastConfig({
+          isVisible: true,
+          message: result.error,
+          type: "error",
+        });
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
     }
-  }, [displayProduct, dispatch]);
+  }, [displayProduct, dispatch, addToCart]);
 
   if (!baseProduct && products.length > 0) {
     return (
