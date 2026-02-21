@@ -161,16 +161,15 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
       dispatch(fetchCartFromSalla());
-      // Increase limit to 30 attempts (7.5s) to allow for Salla popups/delays
-      if (pollCount >= 30) {
+      // Poll every 250ms for 4s (total 16 attempts) for faster feedback
+      if (pollCount >= 16) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
 
-        // TIMEOUT FALLBACK: If we polled for 7.5s without confirmed success or Salla error,
-        // show a generic hint.
+        // TIMEOUT FALLBACK: If we polled for 4s without confirmed success or Salla error
         setToastConfig({
           isVisible: true,
-          message: "تعذر التأكد من الإضافة، يرجى مراجعة السلة",
+          message: "الصنف منتهى",
           type: "error",
         });
       }
@@ -178,14 +177,14 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
-      // Pre-emptive Out-of-Stock Check for manual add (rare in Store carousel but good for safety)
+      // Pre-emptive Out-of-Stock Check
       const isOut =
         product.isOutOfStock ||
         (product.quantity !== undefined && product.quantity === 0);
       if (isOut) {
         setToastConfig({
           isVisible: true,
-          message: "عذراً، هذا المنتج غير متوفر حالياً",
+          message: "الصنف منتهى",
           type: "error",
         });
         clearInterval(pollingIntervalRef.current);

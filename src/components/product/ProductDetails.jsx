@@ -56,10 +56,13 @@ const ProductDetails = () => {
             regularPrice: details.regularPrice || details.rawRegularPrice,
             salePrice: details.salePrice || details.rawSalePrice,
             isOnSale: details.isOnSale,
+            sizeVariants: details.sizeVariants,
+            quantity: details.quantity,
+            isOutOfStock: details.isOutOfStock,
           });
         }
-      } catch (err) {
-        console.warn("[Storia] Discovery Error:", err);
+      } catch (error) {
+        console.error("[Storia] Discovery Error:", error);
       } finally {
         if (isMounted) {
           /* done */
@@ -123,8 +126,7 @@ const ProductDetails = () => {
     const handleCartError = (event) => {
       console.error("[Storia] Cart Error Trap!", event?.detail);
       if (isMounted) {
-        const errorMsg =
-          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
+        const errorMsg = event?.detail?.message || "عذراً، الصنف منتهى";
         setToastConfig({
           isVisible: true,
           message: errorMsg,
@@ -209,7 +211,7 @@ const ProductDetails = () => {
     if (isOut) {
       setToastConfig({
         isVisible: true,
-        message: "عذراً، هذا المنتج غير متوفر حالياً",
+        message: "الصنف منتهى",
         type: "error",
       });
       return;
@@ -230,15 +232,15 @@ const ProductDetails = () => {
       console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
 
-      // Poll every 250ms for 7.5s (total 30 attempts)
-      if (pollCount >= 30) {
+      // Poll every 250ms for 4s (total 16 attempts) for faster feedback
+      if (pollCount >= 16) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
 
-        // TIMEOUT FALLBACK: If we reached 30 polls without success/error event, show generic error
+        // TIMEOUT FALLBACK: If we reached 16 polls without success/error event, show generic error
         setToastConfig({
           isVisible: true,
-          message: "تعذر التأكد من الإضافة، يرجى مراجعة السلة",
+          message: "الصنف منتهى",
           type: "error",
         });
       }
