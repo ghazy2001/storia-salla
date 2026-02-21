@@ -1269,9 +1269,12 @@ class SallaService {
       }
 
       console.error("[Storia] Error adding to Salla cart:", error);
+      const sallaErrorMsg =
+        error.response?.data?.message || error.data?.message || error.message;
+
       return {
         success: false,
-        error: error.message || "Failed to add to cart",
+        error: sallaErrorMsg || "عذراً، تعذر إضافة المنتج للسلة (قد يكون نفد)",
       };
     }
   }

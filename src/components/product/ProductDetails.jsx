@@ -122,10 +122,19 @@ const ProductDetails = () => {
     };
 
     const handleCartError = (event) => {
-      console.error("[Storia] Cart Error Trap!", event?.detail);
+      console.error("[Storia] Cart Error Trap!", event);
       if (isMounted) {
+        // Aggressive extraction from various Salla JS SDK formats
         const errorMsg =
-          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
+          event?.detail?.message ||
+          event?.detail?.error ||
+          event?.message ||
+          (event?.detail && typeof event.detail === "string"
+            ? event.detail
+            : null) ||
+          (typeof event === "string" ? event : null) ||
+          "عذراً، تعذر إضافة المنتج للسلة (قد يكون نفد)";
+
         setToastConfig({
           isVisible: true,
           message: errorMsg,
@@ -146,15 +155,37 @@ const ProductDetails = () => {
       document.addEventListener("cart::add-item", handleCartSync);
       document.addEventListener("cart::added", handleCartSync);
 
-      // FAILURE listeners
-      document.addEventListener("cart::add-item-failed", handleCartError);
-      document.addEventListener("cart::not-available", handleCartError);
+      // FAILURE listeners - THE "ULTIMATE" NET 🕸️
+      const failureEvents = [
+        "cart::add-item-failed",
+        "cart::addItem-failed",
+        "cart::add-item-error",
+        "cart::addItem-error",
+        "cart::not-available",
+        "cart::error",
+        "salla-cart-add-item-failed",
+        "salla-cart-error",
+        "addItem-failed",
+        "addItem-error",
+      ];
+
+      failureEvents.forEach((evt) =>
+        document.addEventListener(evt, handleCartError),
+      );
 
       if (window.salla && window.salla.event) {
         window.salla.event.on("cart::add-item", handleCartSync);
         window.salla.event.on("cart::added", handleCartSync);
-        window.salla.event.on("cart::add-item-failed", handleCartError);
-        window.salla.event.on("cart::not-available", handleCartError);
+
+        // Match SDK specific listeners
+        failureEvents.forEach((evt) => {
+          try {
+            window.salla.event.on(evt, handleCartError);
+          } catch (e) {
+            /* skip */
+          }
+        });
+
         isSallaEventAttached = true;
         return true;
       }
@@ -162,18 +193,35 @@ const ProductDetails = () => {
     };
 
     const cleanup = () => {
-      document.removeEventListener("salla-cart-updated", handleCartSync);
-      document.removeEventListener("cart::add-item", handleCartSync);
-      document.removeEventListener("cart::added", handleCartSync);
-      document.removeEventListener("cart::add-item-failed", handleCartError);
-      document.removeEventListener("cart::not-available", handleCartError);
+      const allEvents = [
+        "salla-cart-updated",
+        "cart::add-item",
+        "cart::added",
+        "cart::add-item-failed",
+        "cart::addItem-failed",
+        "cart::add-item-error",
+        "cart::addItem-error",
+        "cart::not-available",
+        "cart::error",
+        "salla-cart-add-item-failed",
+        "salla-cart-error",
+        "addItem-failed",
+        "addItem-error",
+      ];
+
+      allEvents.forEach((evt) =>
+        document.removeEventListener(evt, handleCartError),
+      );
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
-          window.salla.event.off("cart::add-item", handleCartSync);
-          window.salla.event.off("cart::added", handleCartSync);
-          window.salla.event.off("cart::add-item-failed", handleCartError);
-          window.salla.event.off("cart::not-available", handleCartError);
+          allEvents.forEach((evt) => {
+            try {
+              window.salla.event.off(evt, handleCartError);
+            } catch (e) {
+              /* skip */
+            }
+          });
         } catch {
           /* ignore */
         }
