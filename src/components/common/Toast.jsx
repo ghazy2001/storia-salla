@@ -24,14 +24,13 @@ const Toast = ({ message, isVisible, onClose, action, type = "success" }) => {
         { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" },
       );
 
-      // Auto close after 2 seconds (or slightly longer for errors)
-      const duration = type === "error" ? 2500 : 2000;
       const timer = setTimeout(() => {
-        onClose();
-      }, duration);
+        handleClose();
+      }, 5000); // 5 seconds for errors, stays a bit longer
+
       return () => clearTimeout(timer);
     }
-  }, [isVisible, onClose, type]);
+  }, [isVisible, handleClose]);
 
   if (!isVisible) return null;
 

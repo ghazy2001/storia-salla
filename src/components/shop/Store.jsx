@@ -161,36 +161,15 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
       dispatch(fetchCartFromSalla());
-      // Poll every 250ms for 2s (total 8 attempts) for near-instant feedback
-      if (pollCount >= 8) {
+      // Increase limit to 30 attempts (7.5s) to allow for Salla popups/delays
+      if (pollCount >= 30) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
-
-        // TIMEOUT FALLBACK
-        setToastConfig({
-          isVisible: true,
-          message: "عذراً، هذا المنتج غير متوفر حالياً",
-          type: "error",
-        });
       }
     }, 250);
 
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
-      // Pre-emptive Out-of-Stock Check
-      const isOut =
-        product.isOutOfStock ||
-        (product.quantity !== undefined && product.quantity === 0);
-      if (isOut) {
-        setToastConfig({
-          isVisible: true,
-          message: "عذراً، هذا المنتج غير متوفر حالياً",
-          type: "error",
-        });
-        clearInterval(pollingIntervalRef.current);
-        return;
-      }
-
       await addToCartWithSync(product, quantity, size);
       // Waiter will handle toast
     }

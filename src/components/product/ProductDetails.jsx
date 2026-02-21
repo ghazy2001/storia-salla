@@ -56,13 +56,10 @@ const ProductDetails = () => {
             regularPrice: details.regularPrice || details.rawRegularPrice,
             salePrice: details.salePrice || details.rawSalePrice,
             isOnSale: details.isOnSale,
-            sizeVariants: details.sizeVariants,
-            quantity: details.quantity,
-            isOutOfStock: details.isOutOfStock,
           });
         }
-      } catch (error) {
-        console.error("[Storia] Discovery Error:", error);
+      } catch (err) {
+        console.warn("[Storia] Discovery Error:", err);
       } finally {
         if (isMounted) {
           /* done */
@@ -126,7 +123,8 @@ const ProductDetails = () => {
     const handleCartError = (event) => {
       console.error("[Storia] Cart Error Trap!", event?.detail);
       if (isMounted) {
-        const errorMsg = event?.detail?.message || "عذراً، الصنف منتهى";
+        const errorMsg =
+          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
         setToastConfig({
           isVisible: true,
           message: errorMsg,
@@ -203,20 +201,6 @@ const ProductDetails = () => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
-    // 0. Pre-emptive Out-of-Stock Check
-    const isOut =
-      displayProduct.isOutOfStock ||
-      (displayProduct.quantity !== undefined && displayProduct.quantity === 0);
-
-    if (isOut) {
-      setToastConfig({
-        isVisible: true,
-        message: "عذراً، هذا المنتج غير متوفر حالياً",
-        type: "error",
-      });
-      return;
-    }
-
     // 1. Record click for fallbacks
     lastClickTimeRef.current = Date.now();
 
@@ -231,24 +215,18 @@ const ProductDetails = () => {
       pollCount++;
       console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
-
-      // Poll every 250ms for 2s (total 8 attempts) for near-instant feedback
-      if (pollCount >= 8) {
+      // Poll every 250ms for 5s (total 20 attempts)
+      if (pollCount >= 20) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
-
-        // TIMEOUT FALLBACK
-        setToastConfig({
-          isVisible: true,
-          message: "الصنف منتهى",
-          type: "error",
-        });
       }
     }, 250);
 
-    console.log("[Storia] V24 (Timeout Enabled) for ID:", sallaId);
+    console.log("[Storia] V23: Turbo Polling & Event Trap for ID:", sallaId);
 
-    // Trigger the native Salla button
+    // Trigger the native Salla button.
+    // This will open Salla's selection popup if sizes are needed,
+    // or add directly if not. This is 100% reliable.
     const nativeBtn =
       document.querySelector(`[product-id="${sallaId}"] button`) ||
       document.querySelector(
@@ -257,13 +235,11 @@ const ProductDetails = () => {
 
     if (nativeBtn) {
       nativeBtn.click();
+      // Toast and refresh are now handled by the event listener above
+      // to ensure they only happen on SUCCESSFUL addition.
     } else {
       console.error("[Storia] Native Salla button not found!");
-      setToastConfig({
-        isVisible: true,
-        message: "عذراً، نظام السلة غير متوفر حالياً.",
-        type: "error",
-      });
+      alert("عذراً، نظام السلة غير متوفر حالياً.");
     }
   }, [displayProduct, dispatch]);
 

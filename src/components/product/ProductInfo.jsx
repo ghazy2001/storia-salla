@@ -69,6 +69,8 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         >
           إضافة للسلة
         </button>
+
+        {/* Info boxes removed as per user request */}
       </div>
 
       {/* Salla Native Button Proxy - THE ENGINE */}
