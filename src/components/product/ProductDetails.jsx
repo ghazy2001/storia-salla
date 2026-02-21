@@ -37,40 +37,110 @@ const ProductDetails = () => {
     return { ...baseProduct, ...enrichedData };
   }, [baseProduct, enrichedData]);
 
-  // 3. V19 Proxy Discovery (Focused on Prices only)
+  // 3. V19 Proxy Discovery (Prices + Sizes from Salla API)
   useEffect(() => {
     const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
     if (!sallaId || sallaId < 100) return;
 
     let isMounted = true;
+    let retryTimer = null;
 
-    const discover = async () => {
+    // Direct REST fetch for product options/sizes
+    const fetchSizesDirectly = async (id) => {
       try {
+        const headers = { Accept: "application/json" };
+        const sm = window.salla;
+        if (sm?.config?.store_id)
+          headers["Store-Identifier"] = sm.config.store_id;
+
+        const res = await fetch(`/api/v1/products/${id}`, { headers });
+        if (!res.ok) return null;
+        const json = await res.json();
+        const raw = json.data || json.product || (json.id ? json : null);
+        if (!raw) return null;
+
+        // Extract options (sizes)
+        const options = raw.options || raw.details?.options || [];
+        const variants =
+          raw.variants || raw.skus || raw.details?.variants || [];
+
+        // Find size option
+        const sizeOption =
+          options.find((opt) => {
+            const name = (opt.name || opt.label || "").toLowerCase();
+            return (
+              name.includes("مقاس") ||
+              name.includes("قياس") ||
+              name.includes("size")
+            );
+          }) || (options.length > 0 ? options[0] : null);
+
+        let sizes = [];
+        if (sizeOption) {
+          const vals = sizeOption.values || sizeOption.data || [];
+          sizes = vals
+            .map((v) => String(v.name || v.label || v.value || "").trim())
+            .filter(Boolean);
+        } else if (variants.length > 0) {
+          sizes = variants
+            .map((v) => String(v.name || v.label || v.sku || "").trim())
+            .filter(Boolean);
+        }
+
+        return sizes.length > 0 ? sizes : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const discover = async (attempt = 0) => {
+      try {
+        // Wait for Salla SDK to be ready before fetching
+        await sallaService.waitForSalla(3000);
+        if (!isMounted) return;
+
         const details = await sallaService
           .getProductDetails(sallaId)
           .catch(() => null);
         if (!isMounted) return;
 
         if (details) {
+          // If service returned sizes, use them; otherwise try direct fetch
+          let sizes =
+            details.sizes && details.sizes.length > 0 ? details.sizes : null;
+          if (!sizes) {
+            sizes = await fetchSizesDirectly(sallaId);
+          }
+
           setEnrichedData({
             regularPrice: details.regularPrice || details.rawRegularPrice,
             salePrice: details.salePrice || details.rawSalePrice,
             isOnSale: details.isOnSale,
-            sizes:
-              details.sizes && details.sizes.length > 0
-                ? details.sizes
-                : undefined,
+            sizes: sizes || undefined,
             sizeVariants:
               details.sizeVariants && details.sizeVariants.length > 0
                 ? details.sizeVariants
                 : undefined,
           });
+        } else {
+          // Service returned null — try direct REST fetch for sizes
+          const sizes = await fetchSizesDirectly(sallaId);
+          if (isMounted && sizes) {
+            setEnrichedData((prev) => ({ ...(prev || {}), sizes }));
+          } else if (attempt < 3 && isMounted) {
+            retryTimer = setTimeout(
+              () => discover(attempt + 1),
+              1500 * (attempt + 1),
+            );
+          }
         }
       } catch (err) {
         console.warn("[Storia] Discovery Error:", err);
-      } finally {
-        if (isMounted) {
-          /* done */
+        if (attempt < 3 && isMounted) {
+          retryTimer = setTimeout(
+            () => discover(attempt + 1),
+            1500 * (attempt + 1),
+          );
         }
       }
     };
@@ -78,6 +148,7 @@ const ProductDetails = () => {
     discover();
     return () => {
       isMounted = false;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [baseProduct?.id, baseProduct?.sallaProductId]);
 
