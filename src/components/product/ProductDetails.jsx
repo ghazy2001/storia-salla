@@ -45,26 +45,19 @@ const ProductDetails = () => {
     let isMounted = true;
     let retryTimer = null;
 
-    // Direct REST fetch for product options/sizes
-    const fetchSizesDirectly = async (id) => {
+    // Fetch sizes via Salla SDK api.get() — avoids the failing REST endpoints
+    const fetchSizesViaSdk = async (id) => {
       try {
-        const headers = { Accept: "application/json" };
         const sm = window.salla;
-        if (sm?.config?.store_id)
-          headers["Store-Identifier"] = sm.config.store_id;
-
-        const res = await fetch(`/api/v1/products/${id}`, { headers });
-        if (!res.ok) return null;
-        const json = await res.json();
-        const raw = json.data || json.product || (json.id ? json : null);
+        if (!sm?.api?.get) return null;
+        const res = await sm.api.get(`products/${id}`);
+        const raw = res?.data || (res?.id ? res : null);
         if (!raw) return null;
 
-        // Extract options (sizes)
         const options = raw.options || raw.details?.options || [];
         const variants =
           raw.variants || raw.skus || raw.details?.variants || [];
 
-        // Find size option
         const sizeOption =
           options.find((opt) => {
             const name = (opt.name || opt.label || "").toLowerCase();
@@ -105,11 +98,11 @@ const ProductDetails = () => {
         if (!isMounted) return;
 
         if (details) {
-          // If service returned sizes, use them; otherwise try direct fetch
+          // If service returned sizes, use them; otherwise try SDK fetch
           let sizes =
             details.sizes && details.sizes.length > 0 ? details.sizes : null;
           if (!sizes) {
-            sizes = await fetchSizesDirectly(sallaId);
+            sizes = await fetchSizesViaSdk(sallaId);
           }
 
           setEnrichedData({
@@ -123,8 +116,8 @@ const ProductDetails = () => {
                 : undefined,
           });
         } else {
-          // Service returned null — try direct REST fetch for sizes
-          const sizes = await fetchSizesDirectly(sallaId);
+          // Service returned null — try SDK fetch for sizes
+          const sizes = await fetchSizesViaSdk(sallaId);
           if (isMounted && sizes) {
             setEnrichedData((prev) => ({ ...(prev || {}), sizes }));
           } else if (attempt < 3 && isMounted) {

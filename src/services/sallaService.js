@@ -1078,41 +1078,70 @@ class SallaService {
     log(`[Storia] getProductDetails(${sallaProductId}) starting...`);
     let rawProduct = null;
 
-    // STRATEGY 1: Direct REST API (most reliable for full product data with options)
-    try {
-      const sm = window.salla || this.salla;
-      const storeId = sm?.config?.store_id || "";
-      const headers = { Accept: "application/json" };
-      if (storeId) headers["Store-Identifier"] = storeId;
-
-      const restUrls = [
-        `/api/v1/products/${sallaProductId}`,
-        `/products/${sallaProductId}.json`,
-      ];
-
-      for (const url of restUrls) {
-        try {
-          log(`[Storia] V18 Fidelity: Trying REST: ${url}`);
-          const res = await fetch(url, { headers });
-          if (res.ok) {
-            const json = await res.json();
-            rawProduct = json.data || json.product || (json.id ? json : null);
-            if (rawProduct) {
-              log(`[Storia] V18 Success from ${url}:`, {
+    // STRATEGY 1: Salla SDK api.get() — authenticated, works on Salla platform
+    if (this.isAvailable()) {
+      try {
+        const sm = window.salla || this.salla;
+        const apiWrapper = sm?.api;
+        if (apiWrapper && typeof apiWrapper.get === "function") {
+          try {
+            const res = await apiWrapper.get(`products/${sallaProductId}`);
+            const candidate = res?.data || (res?.id ? res : null);
+            if (candidate) {
+              rawProduct = candidate;
+              log("[Storia] SDK api.get(products/{id}) success:", {
                 hasOptions: !!rawProduct.options?.length,
                 hasVariants: !!(
                   rawProduct.variants?.length || rawProduct.skus?.length
                 ),
               });
-              break;
             }
+          } catch (e) {
+            log("[Storia] SDK api.get() failed:", e.message);
           }
-        } catch (e) {
-          log(`[Storia] REST ${url} failed:`, e.message);
         }
+      } catch (e) {
+        log("[Storia] SDK api strategy failed:", e);
       }
-    } catch (e) {
-      log("[Storia] REST strategy failed:", e);
+    }
+
+    // STRATEGY 1.5: Direct REST API (fallback, may fail with 400 on some stores)
+    if (!rawProduct) {
+      try {
+        const sm = window.salla || this.salla;
+        const storeId = sm?.config?.store_id || "";
+        const headers = { Accept: "application/json" };
+        if (storeId) headers["Store-Identifier"] = storeId;
+
+        const restUrls = [
+          `/api/v1/products/${sallaProductId}`,
+          `/products/${sallaProductId}.json`,
+        ];
+
+        for (const url of restUrls) {
+          try {
+            log(`[Storia] V18 Fidelity: Trying REST: ${url}`);
+            const res = await fetch(url, { headers });
+            if (res.ok) {
+              const json = await res.json();
+              rawProduct = json.data || json.product || (json.id ? json : null);
+              if (rawProduct) {
+                log(`[Storia] V18 Success from ${url}:`, {
+                  hasOptions: !!rawProduct.options?.length,
+                  hasVariants: !!(
+                    rawProduct.variants?.length || rawProduct.skus?.length
+                  ),
+                });
+                break;
+              }
+            }
+          } catch (e) {
+            log(`[Storia] REST ${url} failed:`, e.message);
+          }
+        }
+      } catch (e) {
+        log("[Storia] REST strategy failed:", e);
+      }
     }
 
     // STRATEGY 2: SDK product.get() (may not have options but worth trying)
