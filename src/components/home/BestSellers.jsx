@@ -205,8 +205,8 @@ const BestSellers = () => {
               className={`flex justify-between items-center px-8 mt-6 gap-12 ${textColorClass}`}
               dir="rtl"
             >
-              <div className="text-right">
-                <div className="flex items-center gap-3 mb-2 flex-wrap justify-end">
+              <div className="flex-1 text-right">
+                <div className="flex items-center gap-3 mb-2 flex-wrap justify-start">
                   {(() => {
                     const syncedProduct = products.find(
                       (p) => String(p.id) === String(featuredConfig.id),
