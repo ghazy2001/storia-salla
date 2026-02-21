@@ -68,7 +68,7 @@ const ProductInfo = ({ product, handleAddToCart }) => {
 
       {/* Size Selector — uses real Salla sizes */}
       {hasSizes && (
-        <div className="w-full max-w-md ml-auto lg:ml-auto mb-6">
+        <div className="w-full mb-6">
           <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right">
             المقاس
             {selectedSize && (
