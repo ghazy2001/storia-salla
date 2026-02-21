@@ -126,7 +126,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
         failureEvents.forEach((evt) => {
           try {
             window.salla.event.on(evt, handleCartError);
-          } catch (e) {
+          } catch {
             /* skip */
           }
         });
@@ -163,7 +163,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
           allEvents.forEach((evt) => {
             try {
               window.salla.event.off(evt, handleCartError);
-            } catch (e) {
+            } catch {
               /* skip */
             }
           });
@@ -198,19 +198,6 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
   const handleAddToCart = async (payload) => {
     const { product, quantity, size, isClickOnly } = payload;
-
-    // 0. Proactive Stock Check
-    if (
-      product.is_available === false ||
-      (product.quantity !== undefined && product.quantity <= 0)
-    ) {
-      setToastConfig({
-        isVisible: true,
-        message: "عذراً، هذا المنتج غير متوفر حالياً (نفدت الكمية)",
-        type: "error",
-      });
-      return;
-    }
 
     // Record click for fallbacks
     lastClickTimeRef.current = Date.now();
