@@ -1244,12 +1244,17 @@ class SallaService {
 
         // V14: The Natural Handover 🌿
         if (statusCode === 422 || statusCode === 400) {
+          const sallaMsg =
+            error.response?.data?.message ||
+            error.data?.message ||
+            error.message;
           log(
-            `[Storia] Salla requires validation (${statusCode}). Signaling Native Handover.`,
+            `[Storia] Salla refusal (${statusCode}): ${sallaMsg}. Signaling Handover.`,
           );
-          const cleanError = new Error("Validation Required");
+          const cleanError = new Error(sallaMsg || "Validation Required");
           cleanError.isValidation = true;
           cleanError.statusCode = statusCode;
+          cleanError.originalMessage = sallaMsg;
           throw cleanError;
         }
 
@@ -1264,7 +1269,7 @@ class SallaService {
         return {
           success: false,
           isValidation: true,
-          error: "الرجاء اختيار الخيارات المطلوبة",
+          error: error.originalMessage || "الرجاء اختيار الخيارات المطلوبة",
         };
       }
 

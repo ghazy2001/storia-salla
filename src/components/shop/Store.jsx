@@ -199,6 +199,19 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const handleAddToCart = async (payload) => {
     const { product, quantity, size, isClickOnly } = payload;
 
+    // 0. Proactive Stock Check
+    if (
+      product.is_available === false ||
+      (product.quantity !== undefined && product.quantity <= 0)
+    ) {
+      setToastConfig({
+        isVisible: true,
+        message: "عذراً، هذا المنتج غير متوفر حالياً (نفدت الكمية)",
+        type: "error",
+      });
+      return;
+    }
+
     // Record click for fallbacks
     lastClickTimeRef.current = Date.now();
 
@@ -230,6 +243,30 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
           pollingIntervalRef.current = null;
         }
       }
+    } else {
+      // For click proxy, we should also check if the native button is disabled after a small delay
+      // because CarouselMedia might have a disabled button
+      setTimeout(() => {
+        const sallaId = product.sallaProductId || product.id;
+        const nativeBtn = document.querySelector(
+          `salla-add-product-button[product-id="${sallaId}"]`,
+        );
+        const isBtnDisabled =
+          nativeBtn?.hasAttribute("disabled") ||
+          nativeBtn?.querySelector("button")?.disabled;
+
+        if (isBtnDisabled) {
+          setToastConfig({
+            isVisible: true,
+            message: "عذراً، هذا المنتج غير متوفر حالياً",
+            type: "error",
+          });
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+        }
+      }, 100);
     }
   };
   // --- END TURBO WATCHER ---

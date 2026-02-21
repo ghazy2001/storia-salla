@@ -218,7 +218,7 @@ const ProductDetails = () => {
           allEvents.forEach((evt) => {
             try {
               window.salla.event.off(evt, handleCartError);
-            } catch (e) {
+            } catch {
               /* skip */
             }
           });
@@ -251,6 +251,20 @@ const ProductDetails = () => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
+    // 0. Proactive Stock Check
+    // Handle "out of stock" immediately if it's already known
+    if (
+      displayProduct.is_available === false ||
+      (displayProduct.quantity !== undefined && displayProduct.quantity <= 0)
+    ) {
+      setToastConfig({
+        isVisible: true,
+        message: "عذراً، هذا المنتج غير متوفر حالياً (نفدت الكمية)",
+        type: "error",
+      });
+      return;
+    }
+
     // 1. Initial Polling & UI Setup
     lastClickTimeRef.current = Date.now();
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
@@ -278,6 +292,24 @@ const ProductDetails = () => {
       );
 
     if (nativeBtn) {
+      // Check if native button is disabled (Out of stock)
+      const isBtnDisabled =
+        nativeBtn.hasAttribute("disabled") ||
+        nativeBtn.querySelector("button")?.disabled;
+
+      if (isBtnDisabled) {
+        setToastConfig({
+          isVisible: true,
+          message: "عذراً، هذا المنتج غير متوفر حالياً",
+          type: "error",
+        });
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        return;
+      }
+
       nativeBtn.click();
       // Success/Failure is handled by the event listeners in useEffect
     } else {
