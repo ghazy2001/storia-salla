@@ -22,7 +22,7 @@ const ProductDetails = () => {
   const products = useSelector(selectProducts);
   const theme = useSelector(selectTheme);
 
-  // 1. Find the base product from Redux
+  // 1. Find the base product from Redux (includes hardcoded sizes from products.js)
   const baseProduct = useMemo(() => {
     return products.find((p) => String(p._id || p.id) === String(productId));
   }, [products, productId]);
@@ -30,339 +30,81 @@ const ProductDetails = () => {
   const [activeMedia, setActiveMedia] = useState(0);
   const [enrichedData, setEnrichedData] = useState(null);
 
-  // 2. Final Product Data (Base + Enriched)
+  // 2. Final Product Data (Base + Enriched prices from Salla API)
   const displayProduct = useMemo(() => {
     if (!baseProduct) return null;
     if (!enrichedData) return baseProduct;
-    return { ...baseProduct, ...enrichedData };
+    // Merge enriched data but keep base sizes (hardcoded) unless enriched has better ones
+    return {
+      ...baseProduct,
+      ...enrichedData,
+      sizes:
+        enrichedData.sizes && enrichedData.sizes.length > 0
+          ? enrichedData.sizes
+          : baseProduct.sizes,
+    };
   }, [baseProduct, enrichedData]);
 
-  // DEBUG: Log what's available in window.salla
-  useEffect(() => {
-    const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
-    if (!sallaId || sallaId < 100) return;
-
-    const debugSalla = () => {
-      const sm = window.salla;
-      if (!sm) {
-        console.log("[Storia DEBUG] window.salla NOT available");
-        return;
-      }
-      console.log("[Storia DEBUG] window.salla keys:", Object.keys(sm));
-      console.log(
-        "[Storia DEBUG] salla.product:",
-        sm.product ? Object.keys(sm.product) : "N/A",
-      );
-      console.log(
-        "[Storia DEBUG] salla.api:",
-        sm.api ? Object.keys(sm.api) : "N/A",
-      );
-      console.log(
-        "[Storia DEBUG] salla.event:",
-        sm.event ? Object.keys(sm.event) : "N/A",
-      );
-
-      // Check web component
-      const btn = document.querySelector(
-        `salla-add-product-button[product-id="${sallaId}"]`,
-      );
-      console.log("[Storia DEBUG] salla-add-product-button found:", !!btn);
-      if (btn) {
-        console.log("[Storia DEBUG] btn keys:", Object.keys(btn));
-        console.log("[Storia DEBUG] btn.product:", btn.product);
-        console.log(
-          "[Storia DEBUG] btn.shadowRoot:",
-          btn.shadowRoot ? "exists" : "null",
-        );
-        if (btn.shadowRoot) {
-          console.log(
-            "[Storia DEBUG] shadowRoot innerHTML:",
-            btn.shadowRoot.innerHTML.substring(0, 500),
-          );
-        }
-      }
-    };
-
-    setTimeout(debugSalla, 2000);
-    setTimeout(debugSalla, 5000);
-  }, [baseProduct?.id, baseProduct?.sallaProductId]);
-
-  // 3. Fetch product sizes from Salla web component DOM
+  // 3. Fetch price data from Salla API (prices only — sizes come from products.js)
   useEffect(() => {
     const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
     if (!sallaId || sallaId < 100) return;
 
     let isMounted = true;
-    let retryTimer = null;
 
-    // Extract sizes from the salla-add-product-button web component's internal data
-    const extractSizesFromWebComponent = () => {
-      const btn = document.querySelector(
-        `salla-add-product-button[product-id="${sallaId}"]`,
-      );
-      if (!btn) return null;
-
-      // Try reading the product property directly from the web component
-      const productData = btn.product || btn._product || btn.__product;
-      if (productData) {
-        const options =
-          productData.options || productData.details?.options || [];
-        const variants = productData.variants || productData.skus || [];
-
-        const sizeOption =
-          options.find((opt) => {
-            const name = (opt.name || opt.label || "").toLowerCase();
-            return (
-              name.includes("مقاس") ||
-              name.includes("قياس") ||
-              name.includes("size")
-            );
-          }) || (options.length > 0 ? options[0] : null);
-
-        let sizes = [];
-        if (sizeOption) {
-          const vals = sizeOption.values || sizeOption.data || [];
-          sizes = vals
-            .map((v) => String(v.name || v.label || v.value || "").trim())
-            .filter(Boolean);
-        } else if (variants.length > 0) {
-          sizes = variants
-            .map((v) => String(v.name || v.label || v.sku || "").trim())
-            .filter(Boolean);
-        }
-        if (sizes.length > 0) return sizes;
-      }
-
-      // Try reading from shadow DOM select options
-      const shadow = btn.shadowRoot;
-      if (shadow) {
-        const select = shadow.querySelector("select");
-        if (select) {
-          const sizes = Array.from(select.options)
-            .map((o) => o.text.trim())
-            .filter((t) => t && t !== "اختر" && t !== "Choose");
-          if (sizes.length > 0) return sizes;
-        }
-      }
-
-      return null;
-    };
-
-    // Try Salla SDK product.get() directly
-    const fetchViaSallaSDK = async (id) => {
-      try {
-        const sm = window.salla;
-        if (!sm) return null;
-
-        // Try salla.product.get(id)
-        const productMgr = sm.product || sm.api?.product;
-        if (productMgr?.get) {
-          const res = await productMgr.get(id).catch(() => null);
-          const raw = res?.data || (res?.id ? res : null);
-          if (raw) {
-            const options = raw.options || [];
-            const variants = raw.variants || raw.skus || [];
-            const sizeOption =
-              options.find((opt) => {
-                const name = (opt.name || opt.label || "").toLowerCase();
-                return (
-                  name.includes("مقاس") ||
-                  name.includes("قياس") ||
-                  name.includes("size")
-                );
-              }) || (options.length > 0 ? options[0] : null);
-
-            let sizes = [];
-            if (sizeOption) {
-              const vals = sizeOption.values || sizeOption.data || [];
-              sizes = vals
-                .map((v) => String(v.name || v.label || v.value || "").trim())
-                .filter(Boolean);
-            } else if (variants.length > 0) {
-              sizes = variants
-                .map((v) => String(v.name || v.label || v.sku || "").trim())
-                .filter(Boolean);
-            }
-            if (sizes.length > 0) return sizes;
-          }
-        }
-
-        // Try salla.api.get()
-        if (sm.api?.get) {
-          const res = await sm.api.get(`products/${id}`).catch(() => null);
-          const raw = res?.data || (res?.id ? res : null);
-          if (raw) {
-            const options = raw.options || [];
-            const variants = raw.variants || raw.skus || [];
-            const sizeOption =
-              options.find((opt) => {
-                const name = (opt.name || opt.label || "").toLowerCase();
-                return (
-                  name.includes("مقاس") ||
-                  name.includes("قياس") ||
-                  name.includes("size")
-                );
-              }) || (options.length > 0 ? options[0] : null);
-
-            let sizes = [];
-            if (sizeOption) {
-              const vals = sizeOption.values || sizeOption.data || [];
-              sizes = vals
-                .map((v) => String(v.name || v.label || v.value || "").trim())
-                .filter(Boolean);
-            } else if (variants.length > 0) {
-              sizes = variants
-                .map((v) => String(v.name || v.label || v.sku || "").trim())
-                .filter(Boolean);
-            }
-            if (sizes.length > 0) return sizes;
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-      return null;
-    };
-
-    const discover = async (attempt = 0) => {
-      if (!isMounted) return;
+    const discover = async () => {
       try {
         await sallaService.waitForSalla(3000);
         if (!isMounted) return;
 
-        // 1. Try web component DOM first (fastest, no API call needed)
-        let sizes = extractSizesFromWebComponent();
+        const details = await sallaService
+          .getProductDetails(sallaId)
+          .catch(() => null);
+        if (!isMounted) return;
 
-        // 2. Try Salla SDK methods
-        if (!sizes) {
-          sizes = await fetchViaSallaSDK(sallaId);
-        }
-
-        // 3. Try sallaService.getProductDetails (has its own strategies)
-        if (!sizes) {
-          const details = await sallaService
-            .getProductDetails(sallaId)
-            .catch(() => null);
-          if (details) {
-            sizes =
-              details.sizes && details.sizes.length > 0 ? details.sizes : null;
-            if (isMounted) {
-              setEnrichedData({
-                regularPrice: details.regularPrice || details.rawRegularPrice,
-                salePrice: details.salePrice || details.rawSalePrice,
-                isOnSale: details.isOnSale,
-                sizes: sizes || undefined,
-                sizeVariants:
-                  details.sizeVariants && details.sizeVariants.length > 0
-                    ? details.sizeVariants
-                    : undefined,
-              });
-              return;
-            }
-          }
-        }
-
-        if (isMounted && sizes) {
-          setEnrichedData((prev) => ({ ...(prev || {}), sizes }));
-        } else if (attempt < 5 && isMounted) {
-          // Retry — web component may not be initialized yet
-          retryTimer = setTimeout(
-            () => discover(attempt + 1),
-            1000 * (attempt + 1),
-          );
+        if (details) {
+          setEnrichedData({
+            regularPrice: details.regularPrice || details.rawRegularPrice,
+            salePrice: details.salePrice || details.rawSalePrice,
+            isOnSale: details.isOnSale,
+            // Only override sizes if Salla returned real ones
+            sizes:
+              details.sizes && details.sizes.length > 0
+                ? details.sizes
+                : undefined,
+            sizeVariants:
+              details.sizeVariants && details.sizeVariants.length > 0
+                ? details.sizeVariants
+                : undefined,
+          });
         }
       } catch (err) {
         console.warn("[Storia] Discovery Error:", err);
-        if (attempt < 5 && isMounted) {
-          retryTimer = setTimeout(
-            () => discover(attempt + 1),
-            1000 * (attempt + 1),
-          );
-        }
       }
     };
 
     discover();
     return () => {
       isMounted = false;
-      if (retryTimer) clearTimeout(retryTimer);
-    };
-  }, [baseProduct?.id, baseProduct?.sallaProductId]);
-
-  // Listen to Salla product::details event as an additional source for sizes
-  useEffect(() => {
-    const sallaId = baseProduct?.sallaProductId || baseProduct?.id;
-    if (!sallaId || sallaId < 100) return;
-
-    const handleProductDetails = (event) => {
-      const data = event?.detail || event?.data || event;
-      if (!data) return;
-      const product = data.product || data;
-      if (String(product?.id) !== String(sallaId)) return;
-
-      const options = product.options || [];
-      const variants = product.variants || product.skus || [];
-
-      const sizeOption =
-        options.find((opt) => {
-          const name = (opt.name || opt.label || "").toLowerCase();
-          return (
-            name.includes("مقاس") ||
-            name.includes("قياس") ||
-            name.includes("size")
-          );
-        }) || (options.length > 0 ? options[0] : null);
-
-      let sizes = [];
-      if (sizeOption) {
-        const vals = sizeOption.values || sizeOption.data || [];
-        sizes = vals
-          .map((v) => String(v.name || v.label || v.value || "").trim())
-          .filter(Boolean);
-      } else if (variants.length > 0) {
-        sizes = variants
-          .map((v) => String(v.name || v.label || v.sku || "").trim())
-          .filter(Boolean);
-      }
-
-      if (sizes.length > 0) {
-        setEnrichedData((prev) => ({ ...(prev || {}), sizes }));
-      }
-    };
-
-    document.addEventListener("product::details", handleProductDetails);
-    if (window.salla?.event?.on) {
-      window.salla.event.on("product::details", handleProductDetails);
-    }
-
-    return () => {
-      document.removeEventListener("product::details", handleProductDetails);
-      if (window.salla?.event?.off) {
-        try {
-          window.salla.event.off("product::details", handleProductDetails);
-        } catch {
-          /* ignore */
-        }
-      }
     };
   }, [baseProduct?.id, baseProduct?.sallaProductId]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productId]);
+
   const [toastConfig, setToastConfig] = useState({
     isVisible: false,
     message: "",
     type: "success",
   });
 
-  // 1.5 Cart Count Watcher (Triple Redundancy) - Hardened V5
+  // Cart Count Watcher
   const cartCount = useSelector((state) => state.cart.count);
   const prevCountRef = useRef(cartCount);
   const lastClickTimeRef = useRef(0);
   const pollingIntervalRef = useRef(null);
 
-  // Watch for count increases as THE primary reliable success trigger
   useEffect(() => {
     if (cartCount > prevCountRef.current) {
       const timeSinceClick = Date.now() - lastClickTimeRef.current;
@@ -381,7 +123,7 @@ const ProductDetails = () => {
     prevCountRef.current = cartCount;
   }, [cartCount]);
 
-  // 4. Cart Logic - THE PURE NATIVE PROXY (Hardening V5)
+  // Cart Logic - Native Salla Proxy
   useEffect(() => {
     let isMounted = true;
     let retryCount = 0;
@@ -391,7 +133,6 @@ const ProductDetails = () => {
       if (!isMounted) return;
       console.log("[Storia] Cart Event Success Sync:", event?.type || event);
       dispatch(fetchCartFromSalla());
-      // SUCCESS Toast is handled by the count watcher above
     };
 
     const handleCartError = (event) => {
@@ -414,12 +155,9 @@ const ProductDetails = () => {
     const attachListeners = () => {
       if (!isMounted) return false;
 
-      // SUCCESS listeners (Sync only)
       document.addEventListener("salla-cart-updated", handleCartSync);
       document.addEventListener("cart::add-item", handleCartSync);
       document.addEventListener("cart::added", handleCartSync);
-
-      // FAILURE listeners
       document.addEventListener("cart::add-item-failed", handleCartError);
       document.addEventListener("cart::not-available", handleCartError);
 
@@ -475,32 +213,22 @@ const ProductDetails = () => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
-    // 1. Record click for fallbacks
     lastClickTimeRef.current = Date.now();
 
-    // 2. ACTIVE SYNC: Start polling to force Redux update even if events fail
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
 
-    // Immediate first poll
     dispatch(fetchCartFromSalla());
 
     let pollCount = 0;
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
-      console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
-      // Poll every 250ms for 5s (total 20 attempts)
       if (pollCount >= 20) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
     }, 250);
 
-    console.log("[Storia] V23: Turbo Polling & Event Trap for ID:", sallaId);
-
-    // Trigger the native Salla button.
-    // This will open Salla's selection popup if sizes are needed,
-    // or add directly if not. This is 100% reliable.
     const nativeBtn =
       document.querySelector(`[product-id="${sallaId}"] button`) ||
       document.querySelector(
@@ -509,8 +237,6 @@ const ProductDetails = () => {
 
     if (nativeBtn) {
       nativeBtn.click();
-      // Toast and refresh are now handled by the event listener above
-      // to ensure they only happen on SUCCESSFUL addition.
     } else {
       console.error("[Storia] Native Salla button not found!");
       alert("عذراً، نظام السلة غير متوفر حالياً.");

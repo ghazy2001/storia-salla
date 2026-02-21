@@ -7,6 +7,7 @@ export const products = [
     description: "",
     category: "cloche",
     sallaProductId: 205379656,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p01/p01_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p01/p01_1.jpg" },
@@ -24,6 +25,7 @@ export const products = [
     description: "",
     category: "cloche",
     sallaProductId: 421404226,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p02/p02_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p02/p02_1.jpg" },
@@ -40,6 +42,7 @@ export const products = [
     description: "",
     category: "bisht",
     sallaProductId: 596619591,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p03/p03_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p03/p03_1.jpg" },
@@ -59,6 +62,7 @@ export const products = [
     description: "",
     category: "classic",
     sallaProductId: 130315077,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p04/p04_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p04/p04_1.jpg" },
@@ -77,6 +81,7 @@ export const products = [
     description: "",
     category: "official",
     sallaProductId: 818746647,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p05/p05_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p05/p05_1.jpg" },
@@ -93,6 +98,7 @@ export const products = [
     description: "",
     category: "practical",
     sallaProductId: 1252773325,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p06/p06_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p06/p06_1.jpg" },
@@ -109,6 +115,7 @@ export const products = [
     description: "",
     category: "luxury",
     sallaProductId: 810644068,
+    sizes: ["52", "54", "56", "58", "60"],
     image: "/assets/products/p07/p07_1.jpg",
     media: [
       { type: "image", src: "/assets/products/p07/p07_1.jpg" },
