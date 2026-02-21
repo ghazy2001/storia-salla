@@ -175,8 +175,9 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const handleAddToCart = async (payload) => {
     const { product, quantity, size, isClickOnly } = payload;
 
-    // Record click for fallbacks
+    // Record click time and cart count at click time
     lastClickTimeRef.current = Date.now();
+    const cartCountAtClick = prevCountRef.current;
 
     // Start Turbo Polling
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
@@ -185,17 +186,32 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
       dispatch(fetchCartFromSalla());
-      // Increase limit to 30 attempts (7.5s) to allow for Salla popups/delays
       if (pollCount >= 30) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
     }, 250);
 
+    // Timeout fallback: if cart count hasn't changed after 5s, show out-of-stock toast
+    setTimeout(() => {
+      const timeSinceClick = Date.now() - lastClickTimeRef.current;
+      // Only show if this was the last click (within 6s) and cart didn't update
+      if (timeSinceClick < 6000 && prevCountRef.current === cartCountAtClick) {
+        setToastConfig({
+          isVisible: true,
+          message: "عذراً، هذا المنتج غير متوفر حالياً أو نفدت الكمية",
+          type: "error",
+        });
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+    }, 5000);
+
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
       await addToCartWithSync(product, quantity, size);
-      // Waiter will handle toast
     }
   };
   // --- END TURBO WATCHER ---

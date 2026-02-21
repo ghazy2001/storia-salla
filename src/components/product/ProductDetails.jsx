@@ -233,6 +233,7 @@ const ProductDetails = () => {
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
     lastClickTimeRef.current = Date.now();
+    const cartCountAtClick = prevCountRef.current;
 
     if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
 
@@ -247,6 +248,22 @@ const ProductDetails = () => {
         pollingIntervalRef.current = null;
       }
     }, 250);
+
+    // Timeout fallback: if cart count hasn't changed after 5s, show out-of-stock toast
+    setTimeout(() => {
+      const timeSinceClick = Date.now() - lastClickTimeRef.current;
+      if (timeSinceClick < 6000 && prevCountRef.current === cartCountAtClick) {
+        setToastConfig({
+          isVisible: true,
+          message: "عذراً، هذا المنتج غير متوفر حالياً أو نفدت الكمية",
+          type: "error",
+        });
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+    }, 5000);
 
     const nativeBtn =
       document.querySelector(`[product-id="${sallaId}"] button`) ||
