@@ -111,8 +111,7 @@ const ProductDetails = () => {
     const handleCartSuccess = (event) => {
       if (!isMounted) return;
       console.log("[Storia] Cart Event Triggered:", event?.type || event);
-      // Trigger toast directly from event as well
-      setShowToast(true);
+      // Only sync, toast is handled by count watcher
       dispatch(fetchCartFromSalla());
     };
 

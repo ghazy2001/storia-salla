@@ -165,6 +165,7 @@ const BestSellers = () => {
                     {/* Card Container */}
                     <div
                       className={`rounded-[2rem] p-2 transition-all duration-300 hover:shadow-xl ${getCardClass(theme)}`}
+                      dir="rtl"
                     >
                       {/* Image Area */}
                       <div
@@ -202,8 +203,9 @@ const BestSellers = () => {
             {/* Navigation & Info */}
             <div
               className={`flex justify-between items-center px-8 mt-6 gap-12 ${textColorClass}`}
+              dir="rtl"
             >
-              <div className="w-full text-right">
+              <div className="text-right">
                 <div className="flex items-center gap-3 mb-2 flex-wrap justify-end">
                   {(() => {
                     const syncedProduct = products.find(

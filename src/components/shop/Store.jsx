@@ -52,9 +52,10 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     let isSallaEventAttached = false;
 
     const handleCartSuccess = (event) => {
-      console.log("[Store] Salla Cart Success Trap!", event?.detail);
+      console.log("[Store] Salla Cart Event Trap!", event?.detail);
       if (isMounted) {
-        setShowToast(true);
+        // Only trigger sync, NOT toast.
+        // Toast is handled by the cartCount watcher for true success.
         dispatch(fetchCartFromSalla());
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
