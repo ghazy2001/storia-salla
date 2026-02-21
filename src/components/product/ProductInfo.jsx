@@ -78,7 +78,7 @@ const ProductInfo = ({ product, handleAddToCart }) => {
                 </span>
               )}
             </p>
-            <div className="flex flex-wrap gap-3 justify-end">
+            <div className="flex flex-wrap gap-3 justify-start flex-row-reverse">
               {sizes.map((size) => (
                 <button
                   key={size}
