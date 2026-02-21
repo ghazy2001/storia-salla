@@ -39,7 +39,7 @@ const ProductInfo = ({ product, handleAddToCart }) => {
   };
 
   return (
-    <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
+    <div className="flex flex-col justify-center text-right lg:order-1">
       <h1 className="text-4xl md:text-5xl font-sans font-black mb-8 text-brand-charcoal w-full">
         {product.name}
       </h1>
@@ -68,8 +68,8 @@ const ProductInfo = ({ product, handleAddToCart }) => {
 
       {/* Size Selector — uses real Salla sizes */}
       {hasSizes && (
-        <div className="w-full mb-6">
-          <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right">
+        <div className="w-full mb-6 flex flex-col items-end">
+          <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right w-full">
             المقاس
             {selectedSize && (
               <span className="mr-2 text-brand-gold font-black">
@@ -77,7 +77,7 @@ const ProductInfo = ({ product, handleAddToCart }) => {
               </span>
             )}
           </p>
-          <div className="flex flex-wrap gap-3 justify-end" dir="rtl">
+          <div className="flex flex-wrap gap-3 justify-end w-full">
             {sizes.map((size) => (
               <button
                 key={size}
