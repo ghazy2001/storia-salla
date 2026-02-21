@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 
 /**
- * ProductInfo Component - V20.1 Visual Refinement
- * Renders product title, price, and add to cart section.
- * Streamlined to remove redundant currency labels and info boxes.
+ * ProductInfo Component - V20.2 with Size Selector
+ * Renders product title, price, size options, and add to cart section.
  */
 const ProductInfo = ({ product, handleAddToCart }) => {
+  const [selectedSize, setSelectedSize] = useState(null);
+
   // Ultra-safe parsing for numeric calculation to avoid NaN
   const safeParse = (val) => {
     if (!val) return 0;
@@ -32,6 +33,12 @@ const ProductInfo = ({ product, handleAddToCart }) => {
     regPrice > curPrice && regPrice > 0
       ? Math.round(((regPrice - curPrice) / regPrice) * 100)
       : 0;
+
+  const hasSizes = product.sizes && product.sizes.length > 0;
+
+  const onAddToCart = () => {
+    handleAddToCart(selectedSize);
+  };
 
   return (
     <div className="flex flex-col justify-center lg:items-start text-right lg:order-1">
@@ -61,9 +68,42 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         {product.description}
       </p>
 
+      {/* Size Selector */}
+      {hasSizes && (
+        <div className="w-full max-w-md ml-auto lg:ml-auto mb-6">
+          <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right">
+            المقاس
+            {selectedSize && (
+              <span className="mr-2 text-brand-gold font-black">
+                : {selectedSize}
+              </span>
+            )}
+          </p>
+          <div className="flex flex-wrap gap-3 justify-end">
+            {product.sizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`
+                  min-w-[3rem] h-12 px-4 rounded-xl border-2 font-sans font-bold text-sm
+                  transition-all duration-200
+                  ${
+                    selectedSize === size
+                      ? "border-brand-gold bg-brand-gold text-white shadow-md scale-105"
+                      : "border-brand-charcoal/20 bg-white text-brand-charcoal hover:border-brand-gold hover:text-brand-gold"
+                  }
+                `}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
         <button
-          onClick={handleAddToCart}
+          onClick={onAddToCart}
           className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
                      bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
         >
