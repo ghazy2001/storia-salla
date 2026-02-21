@@ -29,6 +29,7 @@ const ProductDetails = () => {
 
   const [activeMedia, setActiveMedia] = useState(0);
   const [enrichedData, setEnrichedData] = useState(null);
+  const [isProductDisabled, setIsProductDisabled] = useState(false);
 
   // 2. Final Product Data (Base + Enriched prices from Salla API)
   const displayProduct = useMemo(() => {
@@ -258,6 +259,7 @@ const ProductDetails = () => {
           message: "عذراً، هذا المنتج غير متوفر حالياً أو نفدت الكمية",
           type: "error",
         });
+        setIsProductDisabled(true);
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -330,6 +332,7 @@ const ProductDetails = () => {
           product={displayProduct}
           handleAddToCart={handleAddToCart}
           theme={theme}
+          disabled={isProductDisabled}
         />
       </div>
     </div>

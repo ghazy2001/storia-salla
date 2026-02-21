@@ -4,7 +4,7 @@ import React, { useState } from "react";
  * ProductInfo Component - V20.3 with Salla Size Selector
  * Renders product title, price, size options (from Salla API), and add to cart section.
  */
-const ProductInfo = ({ product, handleAddToCart }) => {
+const ProductInfo = ({ product, handleAddToCart, disabled }) => {
   const [selectedSize, setSelectedSize] = useState(null);
 
   // Ultra-safe parsing for numeric calculation to avoid NaN
@@ -102,10 +102,14 @@ const ProductInfo = ({ product, handleAddToCart }) => {
 
         <button
           onClick={onAddToCart}
-          className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
-                     bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+          disabled={disabled}
+          className={`w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg ${
+            disabled
+              ? "bg-gray-300 text-gray-500 cursor-not-allowed hover:scale-100"
+              : "bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+          }`}
         >
-          إضافة للسلة
+          {disabled ? "نفذت الكمية" : "إضافة للسلة"}
         </button>
       </div>
 

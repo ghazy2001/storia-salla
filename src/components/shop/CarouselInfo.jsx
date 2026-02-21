@@ -4,7 +4,7 @@ import React, { useState } from "react";
  * CarouselInfo Component - V20.3 with Size Selector
  * Store listing card: title, price, sizes, and add to cart.
  */
-const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
+const CarouselInfo = ({ product, onSelect, onAddToCart, disabled }) => {
   const [selectedSize, setSelectedSize] = useState(null);
 
   // Ultra-safe parsing for numeric calculation to avoid NaN
@@ -128,9 +128,14 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
 
         <button
           onClick={handleNativeAddToCart}
-          className="px-8 py-3 border border-brand-charcoal text-brand-charcoal hover:bg-brand-gold hover:border-brand-gold hover:text-white transition-all duration-300 text-lg font-medium rounded-sm"
+          disabled={disabled}
+          className={`px-8 py-3 border text-lg font-medium rounded-sm transition-all duration-300 ${
+            disabled
+              ? "border-gray-300 text-gray-300 cursor-not-allowed bg-gray-100"
+              : "border-brand-charcoal text-brand-charcoal hover:bg-brand-gold hover:border-brand-gold hover:text-white"
+          }`}
         >
-          إضافة للسلة
+          {disabled ? "نفذت الكمية" : "إضافة للسلة"}
         </button>
       </div>
 

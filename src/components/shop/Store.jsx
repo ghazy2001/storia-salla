@@ -24,6 +24,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     message: "",
     type: "success",
   });
+  const [disabledProducts, setDisabledProducts] = useState({});
   const { addToCart: addToCartWithSync } = useAddToCart();
 
   // --- TURBO WATCHER V24 (STORE SYNC + ERROR TRAPS) ---
@@ -201,6 +202,11 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
           message: "عذراً، هذا المنتج غير متوفر حالياً أو نفدت الكمية",
           type: "error",
         });
+        // Disable the button for this product
+        setDisabledProducts((prev) => ({
+          ...prev,
+          [product.id]: true,
+        }));
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -301,6 +307,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
             product={product}
             onSelect={onProductSelect}
             onAddToCart={handleAddToCart}
+            disabled={disabledProducts[product.id]}
           />
         ))}
       </div>

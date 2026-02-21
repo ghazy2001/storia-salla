@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import CarouselMedia from "./CarouselMedia";
 import CarouselInfo from "./CarouselInfo";
 
-const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
+const ProductCarousel = ({ product, onSelect, onAddToCart, disabled }) => {
   const [currentIndex, setCurrentIndex] = useState(() => {
     const firstImageIndex = product.media.findIndex((m) => m.type === "image");
     return firstImageIndex >= 0 ? firstImageIndex : 0;
@@ -14,6 +14,7 @@ const ProductCarousel = ({ product, onSelect, onAddToCart }) => {
         product={product}
         onSelect={onSelect}
         onAddToCart={onAddToCart}
+        disabled={disabled}
       />
       <CarouselMedia
         product={product}
