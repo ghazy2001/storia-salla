@@ -871,7 +871,10 @@ class SallaService {
             name.includes("مقاس") ||
             name.includes("قياس") ||
             name.includes("القياس") ||
-            name.includes("اللون")
+            name.includes("اللون") ||
+            name.includes("الخيار") ||
+            name.includes("اختيار") ||
+            name.includes("خيارات")
           );
         });
 

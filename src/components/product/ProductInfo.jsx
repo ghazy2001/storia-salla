@@ -84,22 +84,25 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         </div>
       )}
 
-      {/* Total Out of Stock Banner */}
-      {(product.isOutOfStock || product.quantity === 0) && (
-        <div className="mb-8 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm font-bold text-center font-sans">
-          عذراً، هذا المنتج غير متوفر حالياً
-        </div>
-      )}
+      {/* Total Out of Stock Banner - Removed as per user screenshot feedback for cleaner UI */}
 
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
-        <button
-          onClick={handleAddToCart}
-          className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
-                     bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-        >
-          إضافة للسلة
-        </button>
-
+        {product.isOutOfStock || product.quantity === 0 ? (
+          <button
+            disabled
+            className="w-full py-5 rounded-[2rem] font-sans font-black text-lg bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+          >
+            الصنف منتهى
+          </button>
+        ) : (
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
+                       bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            إضافة للسلة
+          </button>
+        )}
         {/* Info boxes removed as per user request */}
       </div>
 

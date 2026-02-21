@@ -232,12 +232,12 @@ const ProductDetails = () => {
       console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
 
-      // Poll every 250ms for 4s (total 16 attempts) for faster feedback
-      if (pollCount >= 16) {
+      // Poll every 250ms for 2s (total 8 attempts) for near-instant feedback
+      if (pollCount >= 8) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
 
-        // TIMEOUT FALLBACK: If we reached 16 polls without success/error event, show generic error
+        // TIMEOUT FALLBACK
         setToastConfig({
           isVisible: true,
           message: "الصنف منتهى",

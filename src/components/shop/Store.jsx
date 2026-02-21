@@ -161,12 +161,12 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
       dispatch(fetchCartFromSalla());
-      // Poll every 250ms for 4s (total 16 attempts) for faster feedback
-      if (pollCount >= 16) {
+      // Poll every 250ms for 2s (total 8 attempts) for near-instant feedback
+      if (pollCount >= 8) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
 
-        // TIMEOUT FALLBACK: If we polled for 4s without confirmed success or Salla error
+        // TIMEOUT FALLBACK
         setToastConfig({
           isVisible: true,
           message: "الصنف منتهى",
