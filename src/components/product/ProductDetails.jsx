@@ -28,7 +28,6 @@ const ProductDetails = () => {
   }, [products, productId]);
 
   const [activeMedia, setActiveMedia] = useState(0);
-  const [showToast, setShowToast] = useState(false);
   const [enrichedData, setEnrichedData] = useState(null);
 
   // 2. Final Product Data (Base + Enriched)
@@ -77,22 +76,28 @@ const ProductDetails = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productId]);
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: "",
+    type: "success",
+  });
 
-  // 1.5 Cart Count Watcher (Triple Redundancy) - Hardened V4
+  // 1.5 Cart Count Watcher (Triple Redundancy) - Hardened V5
   const cartCount = useSelector((state) => state.cart.count);
   const prevCountRef = useRef(cartCount);
   const lastClickTimeRef = useRef(0);
   const pollingIntervalRef = useRef(null);
 
-  // Watch for count increases as the PRIMARY reliable trigger
+  // Watch for count increases as THE primary reliable success trigger
   useEffect(() => {
     if (cartCount > prevCountRef.current) {
       const timeSinceClick = Date.now() - lastClickTimeRef.current;
-      // If count increased shortly after a click, show toast
       if (timeSinceClick < 15000) {
-        console.log("[Storia] Cart count increased, showing toast.");
-        setShowToast(true);
-        // Stop polling once we find success
+        setToastConfig({
+          isVisible: true,
+          message: "تمت إضافة المنتج إلى السلة بنجاح",
+          type: "success",
+        });
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -102,33 +107,53 @@ const ProductDetails = () => {
     prevCountRef.current = cartCount;
   }, [cartCount]);
 
-  // 4. Cart Logic - THE PURE NATIVE PROXY (Hardening V4)
+  // 4. Cart Logic - THE PURE NATIVE PROXY (Hardening V5)
   useEffect(() => {
     let isMounted = true;
     let retryCount = 0;
     let isSallaEventAttached = false;
 
-    const handleCartSuccess = (event) => {
+    const handleCartSync = (event) => {
       if (!isMounted) return;
-      console.log("[Storia] Cart Event Triggered:", event?.type || event);
-      // Only sync, toast is handled by count watcher
+      console.log("[Storia] Cart Event Success Sync:", event?.type || event);
       dispatch(fetchCartFromSalla());
+      // SUCCESS Toast is handled by the count watcher above
+    };
+
+    const handleCartError = (event) => {
+      console.error("[Storia] Cart Error Trap!", event?.detail);
+      if (isMounted) {
+        const errorMsg =
+          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
+        setToastConfig({
+          isVisible: true,
+          message: errorMsg,
+          type: "error",
+        });
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
     };
 
     const attachListeners = () => {
       if (!isMounted) return false;
 
-      // A. Document Level (Catch-all)
-      document.addEventListener("salla-cart-updated", handleCartSuccess);
-      document.addEventListener("cart::add-item", handleCartSuccess);
-      document.addEventListener("cart::added", handleCartSuccess);
-      document.addEventListener("cart::updated", handleCartSuccess);
+      // SUCCESS listeners (Sync only)
+      document.addEventListener("salla-cart-updated", handleCartSync);
+      document.addEventListener("cart::add-item", handleCartSync);
+      document.addEventListener("cart::added", handleCartSync);
 
-      // B. Salla SDK Level
+      // FAILURE listeners
+      document.addEventListener("cart::add-item-failed", handleCartError);
+      document.addEventListener("cart::not-available", handleCartError);
+
       if (window.salla && window.salla.event) {
-        window.salla.event.on("cart::add-item", handleCartSuccess);
-        window.salla.event.on("cart::added", handleCartSuccess);
-        window.salla.event.on("cart::updated", handleCartSuccess);
+        window.salla.event.on("cart::add-item", handleCartSync);
+        window.salla.event.on("cart::added", handleCartSync);
+        window.salla.event.on("cart::add-item-failed", handleCartError);
+        window.salla.event.on("cart::not-available", handleCartError);
         isSallaEventAttached = true;
         return true;
       }
@@ -136,23 +161,24 @@ const ProductDetails = () => {
     };
 
     const cleanup = () => {
-      document.removeEventListener("salla-cart-updated", handleCartSuccess);
-      document.removeEventListener("cart::add-item", handleCartSuccess);
-      document.removeEventListener("cart::added", handleCartSuccess);
-      document.removeEventListener("cart::updated", handleCartSuccess);
+      document.removeEventListener("salla-cart-updated", handleCartSync);
+      document.removeEventListener("cart::add-item", handleCartSync);
+      document.removeEventListener("cart::added", handleCartSync);
+      document.removeEventListener("cart::add-item-failed", handleCartError);
+      document.removeEventListener("cart::not-available", handleCartError);
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
-          window.salla.event.off("cart::add-item", handleCartSuccess);
-          window.salla.event.off("cart::added", handleCartSuccess);
-          window.salla.event.off("cart::updated", handleCartSuccess);
+          window.salla.event.off("cart::add-item", handleCartSync);
+          window.salla.event.off("cart::added", handleCartSync);
+          window.salla.event.off("cart::add-item-failed", handleCartError);
+          window.salla.event.off("cart::not-available", handleCartError);
         } catch {
           /* ignore */
         }
       }
     };
 
-    // Try immediately
     if (!attachListeners()) {
       const interval = setInterval(() => {
         retryCount++;
@@ -244,9 +270,12 @@ const ProductDetails = () => {
   return (
     <div className="min-h-screen bg-brand-offwhite text-brand-charcoal pt-24 pb-12">
       <Toast
-        message="تمت إضافة المنتج إلى السلة بنجاح"
-        isVisible={showToast}
-        onClose={() => setShowToast(false)}
+        message={toastConfig.message}
+        isVisible={toastConfig.isVisible}
+        type={toastConfig.type}
+        onClose={() =>
+          setToastConfig((prev) => ({ ...prev, isVisible: false }))
+        }
         theme={theme}
         action={{
           label: "عرض السلة >>",

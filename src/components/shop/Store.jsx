@@ -19,23 +19,30 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
   const categories = useSelector(selectCategories);
   const [filter, setFilter] = useState(initialFilter);
   const [visibleProducts, setVisibleProducts] = useState([]); // Initialize with empty array
-  const [showToast, setShowToast] = useState(false);
+  const [toastConfig, setToastConfig] = useState({
+    isVisible: false,
+    message: "",
+    type: "success",
+  });
   const { addToCart: addToCartWithSync } = useAddToCart();
 
-  // --- TURBO WATCHER V23 (STORE SYNC) ---
+  // --- TURBO WATCHER V24 (STORE SYNC + ERROR TRAPS) ---
   const dispatch = useDispatch();
   const cartCount = useSelector((state) => state.cart.count);
   const prevCountRef = useRef(cartCount);
   const lastClickTimeRef = useRef(0);
   const pollingIntervalRef = useRef(null);
 
-  // 1. WATCHER: Count monitoring as baseline
+  // 1. WATCHER: Count monitoring for confirmed success
   useEffect(() => {
     if (cartCount > prevCountRef.current) {
       const timeSinceClick = Date.now() - lastClickTimeRef.current;
       if (timeSinceClick < 15000) {
-        console.log("[Store] Cart count increased, showing toast.");
-        setShowToast(true);
+        setToastConfig({
+          isVisible: true,
+          message: "تمت إضافة المنتج إلى السلة بنجاح",
+          type: "success",
+        });
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -45,18 +52,30 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     prevCountRef.current = cartCount;
   }, [cartCount]);
 
-  // 2. EVENT TRAPS: Catch Salla events
+  // 2. EVENT TRAPS: Catch Salla events (Success & Failure)
   useEffect(() => {
     let isMounted = true;
     let retryCount = 0;
     let isSallaEventAttached = false;
 
-    const handleCartSuccess = (event) => {
-      console.log("[Store] Salla Cart Event Trap!", event?.detail);
+    const handleCartSync = (event) => {
+      console.log("[Store] Salla Cart Sync Trap!", event?.detail);
       if (isMounted) {
-        // Only trigger sync, NOT toast.
-        // Toast is handled by the cartCount watcher for true success.
         dispatch(fetchCartFromSalla());
+        // Toast is handled by the cartCount watcher for true success validation
+      }
+    };
+
+    const handleCartError = (event) => {
+      console.error("[Store] Salla Cart Error Trap!", event?.detail);
+      if (isMounted) {
+        const errorMsg =
+          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
+        setToastConfig({
+          isVisible: true,
+          message: errorMsg,
+          type: "error",
+        });
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
@@ -66,15 +85,21 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
 
     const attachListeners = () => {
       if (!isMounted) return false;
-      document.addEventListener("salla-cart-updated", handleCartSuccess);
-      document.addEventListener("cart::add-item", handleCartSuccess);
-      document.addEventListener("cart::added", handleCartSuccess);
-      document.addEventListener("cart::updated", handleCartSuccess);
+
+      // SUCCESS TRAPS (Sync only)
+      document.addEventListener("salla-cart-updated", handleCartSync);
+      document.addEventListener("cart::add-item", handleCartSync);
+      document.addEventListener("cart::added", handleCartSync);
+
+      // FAILURE TRAPS
+      document.addEventListener("cart::add-item-failed", handleCartError);
+      document.addEventListener("cart::not-available", handleCartError);
 
       if (window.salla && window.salla.event) {
-        window.salla.event.on("cart::add-item", handleCartSuccess);
-        window.salla.event.on("cart::added", handleCartSuccess);
-        window.salla.event.on("cart::updated", handleCartSuccess);
+        window.salla.event.on("cart::add-item", handleCartSync);
+        window.salla.event.on("cart::added", handleCartSync);
+        window.salla.event.on("cart::add-item-failed", handleCartError);
+        window.salla.event.on("cart::not-available", handleCartError);
         isSallaEventAttached = true;
         return true;
       }
@@ -82,16 +107,18 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     };
 
     const cleanup = () => {
-      document.removeEventListener("salla-cart-updated", handleCartSuccess);
-      document.removeEventListener("cart::add-item", handleCartSuccess);
-      document.removeEventListener("cart::added", handleCartSuccess);
-      document.removeEventListener("cart::updated", handleCartSuccess);
+      document.removeEventListener("salla-cart-updated", handleCartSync);
+      document.removeEventListener("cart::add-item", handleCartSync);
+      document.removeEventListener("cart::added", handleCartSync);
+      document.removeEventListener("cart::add-item-failed", handleCartError);
+      document.removeEventListener("cart::not-available", handleCartError);
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
-          window.salla.event.off("cart::add-item", handleCartSuccess);
-          window.salla.event.off("cart::added", handleCartSuccess);
-          window.salla.event.off("cart::updated", handleCartSuccess);
+          window.salla.event.off("cart::add-item", handleCartSync);
+          window.salla.event.off("cart::added", handleCartSync);
+          window.salla.event.off("cart::add-item-failed", handleCartError);
+          window.salla.event.off("cart::not-available", handleCartError);
         } catch {
           /* ignore */
         }
@@ -134,7 +161,8 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     pollingIntervalRef.current = setInterval(() => {
       pollCount++;
       dispatch(fetchCartFromSalla());
-      if (pollCount >= 20) {
+      // Increase limit to 30 attempts (7.5s) to allow for Salla popups/delays
+      if (pollCount >= 30) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
       }
@@ -143,7 +171,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
       await addToCartWithSync(product, quantity, size);
-      setShowToast(true);
+      // Waiter will handle toast
     }
   };
   // --- END TURBO WATCHER ---
@@ -215,12 +243,14 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
         ))}
       </div>
 
-      {/* Product Carousels List */}
       <div ref={containerRef} className="flex flex-col gap-12">
         <Toast
-          message="تمت إضافة المنتج إلى السلة بنجاح"
-          isVisible={showToast}
-          onClose={() => setShowToast(false)}
+          message={toastConfig.message}
+          isVisible={toastConfig.isVisible}
+          type={toastConfig.type}
+          onClose={() =>
+            setToastConfig((prev) => ({ ...prev, isVisible: false }))
+          }
           action={{
             label: "عرض السلة >>",
             onClick: () => (window.location.href = "/cart"),
