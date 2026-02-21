@@ -57,53 +57,18 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         )}
       </div>
 
-      <p className="leading-loose text-brand-charcoal/80 mb-8 max-w-lg ml-auto lg:ml-auto text-base">
+      <p className="leading-loose text-brand-charcoal/80 mb-12 max-w-lg ml-auto lg:ml-auto text-base">
         {product.description}
       </p>
 
-      {/* Available Sizes - Read Only Display as per User Request */}
-      {product.sizeVariants && product.sizeVariants.length > 0 && (
-        <div className="mb-10 w-full">
-          <h3 className="text-sm font-bold text-brand-charcoal/60 mb-4 font-sans">
-            المقاسات المتوفرة:
-          </h3>
-          <div className="flex flex-wrap gap-2 justify-start flex-row-reverse">
-            {product.sizeVariants.map((variant, idx) => {
-              const isOut = variant.isOutOfStock || variant.stock === 0;
-              return (
-                <div
-                  key={idx}
-                  className={`px-4 py-2 rounded-xl border text-sm font-sans font-bold transition-all
-                    ${isOut ? "border-gray-200 text-gray-300 line-through bg-gray-50/50" : "border-brand-gold/20 text-brand-charcoal bg-white shadow-sm"}`}
-                >
-                  {variant.size}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Total Out of Stock Banner - Removed as per user screenshot feedback for cleaner UI */}
-
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
-        {product.isOutOfStock || product.quantity === 0 ? (
-          <button
-            disabled
-            className="w-full py-5 rounded-[2rem] font-sans font-black text-lg bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-          >
-            الصنف منتهى
-          </button>
-        ) : (
-          <button
-            onClick={handleAddToCart}
-            className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
-                       bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            إضافة للسلة
-          </button>
-        )}
-        {/* Info boxes removed as per user request */}
+        <button
+          onClick={handleAddToCart}
+          className="w-full py-5 rounded-[2rem] font-sans font-black text-lg transition-all shadow-lg 
+                     bg-brand-gold text-white hover:opacity-90 hover:scale-[1.02] active:scale-[0.98]"
+        >
+          إضافة للسلة
+        </button>
       </div>
 
       {/* Salla Native Button Proxy - THE ENGINE */}

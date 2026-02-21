@@ -211,7 +211,7 @@ const ProductDetails = () => {
     if (isOut) {
       setToastConfig({
         isVisible: true,
-        message: "الصنف منتهى",
+        message: "عذراً، هذا المنتج غير متوفر حالياً",
         type: "error",
       });
       return;

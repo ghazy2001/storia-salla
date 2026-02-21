@@ -169,7 +169,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
         // TIMEOUT FALLBACK
         setToastConfig({
           isVisible: true,
-          message: "الصنف منتهى",
+          message: "عذراً، هذا المنتج غير متوفر حالياً",
           type: "error",
         });
       }
@@ -184,7 +184,7 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
       if (isOut) {
         setToastConfig({
           isVisible: true,
-          message: "الصنف منتهى",
+          message: "عذراً، هذا المنتج غير متوفر حالياً",
           type: "error",
         });
         clearInterval(pollingIntervalRef.current);
