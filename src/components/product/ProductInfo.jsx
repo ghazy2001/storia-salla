@@ -57,9 +57,39 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         )}
       </div>
 
-      <p className="leading-loose text-brand-charcoal/80 mb-12 max-w-lg ml-auto lg:ml-auto text-base">
+      <p className="leading-loose text-brand-charcoal/80 mb-8 max-w-lg ml-auto lg:ml-auto text-base">
         {product.description}
       </p>
+
+      {/* Available Sizes - Read Only Display as per User Request */}
+      {product.sizeVariants && product.sizeVariants.length > 0 && (
+        <div className="mb-10 w-full">
+          <h3 className="text-sm font-bold text-brand-charcoal/60 mb-4 font-sans">
+            المقاسات المتوفرة:
+          </h3>
+          <div className="flex flex-wrap gap-2 justify-start flex-row-reverse">
+            {product.sizeVariants.map((variant, idx) => {
+              const isOut = variant.isOutOfStock || variant.stock === 0;
+              return (
+                <div
+                  key={idx}
+                  className={`px-4 py-2 rounded-xl border text-sm font-sans font-bold transition-all
+                    ${isOut ? "border-gray-200 text-gray-300 line-through bg-gray-50/50" : "border-brand-gold/20 text-brand-charcoal bg-white shadow-sm"}`}
+                >
+                  {variant.size}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Total Out of Stock Banner */}
+      {(product.isOutOfStock || product.quantity === 0) && (
+        <div className="mb-8 p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm font-bold text-center font-sans">
+          عذراً، هذا المنتج غير متوفر حالياً
+        </div>
+      )}
 
       <div className="flex flex-col gap-4 w-full max-w-md ml-auto lg:ml-auto">
         <button

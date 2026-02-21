@@ -201,6 +201,20 @@ const ProductDetails = () => {
     if (!displayProduct) return;
     const sallaId = displayProduct.sallaProductId || displayProduct.id;
 
+    // 0. Pre-emptive Out-of-Stock Check
+    const isOut =
+      displayProduct.isOutOfStock ||
+      (displayProduct.quantity !== undefined && displayProduct.quantity === 0);
+
+    if (isOut) {
+      setToastConfig({
+        isVisible: true,
+        message: "عذراً، هذا المنتج غير متوفر حالياً",
+        type: "error",
+      });
+      return;
+    }
+
     // 1. Record click for fallbacks
     lastClickTimeRef.current = Date.now();
 
@@ -215,18 +229,24 @@ const ProductDetails = () => {
       pollCount++;
       console.log("[Storia] Active Sync Polling (Turbo Mode)...", pollCount);
       dispatch(fetchCartFromSalla());
-      // Poll every 250ms for 5s (total 20 attempts)
-      if (pollCount >= 20) {
+
+      // Poll every 250ms for 7.5s (total 30 attempts)
+      if (pollCount >= 30) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
+
+        // TIMEOUT FALLBACK: If we reached 30 polls without success/error event, show generic error
+        setToastConfig({
+          isVisible: true,
+          message: "تعذر التأكد من الإضافة، يرجى مراجعة السلة",
+          type: "error",
+        });
       }
     }, 250);
 
-    console.log("[Storia] V23: Turbo Polling & Event Trap for ID:", sallaId);
+    console.log("[Storia] V24 (Timeout Enabled) for ID:", sallaId);
 
-    // Trigger the native Salla button.
-    // This will open Salla's selection popup if sizes are needed,
-    // or add directly if not. This is 100% reliable.
+    // Trigger the native Salla button
     const nativeBtn =
       document.querySelector(`[product-id="${sallaId}"] button`) ||
       document.querySelector(
@@ -235,11 +255,13 @@ const ProductDetails = () => {
 
     if (nativeBtn) {
       nativeBtn.click();
-      // Toast and refresh are now handled by the event listener above
-      // to ensure they only happen on SUCCESSFUL addition.
     } else {
       console.error("[Storia] Native Salla button not found!");
-      alert("عذراً، نظام السلة غير متوفر حالياً.");
+      setToastConfig({
+        isVisible: true,
+        message: "عذراً، نظام السلة غير متوفر حالياً.",
+        type: "error",
+      });
     }
   }, [displayProduct, dispatch]);
 

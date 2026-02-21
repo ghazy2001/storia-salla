@@ -165,11 +165,33 @@ const Store = ({ initialFilter = "all", onProductSelect }) => {
       if (pollCount >= 30) {
         clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
+
+        // TIMEOUT FALLBACK: If we polled for 7.5s without confirmed success or Salla error,
+        // show a generic hint.
+        setToastConfig({
+          isVisible: true,
+          message: "تعذر التأكد من الإضافة، يرجى مراجعة السلة",
+          type: "error",
+        });
       }
     }, 250);
 
     // Only proceed to manual add if NOT just a click proxy
     if (!isClickOnly) {
+      // Pre-emptive Out-of-Stock Check for manual add (rare in Store carousel but good for safety)
+      const isOut =
+        product.isOutOfStock ||
+        (product.quantity !== undefined && product.quantity === 0);
+      if (isOut) {
+        setToastConfig({
+          isVisible: true,
+          message: "عذراً، هذا المنتج غير متوفر حالياً",
+          type: "error",
+        });
+        clearInterval(pollingIntervalRef.current);
+        return;
+      }
+
       await addToCartWithSync(product, quantity, size);
       // Waiter will handle toast
     }
