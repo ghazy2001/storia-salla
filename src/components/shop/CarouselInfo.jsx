@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useState } from "react";
 
 /**
- * CarouselInfo Component - V20.2 UI Refinement
- * Simplified UI for the store listing: removed sizes, fixed currency, and added regular price.
+ * CarouselInfo Component - V20.3 with Size Selector
+ * Store listing card: title, price, sizes, and add to cart.
  */
 const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
+  const [selectedSize, setSelectedSize] = useState(null);
+
   // Ultra-safe parsing for numeric calculation to avoid NaN
   const safeParse = (val) => {
     if (!val) return 0;
@@ -16,11 +18,8 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
   const renderPrice = (priceVal) => {
     if (!priceVal) return "";
     let str = String(priceVal).trim();
-
-    // Normalize by removing all currency symbols and adding it back once
     const numericPart = str.replace(/ر\.س/g, "").replace(/SAR/g, "").trim();
     if (!numericPart) return str;
-
     return `${numericPart} ر.س`;
   };
 
@@ -28,16 +27,19 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
   const curPrice = safeParse(product.salePrice || product.price);
   const sallaId = product.sallaProductId || product.id;
 
-  // New Native Proxy handler for "Add to Cart" button in carousel
-  const handleNativeAddToCart = () => {
-    console.log(
-      "[Storia] V20.2: Proxying Carousel Add to Cart for ID:",
-      sallaId,
-    );
+  const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : [];
+  const hasSizes = sizes.length > 0;
 
-    // NEW: Always signal parent that a click happened (to start polling)
+  // Native Proxy handler for "Add to Cart" button in carousel
+  const handleNativeAddToCart = () => {
+    // Signal parent that a click happened (to start polling)
     if (onAddToCart) {
-      onAddToCart({ product, quantity: 1, isClickOnly: true });
+      onAddToCart({
+        product,
+        quantity: 1,
+        size: selectedSize,
+        isClickOnly: true,
+      });
     }
 
     // Trigger the hidden native Salla button for this product
@@ -48,8 +50,7 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
       const btn = nativeBtn.querySelector("button") || nativeBtn;
       btn.click();
     } else {
-      // Fallback: If no native button, the signal above will also handle the add
-      onAddToCart && onAddToCart({ product, quantity: 1 });
+      onAddToCart && onAddToCart({ product, quantity: 1, size: selectedSize });
     }
   };
 
@@ -84,7 +85,38 @@ const CarouselInfo = ({ product, onSelect, onAddToCart }) => {
         {product.description}
       </p>
 
-      {/* Manual Sizes selection removed as requested */}
+      {/* Size Selector */}
+      {hasSizes && (
+        <div className="w-full mb-8">
+          <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right">
+            المقاس
+            {selectedSize && (
+              <span className="mr-2 text-brand-gold font-black">
+                : {selectedSize}
+              </span>
+            )}
+          </p>
+          <div className="flex flex-wrap gap-3 justify-end flex-row-reverse">
+            {sizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => setSelectedSize(size)}
+                className={`
+                  min-w-[3rem] h-11 px-4 rounded-xl border-2 font-sans font-bold text-sm
+                  transition-all duration-200
+                  ${
+                    selectedSize === size
+                      ? "border-brand-gold bg-brand-gold text-white shadow-md scale-105"
+                      : "border-brand-charcoal/20 bg-white text-brand-charcoal hover:border-brand-gold hover:text-brand-gold"
+                  }
+                `}
+              >
+                {size}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-4">
         <button
