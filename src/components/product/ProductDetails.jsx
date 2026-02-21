@@ -56,6 +56,14 @@ const ProductDetails = () => {
             regularPrice: details.regularPrice || details.rawRegularPrice,
             salePrice: details.salePrice || details.rawSalePrice,
             isOnSale: details.isOnSale,
+            sizes:
+              details.sizes && details.sizes.length > 0
+                ? details.sizes
+                : undefined,
+            sizeVariants:
+              details.sizeVariants && details.sizeVariants.length > 0
+                ? details.sizeVariants
+                : undefined,
           });
         }
       } catch (err) {

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
 /**
- * ProductInfo Component - V20.2 with Size Selector
- * Renders product title, price, size options, and add to cart section.
+ * ProductInfo Component - V20.3 with Salla Size Selector
+ * Renders product title, price, size options (from Salla API), and add to cart section.
  */
 const ProductInfo = ({ product, handleAddToCart }) => {
   const [selectedSize, setSelectedSize] = useState(null);
@@ -18,12 +18,8 @@ const ProductInfo = ({ product, handleAddToCart }) => {
   const renderPrice = (priceVal) => {
     if (!priceVal) return "";
     let str = String(priceVal).trim();
-
-    // Remove duplicate "ر.س" if it exists at the end
-    // First, normalize by removing all occurrences and adding it back once
     const numericPart = str.replace(/ر\.س/g, "").trim();
     if (!numericPart) return str;
-
     return `${numericPart} ر.س`;
   };
 
@@ -34,7 +30,9 @@ const ProductInfo = ({ product, handleAddToCart }) => {
       ? Math.round(((regPrice - curPrice) / regPrice) * 100)
       : 0;
 
-  const hasSizes = product.sizes && product.sizes.length > 0;
+  // Use sizes from Salla API (enriched data) — these are the real sizes (e.g. 52, 54, 56...)
+  const sizes = product.sizes && product.sizes.length > 0 ? product.sizes : [];
+  const hasSizes = sizes.length > 0;
 
   const onAddToCart = () => {
     handleAddToCart(selectedSize);
@@ -68,7 +66,7 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         {product.description}
       </p>
 
-      {/* Size Selector */}
+      {/* Size Selector — uses real Salla sizes */}
       {hasSizes && (
         <div className="w-full max-w-md ml-auto lg:ml-auto mb-6">
           <p className="text-sm font-bold text-brand-charcoal/70 mb-3 text-right">
@@ -80,7 +78,7 @@ const ProductInfo = ({ product, handleAddToCart }) => {
             )}
           </p>
           <div className="flex flex-wrap gap-3 justify-end">
-            {product.sizes.map((size) => (
+            {sizes.map((size) => (
               <button
                 key={size}
                 onClick={() => setSelectedSize(size)}
@@ -109,8 +107,6 @@ const ProductInfo = ({ product, handleAddToCart }) => {
         >
           إضافة للسلة
         </button>
-
-        {/* Info boxes removed as per user request */}
       </div>
 
       {/* Salla Native Button Proxy - THE ENGINE */}
