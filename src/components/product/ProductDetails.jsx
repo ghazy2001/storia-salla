@@ -138,8 +138,23 @@ const ProductDetails = () => {
     const handleCartError = (event) => {
       console.error("[Storia] Cart Error Trap!", event?.detail);
       if (isMounted) {
-        const errorMsg =
-          event?.detail?.message || "عذراً، تعذر إضافة المنتج (قد يكون نفد)";
+        const eventType = event?.type || "";
+        const detail = event?.detail || {};
+
+        let errorMsg;
+        if (
+          eventType === "cart::not-available" ||
+          detail?.out_of_stock ||
+          detail?.type === "out_of_stock" ||
+          (detail?.message || "").toLowerCase().includes("stock") ||
+          (detail?.message || "").includes("نفد") ||
+          (detail?.message || "").includes("غير متوفر")
+        ) {
+          errorMsg = "عذراً، هذا المنتج غير متوفر حالياً أو نفدت الكمية";
+        } else {
+          errorMsg = detail?.message || "عذراً، تعذر إضافة المنتج إلى السلة";
+        }
+
         setToastConfig({
           isVisible: true,
           message: errorMsg,
@@ -160,12 +175,14 @@ const ProductDetails = () => {
       document.addEventListener("cart::added", handleCartSync);
       document.addEventListener("cart::add-item-failed", handleCartError);
       document.addEventListener("cart::not-available", handleCartError);
+      document.addEventListener("product::out-of-stock", handleCartError);
 
       if (window.salla && window.salla.event) {
         window.salla.event.on("cart::add-item", handleCartSync);
         window.salla.event.on("cart::added", handleCartSync);
         window.salla.event.on("cart::add-item-failed", handleCartError);
         window.salla.event.on("cart::not-available", handleCartError);
+        window.salla.event.on("product::out-of-stock", handleCartError);
         isSallaEventAttached = true;
         return true;
       }
@@ -178,6 +195,7 @@ const ProductDetails = () => {
       document.removeEventListener("cart::added", handleCartSync);
       document.removeEventListener("cart::add-item-failed", handleCartError);
       document.removeEventListener("cart::not-available", handleCartError);
+      document.removeEventListener("product::out-of-stock", handleCartError);
 
       if (isSallaEventAttached && window.salla && window.salla.event) {
         try {
@@ -185,6 +203,7 @@ const ProductDetails = () => {
           window.salla.event.off("cart::added", handleCartSync);
           window.salla.event.off("cart::add-item-failed", handleCartError);
           window.salla.event.off("cart::not-available", handleCartError);
+          window.salla.event.off("product::out-of-stock", handleCartError);
         } catch {
           /* ignore */
         }
